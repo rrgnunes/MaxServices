@@ -17,8 +17,8 @@ class MaxServices(win32serviceutil.ServiceFramework):
         super().__init__(args)
         self.timer_thread_remoto = threadverificaremoto(23)
         self.timer_thread_backup = threadbackuplocal(1800)  # 1800
-        self.timer_thread_alerta_bloqueio = threadalertabloqueio(900)
-        self.timer_thread_xml_contador = threadxmlcontador(300)
+        self.timer_thread_alerta_bloqueio = threadalertabloqueio())
+        self.timer_thread_xml_contador = threadxmlcontador()
         self.stop = False
     
 
@@ -33,10 +33,17 @@ class MaxServices(win32serviceutil.ServiceFramework):
     def SvcDoRun(self):
         self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
         self.ReportServiceStatus(win32service.SERVICE_RUNNING)
-        self.timer_thread_remoto.start()
-        self.timer_thread_backup.start()
+        # self.timer_thread_remoto.start()
+        # self.timer_thread_backup.start()
         self.timer_thread_alerta_bloqueio.start()
-        self.timer_thread_xml_contador.start()
+        
+        # print_log('Start no xml contador')
+        # try:
+        #     self.timer_thread_xml_contador.start()
+        # except Exception as a:
+        #     print_log('Erro no start do xml contador - ' + a);
+
+        
 
         while not self.stop:
             try:

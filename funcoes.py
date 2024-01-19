@@ -66,3 +66,20 @@ def print_log(texto):
     data_hora_formatada = data_hora.strftime('%d_%m_%Y_%H_%M_%S')
     logger.info(texto)
     print(f'{texto} - {data_hora_formatada}')
+
+def SalvaNota(conn,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,cliente_id,contador_id):
+        try:
+            cursor_notafiscal = conn.cursor()
+            sql = f"""INSERT INTO maxservices.notafiscal_notafiscal 
+                (numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento,
+                    cliente_id, contador_id)
+                VALUES('{numero}', '{chave}', '{tipo_nota}', '{serie}',
+                        '{data_nota}', '{xml}', '{xml_cancelamento}',
+                        '{cliente_id}', '{contador_id}')
+                        ON DUPLICATE KEY UPDATE chave = '{chave}'"""
+            #print(f'{sql}')
+            cursor_notafiscal.execute(sql)
+            print_log(f'Salvando nota {tipo_nota} - {chave}')
+            cursor_notafiscal.close()
+        except Exception as a:
+            print_log(a)        
