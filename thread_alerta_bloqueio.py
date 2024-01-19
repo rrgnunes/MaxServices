@@ -19,6 +19,7 @@ class threadalertabloqueio(threading.Thread):
                 with open(path_config_thread, 'r') as config_file:
                     config_thread = json.load(config_file)
             intervalo = config_thread['time_thread_alertabloqueio']
+            
         while not self.event.wait(intervalo):
             # Conexão com o banco de dados
             try:
@@ -37,4 +38,5 @@ class threadalertabloqueio(threading.Thread):
             except Exception as a:
                 # self.logger.error(f"{self._svc_name_} {a}.")
                 print_log(a)
-        time.sleep(intervalo)
+
+            time.sleep(intervalo)

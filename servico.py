@@ -15,9 +15,9 @@ class MaxServices(win32serviceutil.ServiceFramework):
 
     def __init__(self, args):
         super().__init__(args)
-        self.timer_thread_remoto = threadverificaremoto(23)
-        self.timer_thread_backup = threadbackuplocal(1800)  # 1800
-        self.timer_thread_alerta_bloqueio = threadalertabloqueio())
+        self.timer_thread_remoto = threadverificaremoto()
+        self.timer_thread_backup = threadbackuplocal()  
+        self.timer_thread_alerta_bloqueio = threadalertabloqueio()
         self.timer_thread_xml_contador = threadxmlcontador()
         self.stop = False
     
@@ -33,15 +33,30 @@ class MaxServices(win32serviceutil.ServiceFramework):
     def SvcDoRun(self):
         self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
         self.ReportServiceStatus(win32service.SERVICE_RUNNING)
-        # self.timer_thread_remoto.start()
-        # self.timer_thread_backup.start()
-        self.timer_thread_alerta_bloqueio.start()
         
-        # print_log('Start no xml contador')
-        # try:
-        #     self.timer_thread_xml_contador.start()
-        # except Exception as a:
-        #     print_log('Erro no start do xml contador - ' + a);
+        print_log('Start no verifica remoto')
+        try:
+            self.timer_thread_remoto.start()
+        except Exception as a:
+            print_log('Erro no start do verifica remoto - ' + a);            
+
+        print_log('Start no backup')
+        try:
+            self.timer_thread_backup.start()
+        except Exception as a:
+            print_log('Erro no start do backup- ' + a);        
+
+        print_log('Start no alerta de bloqueio')
+        try:
+            self.timer_thread_alerta_bloqueio.start()
+        except Exception as a:
+            print_log('Erro no start do alerta de bloqueio - ' + a);        
+        
+        print_log('Start no xml contador')
+        try:
+            self.timer_thread_xml_contador.start()
+        except Exception as a:
+            print_log('Erro no start do xml contador - ' + a);
 
         
 

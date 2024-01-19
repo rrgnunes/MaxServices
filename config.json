@@ -1,6 +1,8 @@
 {
   "time_thread_xmlcontador":60,
-  "time_thread_alertabloqueio":900
+  "time_thread_alertabloqueio":900,
+  "time_thread_backuplocal":1800,
+  "time_thread_verificaremoto":23
 
 
 }
