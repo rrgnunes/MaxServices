@@ -359,5 +359,5 @@ class threadxmlcontador(threading.Thread):
             except Exception as a:
                 # self.logger.error(f"{self._svc_name_} {a}.")
                 conMYSQL.rollback()
-                print(a)
+                print_log(a)
 
