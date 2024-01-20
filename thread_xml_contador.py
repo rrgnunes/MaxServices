@@ -47,6 +47,8 @@ class threadxmlcontador(threading.Thread):
                                 password=PASSMYSQL,
                                 database=BASEMYSQL
                             )
+
+                            dias_busca_nota = -50
                           
                             print_log(f"Inicia select das notas - xmlcontador")
                             if sistema_em_uso == '1':  # maxsuport
@@ -82,7 +84,7 @@ class threadxmlcontador(threading.Thread):
                                         contador = 0
                                         codigo_empresa = row['CODIGO']
                                         
-                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = {condicao}')
+                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = "{condicao}" ')
                                         rowsPlat=curPlataform.fetchall()
                                         rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
 
@@ -95,7 +97,7 @@ class threadxmlcontador(threading.Thread):
                                             cpf_cnpj = condicao
                                             curPlataform.execute(f'insert into notafiscal_contador(nome,cpf_cnpj,cnpj_empresa) values("{nome}","{cpf_cnpj}","{cnpj_empresa}")')
 
-                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = {condicao}')
+                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = "{condicao}"')
                                         rowsPlat=curPlataform.fetchall()
                                         rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
                                         
@@ -103,7 +105,7 @@ class threadxmlcontador(threading.Thread):
 
                                         # vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É MDFE
                                         print_log(f"Inicia select MDFE- xmlcontador")
-                                        cur.execute("select n.numero_mdfe,n.chave,n.data_emissao,n.serie,n.fk_empresa, n.xml,  n.situacao from mdfe_master n where situacao in ('T','C')")
+                                        cur.execute("select n.numero_mdfe,n.chave,n.data_emissao,n.serie,n.fk_empresa, n.xml,  n.situacao from mdfe_master n where situacao in ('T','C') and n.data_emissao > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)")
                                         rowsNotas=cur.fetchall()
                                         rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
                                         for row_nota in rows_dict_notas:
@@ -122,7 +124,7 @@ class threadxmlcontador(threading.Thread):
 
                                         # vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É NFE
                                         print_log(f"Inicia select NFE- xmlcontador")
-                                        cur.execute('select n.numero,n.chave,n.data_emissao,n.serie,n.fkempresa, n.xml,n.xml_cancelamento, n.situacao from nfe_master n where situacao in (2,3,5)')
+                                        cur.execute('select n.numero,n.chave,n.data_emissao,n.serie,n.fkempresa, n.xml,n.xml_cancelamento, n.situacao from nfe_master n where situacao in (2,3,5) and n.data_emissao > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)')
                                         rowsNotas=cur.fetchall()
                                         rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
                                         for row_nota in rows_dict_notas:
@@ -140,7 +142,7 @@ class threadxmlcontador(threading.Thread):
                                             
                                         # vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É NFCE
                                         print_log(f"Inicia select NFCE- xmlcontador")
-                                        cur.execute("select n.numero,n.chave,n.data_emissao,n.serie,n.fkempresa, n.xml,n.xml_cancelamento, n.situacao from nfce_master n where situacao in ('T','C','I') and chave <> 'CHAVE NÃO GERADA'")
+                                        cur.execute("select n.numero,n.chave,n.data_emissao,n.serie,n.fkempresa, n.xml,n.xml_cancelamento, n.situacao from nfce_master n where situacao in ('T','C','I') and chave <> 'CHAVE NÃO GERADA' and n.data_emissao > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)")
                                         rowsNotas=cur.fetchall()
                                         rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
                                         for row_nota in rows_dict_notas:
@@ -160,7 +162,7 @@ class threadxmlcontador(threading.Thread):
 
                                         # vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É COMPRAS
                                         print_log(f"Inicia select COMPRAS- xmlcontador")
-                                        cur.execute("select n.nr_nota,n.chave,n.dtemissao,n.serie,n.empresa, n.xml from COMPRA N WHERE N.chave is not null")
+                                        cur.execute("select n.nr_nota,n.chave,n.dtemissao,n.serie,n.empresa, n.xml from COMPRA N WHERE N.chave is not null and n.dtemissao > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)")
                                         rowsNotas=cur.fetchall()
                                         rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
                                         for row_nota in rows_dict_notas:
@@ -210,7 +212,7 @@ class threadxmlcontador(threading.Thread):
 
                                         contador = 0
                                                                 
-                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = {condicao}')
+                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = "{condicao}"')
                                         rowsPlat=curPlataform.fetchall()
                                         rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]                            
 
@@ -222,14 +224,14 @@ class threadxmlcontador(threading.Thread):
                                             cnpj_empresa = rows_dict[0]['CNPJ_EMPRESA'] 
                                             curPlataform.execute(f'insert into notafiscal_contador(nome,cpf_cnpj,cnpj_empresa) values("{nome}","{cpf_cnpj}","{cnpj_empresa}")')
 
-                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = {condicao}')
+                                        curPlataform.execute(f'select * from notafiscal_contador nc where cpf_cnpj = "{condicao}"')
                                         rowsPlat=curPlataform.fetchall()
                                         rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
                                         
                                         contador = rows_dict_plat[0]['id'] # get id contador
 
 
-                                    dias_busca_nota = -50
+                                    
 
                                     # salva notas nfe
                                     cur.execute(f'''SELECT c.NOME ,c."CPF" ,c."CNPJ", d."CNPJ" as CNPJ_EMPRESA, DATA_EMIS_NFE,XML,XML_CANCELAM,
