@@ -44,13 +44,14 @@ class MaxServices(win32serviceutil.ServiceFramework):
         self.ReportServiceStatus(win32service.SERVICE_RUNNING)
 
         # Verifico se é produção ou homologação
-        producao = -1
-        while producao == -1:
-            path_config_thread = SCRIPT_PATH + "/config.json"
-            if os.path.exists(path_config_thread):
-                with open(path_config_thread, 'r') as config_file:
-                    config_thread = json.load(config_file)
-            producao = config_thread['producao']
+        producao = 0
+
+        path_config_thread = SCRIPT_PATH + "/config.json"
+        if os.path.exists(path_config_thread):
+            with open(path_config_thread, 'r') as config_file:
+                config_thread = json.load(config_file)
+        producao = config_thread['producao']
+        
         if producao == 0:
             SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/MaxUpdate.py'
 
