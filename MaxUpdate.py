@@ -7,9 +7,9 @@ import os
 import sys
 import subprocess
 import requests
-import timer
+import time
 
-#rodrigo e cris
+#21:44
 MAXSERVICES = 'MaxServices'
 SERVICE_NAME = 'MaxUpdate'
 SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/servico.py'
@@ -145,7 +145,7 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                         print('Serviço nao instalado')
             # Aguardar antes de verificar novamente por atualizações
             print('Agora vou dormir 10 segundos')
-            timer.sleep(10)
+            time.sleep(10)
 
 
 if __name__ == '__main__':
