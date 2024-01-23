@@ -8,6 +8,7 @@ import sys
 import subprocess
 import requests
 import time
+import json
 
 #21:44
 MAXSERVICES = 'MaxServices'
@@ -39,10 +40,23 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
         while self._executar:
             try:
                 print('Bem... Vamos lá')
+
+                producao = -1
+                while producao == -1:
+                    path_config_thread = SCRIPT_PATH + "/config.json"
+                    if os.path.exists(path_config_thread):
+                        with open(path_config_thread, 'r') as config_file:
+                            config_thread = json.load(config_file)
+                    producao = config_thread['producao']
+                if producao == 0:
+                    SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/MaxUpdate.py'
+
                 versao_online = 0
 
                 # Substitua pelo URL da página que deseja obter o conteúdo
                 url = "http://maxsuport.com.br:81/static/update/versao.txt"
+                if producao == 0:
+                    url = "http://maxsuport.com.br:81/static/hom_update/versao.txt"
 
                 # Faz a requisição GET para a página
                 response = requests.get(url, timeout=5)
