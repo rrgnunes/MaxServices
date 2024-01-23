@@ -943,3 +943,27 @@
 2024-01-19 17:34:16,510 - INFO - pega dados local - xmlcontador
 2024-01-19 17:34:33,473 - INFO - Inicia select das notas - xmlcontador
 2024-01-19 17:34:38,565 - INFO - pega dados local - xmlcontador
+2024-01-22 09:42:55,839 - INFO - Carrega configurações da thread - xmlcontador
+2024-01-22 09:43:00,853 - INFO - pega dados local - xmlcontador
+2024-01-22 09:43:01,532 - INFO - Inicia select das notas - xmlcontador
+2024-01-22 09:43:01,786 - INFO - Inicia select contador - xmlcontador
+2024-01-22 09:43:01,924 - INFO - Inicia select MDFE- xmlcontador
+2024-01-22 09:43:01,944 - INFO - Inicia select NFE- xmlcontador
+2024-01-22 09:43:02,024 - INFO - ('Error while preparing SQL statement:\n- SQLCODE: -206\n- Dynamic SQL Error\n- SQL error code = -206\n- Column unknown\n- {DIAS_BUSCA_NOTA}\n- At line 1, column 175', -206, 335544569)
+2024-01-22 09:43:07,040 - INFO - pega dados local - xmlcontador
+2024-01-22 09:43:07,556 - INFO - Inicia select das notas - xmlcontador
+2024-01-22 09:43:07,743 - INFO - Inicia select contador - xmlcontador
+2024-01-22 09:43:07,865 - INFO - Inicia select MDFE- xmlcontador
+2024-01-22 09:43:07,871 - INFO - Inicia select NFE- xmlcontador
+2024-01-22 09:43:07,932 - INFO - ('Error while preparing SQL statement:\n- SQLCODE: -206\n- Dynamic SQL Error\n- SQL error code = -206\n- Column unknown\n- {DIAS_BUSCA_NOTA}\n- At line 1, column 175', -206, 335544569)
+2024-01-22 09:43:54,995 - INFO - Carrega configurações da thread - xmlcontador
+2024-01-22 09:44:00,011 - INFO - pega dados local - xmlcontador
+2024-01-22 09:44:00,713 - INFO - Inicia select das notas - xmlcontador
+2024-01-22 09:44:00,976 - INFO - Inicia select contador - xmlcontador
+2024-01-22 09:44:01,120 - INFO - Inicia select MDFE- xmlcontador
+2024-01-22 09:44:01,125 - INFO - Inicia select NFE- xmlcontador
+2024-01-22 09:44:01,333 - INFO - Salvando nota NFE - 51231219775656000104550010000202541484854779
+2024-01-22 09:44:01,480 - INFO - Salvando nota NFE - 51231219775656000104550010000202551627612070
+2024-01-22 09:44:01,649 - INFO - Salvando nota NFE - 51231219775656000104550010000202561349269132
+2024-01-22 09:44:01,651 - INFO - Inicia select NFCE- xmlcontador
+2024-01-22 09:44:01,694 - INFO - Inicia select COMPRAS- xmlcontador

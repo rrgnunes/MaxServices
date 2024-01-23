@@ -124,7 +124,7 @@ class threadxmlcontador(threading.Thread):
 
                                         # vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É NFE
                                         print_log(f"Inicia select NFE- xmlcontador")
-                                        cur.execute('select n.numero,n.chave,n.data_emissao,n.serie,n.fkempresa, n.xml,n.xml_cancelamento, n.situacao from nfe_master n where situacao in (2,3,5) and n.data_emissao > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)')
+                                        cur.execute(f'select n.numero,n.chave,n.data_emissao,n.serie,n.fkempresa, n.xml,n.xml_cancelamento, n.situacao from nfe_master n where situacao in (2,3,5) and n.data_emissao > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)')
                                         rowsNotas=cur.fetchall()
                                         rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
                                         for row_nota in rows_dict_notas:
