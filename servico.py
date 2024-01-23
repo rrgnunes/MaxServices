@@ -1,14 +1,23 @@
 import win32serviceutil
 import win32service
 import servicemanager
-from thread_verifica_remoto import *
-from thread_backup_local import *
-from thread_alerta_bloqueio import *
-from thread_xml_contador import *
+import os
+import datetime
+import logging
+import json
+from logging.handlers import RotatingFileHandler
 import requests
-from funcoes import print_log
 import urllib.request
 import win32event
+import time
+try:
+    from thread_verifica_remoto import *
+    from thread_backup_local import *
+    from thread_alerta_bloqueio import *
+    from thread_xml_contador import *
+except:
+    print('Erro ao carregar import')
+
 
 #21:47
 MAXSERVICES = 'MaxUpdate'
@@ -16,6 +25,29 @@ SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/MaxUpdate.py'
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 SERVICE_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'MaxUpdate.py')
+# Configuração do logger
+logger = logging.getLogger('my_logger')
+logger.setLevel(logging.DEBUG)
+# Configuração do handler
+log_file = SCRIPT_PATH + 'maxservices.log'
+max_bytes = 1024 * 1024  # 1 MB
+backup_count = 3  # Número de arquivos de backup a serem mantidos
+handler = RotatingFileHandler(
+    log_file, maxBytes=max_bytes, backupCount=backup_count)
+handler.setLevel(logging.DEBUG)
+
+# Formatação do log
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# Adicionando o handler ao logger
+logger.addHandler(handler)
+
+def print_log(texto):
+    data_hora = datetime.datetime.now()
+    data_hora_formatada = data_hora.strftime('%d_%m_%Y_%H_%M_%S')
+    logger.info(texto)
+    print(f'{texto} - {data_hora_formatada}')
 
 class MaxServices(win32serviceutil.ServiceFramework):
     _svc_name_ = "MaxServices"
@@ -24,132 +56,42 @@ class MaxServices(win32serviceutil.ServiceFramework):
 
     def __init__(self, args):
         super().__init__(args)
-        self.timer_thread_remoto = threadverificaremoto()
-        self.timer_thread_backup = threadbackuplocal()  
-        self.timer_thread_alerta_bloqueio = threadalertabloqueio()
-        self.timer_thread_xml_contador = threadxmlcontador()
+        try:
+            self.timer_thread_remoto = threadverificaremoto()
+            self.timer_thread_backup = threadbackuplocal()  
+            self.timer_thread_alerta_bloqueio = threadalertabloqueio()
+            self.timer_thread_xml_contador = threadxmlcontador()
+        except Exception as a:
+            print_log('Erro no init: não carregou as threads')
         self.stop = False
     
 
     def SvcStop(self):
-        self.timer_thread_remoto.event.set()
-        self.timer_thread_backup.event.set()
-        self.timer_thread_alerta_bloqueio.event.set()
-        self.timer_thread_xml_contador.event.set()
+        try:
+            self.timer_thread_remoto.event.set()
+            self.timer_thread_backup.event.set()
+            self.timer_thread_alerta_bloqueio.event.set()
+            self.timer_thread_xml_contador.event.set()
+        except Exception as a:
+            print_log('Erro no stop: Não parou as threads ')        
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         self.stop = True
 
     def SvcDoRun(self):
         self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
         self.ReportServiceStatus(win32service.SERVICE_RUNNING)
-
-        # Verifico se é produção ou homologação
-        producao = 0
-
-        path_config_thread = SCRIPT_PATH + "/config.json"
-        if os.path.exists(path_config_thread):
-            with open(path_config_thread, 'r') as config_file:
-                config_thread = json.load(config_file)
-                producao = config_thread['producao']
-
-        if producao == 0:
-            SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/MaxUpdate.py'
-
-        print_log('Start no verifica remoto')
-        try:
-            self.timer_thread_remoto.start()
-        except Exception as a:
-            print_log('Erro no start do verifica remoto - ' + a);            
-
-        print_log('Start no backup')
-        try:
-            self.timer_thread_backup.start()
-        except Exception as a:
-            print_log('Erro no start do backup- ' + a);        
-
-        print_log('Start no alerta de bloqueio')
-        try:
-            self.timer_thread_alerta_bloqueio.start()
-        except Exception as a:
-            print_log('Erro no start do alerta de bloqueio - ' + a);        
-        
-        print_log('Start no xml contador')
-        try:
-            self.timer_thread_xml_contador.start()
-        except Exception as a:
-            print_log('Erro no start do xml contador - ' + a);
-
         while not self.stop:
-            try:
-                print_log(f"pega dados local - MaxServices")
-                if os.path.exists("C:/Users/Public/config.json"):
-                    with open('C:/Users/Public/config.json', 'r') as config_file:
-                        config = json.load(config_file)
-                    # Ler arquivo INI
-                    # Acessar valor
-                    for cnpj in config['sistema']:
-                        parametros = config['sistema'][cnpj]
-                        ativo = parametros['sistema_ativo']
-                        sistema_em_uso = parametros['sistema_em_uso_id']
-                        caminho_base_dados_gfil = parametros['caminho_base_dados_gfil'].replace(
-                            '\\', '/')
-                        caminho_base_dados_gfil = caminho_base_dados_gfil.split(
-                            '/')[0] + '/' + caminho_base_dados_gfil.split('/')[1]
-                        caminho_base_dados_maxsuport = parametros['caminho_base_dados_maxsuport']
-                        caminho_gbak_firebird_maxsuport = parametros['caminho_gbak_firebird_maxsuport']
-                        porta_firebird_maxsuport = parametros['porta_firebird_maxsuport']
-                        ip = parametros['ip']
+            # Verifico se é produção ou homologação
+            producao = 0
 
-                        print_log(
-                            f"local valor {ativo} do cnpj {cnpj} - MaxServices")
+            path_config_thread = SCRIPT_PATH + "/config.json"
+            if os.path.exists(path_config_thread):
+                with open(path_config_thread, 'r') as config_file:
+                    config_thread = json.load(config_file)
+                    producao = config_thread['producao']
 
-                        if ativo == "0" and sistema_em_uso == "2":
-                            print_log(
-                                f"Encerra Processo do GFIL - MaxServices")
-                            for proc in psutil.process_iter(['name', 'exe']):
-                                if 'FIL' in proc.info['name']:
-                                    if caminho_base_dados_gfil in proc.info['exe'].replace('\\', '/'):
-                                        print_log(
-                                            f"Encerra Processo do GFIL na proc {caminho_base_dados_gfil}, no caminho {proc.info['exe']}- MaxServices")
-                                        proc.kill()
-                                        print_log(
-                                            f"Iniciar conexão com alerta - MaxServices")
-                                        exibe_alerta(
-                                            "1Sistema bloqueado por inadimplência de mensalidades.\nEntre em contato com o suporte!\n(66) 99926-4708\n(66) 99635-3159\n(66) 99935-3355\n-------------------------------\nAtenciosamente\nMax Suport Sistemas;")
-
-                        if sistema_em_uso == "1":
-                            data_cripto = '80E854C4A6929988F97AE2'
-                            if ativo == "1":
-                                data_cripto = '80E854C4A6929988F879E1'
-                            try:
-                                con = fdb.connect(
-                                    host='localhost',
-                                    database=caminho_base_dados_maxsuport,
-                                    user='sysdba',
-                                    password='masterkey',
-                                    port=int(porta_firebird_maxsuport)
-                                )
-                                comando = 'Liberar'
-                                if ativo == "0":
-                                    comando = 'Bloquear'
-                                print_log(
-                                    f"Comando para {comando} maxsuport- MaxServices")
-
-                                cur = con.cursor()
-                                cur.execute(
-                                    f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}' ")
-                                con.commit()
-                                con.close()
-                                # if ativo == "0":
-                                #    exibe_alerta(
-                                #        "1Sistema bloqueado por inadimplência de mensalidades.\nEntre em contato com o suporte!\n(66) 99926-4708\n(66) 99635-3159\n(66) 99935-3355\n-------------------------------\nAtenciosamente\nMax Suport Sistemas;")
-
-                            except fdb.fbcore.DatabaseError as e:
-                                # Lidar com a exceção
-                                print_log("Erro ao executar consulta:" + e)
-            
-            except Exception as a:
-                print_log(f"local valor {self._svc_name_} {a} - MaxServices")
+            if producao == 0:
+                SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/MaxUpdate.py'
 
 
             try:
@@ -256,7 +198,108 @@ class MaxServices(win32serviceutil.ServiceFramework):
                         print_log('Serviço instalado')
                     except:
                         print_log('Serviço nao instalado')
-            # Aguardar antes de verificar novamente por atualizações
+
+
+
+            print_log('Start no verifica remoto')
+
+            try:
+                self.timer_thread_remoto.start()
+            except Exception as a:
+                print_log(f'Erro no start do verifica remoto - {a}');            
+
+            print_log('Start no backup')
+            try:
+                self.timer_thread_backup.start()
+            except Exception as a:
+                print_log(f'Erro no start do backup- {a}');        
+
+            print_log('Start no alerta de bloqueio')
+            try:
+                self.timer_thread_alerta_bloqueio.start()
+            except Exception as a:
+                print_log(f'Erro no start do alerta de bloqueio - {a}');        
+            
+            print_log('Start no xml contador')
+            try:
+                self.timer_thread_xml_contador.start()
+            except Exception as a:
+                print_log(f'Erro no start do xml contador - {a}');
+
+        
+            try:
+                print_log(f"pega dados local - MaxServices")
+                if os.path.exists("C:/Users/Public/config.json"):
+                    with open('C:/Users/Public/config.json', 'r') as config_file:
+                        config = json.load(config_file)
+                    # Ler arquivo INI
+                    # Acessar valor
+                    for cnpj in config['sistema']:
+                        parametros = config['sistema'][cnpj]
+                        ativo = parametros['sistema_ativo']
+                        sistema_em_uso = parametros['sistema_em_uso_id']
+                        caminho_base_dados_gfil = parametros['caminho_base_dados_gfil'].replace(
+                            '\\', '/')
+                        caminho_base_dados_gfil = caminho_base_dados_gfil.split(
+                            '/')[0] + '/' + caminho_base_dados_gfil.split('/')[1]
+                        caminho_base_dados_maxsuport = parametros['caminho_base_dados_maxsuport']
+                        caminho_gbak_firebird_maxsuport = parametros['caminho_gbak_firebird_maxsuport']
+                        porta_firebird_maxsuport = parametros['porta_firebird_maxsuport']
+                        ip = parametros['ip']
+
+                        print_log(
+                            f"local valor {ativo} do cnpj {cnpj} - MaxServices")
+
+                        if ativo == "0" and sistema_em_uso == "2":
+                            print_log(
+                                f"Encerra Processo do GFIL - MaxServices")
+                            for proc in psutil.process_iter(['name', 'exe']):
+                                if 'FIL' in proc.info['name']:
+                                    if caminho_base_dados_gfil in proc.info['exe'].replace('\\', '/'):
+                                        print_log(
+                                            f"Encerra Processo do GFIL na proc {caminho_base_dados_gfil}, no caminho {proc.info['exe']}- MaxServices")
+                                        proc.kill()
+                                        print_log(
+                                            f"Iniciar conexão com alerta - MaxServices")
+                                        exibe_alerta(
+                                            "1Sistema bloqueado por inadimplência de mensalidades.\nEntre em contato com o suporte!\n(66) 99926-4708\n(66) 99635-3159\n(66) 99935-3355\n-------------------------------\nAtenciosamente\nMax Suport Sistemas;")
+
+                        if sistema_em_uso == "1":
+                            data_cripto = '80E854C4A6929988F97AE2'
+                            if ativo == "1":
+                                data_cripto = '80E854C4A6929988F879E1'
+                            try:
+                                con = fdb.connect(
+                                    host='localhost',
+                                    database=caminho_base_dados_maxsuport,
+                                    user='sysdba',
+                                    password='masterkey',
+                                    port=int(porta_firebird_maxsuport)
+                                )
+                                comando = 'Liberar'
+                                if ativo == "0":
+                                    comando = 'Bloquear'
+                                print_log(
+                                    f"Comando para {comando} maxsuport- MaxServices")
+
+                                cur = con.cursor()
+                                cur.execute(
+                                    f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}' ")
+                                con.commit()
+                                con.close()
+                                # if ativo == "0":
+                                #    exibe_alerta(
+                                #        "1Sistema bloqueado por inadimplência de mensalidades.\nEntre em contato com o suporte!\n(66) 99926-4708\n(66) 99635-3159\n(66) 99935-3355\n-------------------------------\nAtenciosamente\nMax Suport Sistemas;")
+
+                            except fdb.fbcore.DatabaseError as e:
+                                # Lidar com a exceção
+                                print_log("Erro ao executar consulta:" + e)
+            
+            except Exception as a:
+                print_log(f"local valor {self._svc_name_} {a} - MaxServices")
+
+
+                        # Aguardar antes de verificar novamente por atualizações
             print_log('Agora vou dormir 10 segundos')
             time.sleep(10)
 
