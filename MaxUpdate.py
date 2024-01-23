@@ -7,6 +7,7 @@ import os
 import sys
 import subprocess
 import requests
+import timer
 
 MAXSERVICES = 'MaxServices'
 SERVICE_NAME = 'MaxUpdate'
@@ -140,8 +141,7 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                         print('Serviço nao instalado')
             # Aguardar antes de verificar novamente por atualizações
             print('Agora vou dormir 10 segundos')
-            win32event.WaitForSingleObject(
-                self.hWaitStop, 10000)  # Aguarda 1 minuto
+            timer.sleep(10)
 
 
 if __name__ == '__main__':

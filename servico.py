@@ -144,7 +144,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
 
                             except fdb.fbcore.DatabaseError as e:
                                 # Lidar com a exceção
-                                print_log("Erro ao executar consulta:", e)
+                                print_log("Erro ao executar consulta:" + e)
             
             except Exception as a:
                 print_log(f"local valor {self._svc_name_} {a} - MaxServices")
@@ -168,8 +168,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
                     versao_online = int(response.text)
                     print_log('Versão online ' + str(versao_online))
                 else:
-                    print_log("Erro ao obter o conteúdo da página:",
-                        response.status_code)
+                    print_log("Erro ao obter o conteúdo da página:" + response.status_code)
                     
             except Exception as a:
                 print_log(a)
@@ -221,7 +220,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
                     except:
                         print_log('Serviço nao iniciado')
 
-                    with open(SCRIPT_PATH + 'versao.txt', 'w') as arquivo:
+                    with open(SCRIPT_PATH + 'versaoupdate.txt', 'w') as arquivo:
                         arquivo.write(str(versao_online))
 
                     servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
@@ -257,10 +256,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
                         print_log('Serviço nao instalado')
             # Aguardar antes de verificar novamente por atualizações
             print_log('Agora vou dormir 10 segundos')
-            win32event.WaitForSingleObject(
-                self.hWaitStop, 10000)  # Aguarda 1 minuto
-
-            time.sleep(7)
+            time.sleep(10)
 
 if __name__ == '__main__':
     win32serviceutil.HandleCommandLine(MaxServices)
