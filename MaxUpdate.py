@@ -86,8 +86,11 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
 
                     # Baixar o novo script
                     # fonte novo
-                    urllib.request.urlretrieve(
-                        SCRIPT_URL, SCRIPT_PATH + 'servico.py')
+                    lista_arquivos = ['servico.py','config.json','parametros.py','funcoes.py','thread_alerta_bloqueio.py',
+                                      'thread_backup_local.py','thread_verifica_remoto.py','thread_xml_contador.py']
+
+                    for arquivo in lista_arquivos:
+                        urllib.request.urlretrieve(SCRIPT_URL, SCRIPT_PATH + arquivo)
                     print('Download efetuado')
 
                     # Instalar o novo serviço
