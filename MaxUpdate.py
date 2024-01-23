@@ -8,6 +8,7 @@ import sys
 import subprocess
 import requests
 
+#rodrigo e cris
 MAXSERVICES = 'MaxServices'
 SERVICE_NAME = 'MaxUpdate'
 SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/servico.py'

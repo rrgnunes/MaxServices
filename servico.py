@@ -10,6 +10,7 @@ from funcoes import print_log
 import urllib.request
 import win32event
 
+
 MAXSERVICES = 'MaxUpdate'
 SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/MaxUpdate.py'
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
