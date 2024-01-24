@@ -1,3 +1,4 @@
+import funcao_import_lib
 import win32serviceutil
 import win32service
 import win32event

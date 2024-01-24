@@ -1,5 +1,6 @@
 from funcoes import *
 
+
 # thread do backup
 class threadbackuplocal(threading.Thread):
     def __init__(self):
@@ -121,13 +122,37 @@ class threadbackuplocal(threading.Thread):
                             if sistema_em_uso == '1':  # maxsuport
                                 pasta_sistema = 'maxsuport'
 
-                            # Caminho do arquivo local que você deseja enviar
-                            arquivo_local = f'{caminho_arquivo_backup}/{nome_arquivo_compactado}'
+
 
                             # Caminho de destino no servidor FTP
-                            diretorio_remoto = f'/home/dinheiro/maxadmin/maxadmin/arquivos/{cnpj}/backup/{pasta_sistema}'
+                            # diretorio_remoto = f'/home/dinheiro/maxadmin/maxadmin/arquivos/{cnpj}/backup/{pasta_sistema}'
+                            diretorio_remoto = f'{cnpj}/backup/{pasta_sistema}'
+
 
                             try:
+                                import dropbox
+                                from dropbox.files import WriteMode
+
+                                # Substitua com suas próprias credenciais
+                                APP_KEY = 'pvj0rltelydr3z6'
+                                APP_SECRET = 'zm2xe1kbq3rnlnm'
+                                ACCESS_TOKEN = 'sl.BuQr6i7L86Kf_UJ99JrCKxasVjqPseFTAVtWcGm-bWJykYca2QUmCUnG73LnrDSVRQwiCxo4_ym8oGq3CdMvXFuYDUD1sAhc8or0HQObDlpreAecZ_SxvF2s3BV8OvP4bGx6oGVvVFn6dSjFvQ0jGK0'
+
+                                # Caminho local do arquivo que você deseja fazer upload
+                                arquivo_local = f'{caminho_arquivo_backup}/{nome_arquivo_compactado}'       
+
+                                # Caminho remoto no Dropbox onde o arquivo será salvo
+                                arquivo_remoto = f'{diretorio_remoto}/{nome_arquivo_compactado}'
+
+                                # Configurar a autenticação com o Dropbox
+                                dbx = dropbox.Dropbox(ACCESS_TOKEN)
+
+                                # Fazer upload do arquivo
+                                with open(arquivo_local, 'rb') as arquivo:
+                                    dbx.files_upload(arquivo.read(), arquivo_remoto, mode=WriteMode('overwrite'))
+
+                                print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto} - backuplocal")
+
                                 # Cria uma instância do cliente FTP
                                 cliente_ftp = FTP()
 
