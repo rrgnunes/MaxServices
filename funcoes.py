@@ -20,16 +20,14 @@ import inspect
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 
 
-
-
 def print_log(texto):
     # Configuração do logger
-    chamador = inspect.currentframe().f_back
-    nome = os.path.basename(chamador.f_code.co_filename)
+    # chamador = inspect.currentframe().f_back
+    # nome = os.path.basename(chamador.f_code.co_filename)
     logger = logging.getLogger('my_logger')
     logger.setLevel(logging.DEBUG)
     # Configuração do handler
-    log_file = SCRIPT_PATH + f'{nome}.log'
+    log_file = SCRIPT_PATH + 'log.log'
     max_bytes = 1024 * 1024  # 1 MB
     backup_count = 3  # Número de arquivos de backup a serem mantidos
     handler = RotatingFileHandler(
