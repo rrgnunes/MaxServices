@@ -67,7 +67,7 @@ def SalvaNota(conn,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,c
                             xml='{xml}',
                             xml_cancelamento='{xml_cancelamento}',
                             cliente_id='{cliente_id}',
-                            contador_id='{cliente_id}'
+                            contador_id='{contador_id}'
                            where chave = '{chave}'""" 
             
             cursor_notafiscal.execute(sql)
