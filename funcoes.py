@@ -15,32 +15,32 @@ import socket
 import zlib
 import fdb
 import psutil
+import inspect
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
-
-# Configuração do logger
-logger = logging.getLogger('my_logger')
-logger.setLevel(logging.DEBUG)
-# Configuração do handler
-log_file = SCRIPT_PATH + 'log.log'
-max_bytes = 1024 * 1024  # 1 MB
-backup_count = 3  # Número de arquivos de backup a serem mantidos
-handler = RotatingFileHandler(
-    log_file, maxBytes=max_bytes, backupCount=backup_count)
-handler.setLevel(logging.DEBUG)
-
-# Formatação do log
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-# Adicionando o handler ao logger
-logger.addHandler(handler)
-
 
 
 
 
 def print_log(texto):
+    # Configuração do logger
+    nome = inspect.stack[1]
+    logger = logging.getLogger('my_logger')
+    logger.setLevel(logging.DEBUG)
+    # Configuração do handler
+    log_file = SCRIPT_PATH + f'{nome}.log'
+    max_bytes = 1024 * 1024  # 1 MB
+    backup_count = 3  # Número de arquivos de backup a serem mantidos
+    handler = RotatingFileHandler(
+        log_file, maxBytes=max_bytes, backupCount=backup_count)
+    handler.setLevel(logging.DEBUG)
+
+    # Formatação do log
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    # Adicionando o handler ao logger
+    logger.addHandler(handler)    
     data_hora = datetime.datetime.now()
     data_hora_formatada = data_hora.strftime('%d_%m_%Y_%H_%M_%S')
     logger.info(texto)
@@ -64,7 +64,7 @@ def SalvaNota(conn,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,c
                             xml_cancelamento = VALUES('{xml_cancelamento}'),
                             cliente_id = VALUES('{cliente_id}'),
                             contador_id = VALUES('{contador_id}')"""
-            #print(f'{sql}')
+            print(f'{sql}')
             cursor_notafiscal.execute(sql)
             print_log(f'Salvando nota {tipo_nota} - {chave}')
             cursor_notafiscal.close()

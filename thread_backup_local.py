@@ -1,6 +1,5 @@
 from funcoes import *
 
-
 # thread do backup
 class threadbackuplocal(threading.Thread):
     def __init__(self):
@@ -10,7 +9,6 @@ class threadbackuplocal(threading.Thread):
     def run(self):
         self.backup()
         
-
     def backup(self):
         print_log(f"Carrega configurações da thread - backuplocal")
         intervalo = -1
