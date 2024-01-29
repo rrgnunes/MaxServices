@@ -59,16 +59,16 @@ def SalvaNota(conn,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,c
                             '{cliente_id}', '{contador_id}')"""
             else:
                 sql = f"""UPDATE maxservices.notafiscal_notafiscal SET 
-                            numero = {numero},
-                            chave = {chave},
-                            tipo_nota={tipo_nota},
-                            serie={serie},
-                            data_nota={data_nota},
-                            xml={xml},
-                            xml_cancelamento={xml_cancelamento},
-                            cliente_id={cliente_id},
-                            contador_id={cliente_id}
-                           where chave = {chave}""" 
+                            numero = '{numero}',
+                            chave = '{chave}',
+                            tipo_nota='{tipo_nota}',
+                            serie='{serie}',
+                            data_nota='{data_nota}',
+                            xml='{xml}',
+                            xml_cancelamento='{xml_cancelamento}',
+                            cliente_id='{cliente_id}',
+                            contador_id='{cliente_id}'
+                           where chave = '{chave}'""" 
             
             cursor_notafiscal.execute(sql)
             print_log(f'Salvando nota {tipo_nota} - {chave}')
