@@ -24,7 +24,8 @@ SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 
 def print_log(texto):
     # Configuração do logger
-    nome = inspect.stack[1]
+    chamador = inspect.currentframe().f_back
+    nome = os.path.basename(chamador.f_code.co_filename)
     logger = logging.getLogger('my_logger')
     logger.setLevel(logging.DEBUG)
     # Configuração do handler
