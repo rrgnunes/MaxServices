@@ -48,22 +48,28 @@ def print_log(texto):
 def SalvaNota(conn,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,cliente_id,contador_id):
         try:
             cursor_notafiscal = conn.cursor()
-            sql = f"""INSERT INTO maxservices.notafiscal_notafiscal 
-                (numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento,
-                    cliente_id, contador_id)
-                VALUES('{numero}', '{chave}', '{tipo_nota}', '{serie}',
-                        '{data_nota}', '{xml}', '{xml_cancelamento}',
-                        '{cliente_id}', '{contador_id}')
-                        ON DUPLICATE KEY UPDATE 
-                            chave = VALUES('{chave}'),
-                            tipo_nota = VALUES('{tipo_nota}'),
-                            serie = VALUES('{serie}'),
-                            data_nota = VALUES('{data_nota}'),
-                            xml = VALUES('{xml}'),
-                            xml_cancelamento = VALUES('{xml_cancelamento}'),
-                            cliente_id = VALUES('{cliente_id}'),
-                            contador_id = VALUES('{contador_id}')"""
-            print(f'{sql}')
+            cursor_notafiscal.execute(f'select * from maxservices.notafiscal_notafiscal nn where nn nn.chave = "{chave}"')
+            rows_nota_fiscal = cursor_notafiscal.fetchall()
+            if len(rows_nota_fiscal) == 0:
+                sql = f"""INSERT INTO maxservices.notafiscal_notafiscal 
+                    (numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento,
+                        cliente_id, contador_id)
+                    VALUES('{numero}', '{chave}', '{tipo_nota}', '{serie}',
+                            '{data_nota}', '{xml}', '{xml_cancelamento}',
+                            '{cliente_id}', '{contador_id}')"""
+            else:
+                sql = f"""UPDATE maxservices.notafiscal_notafiscal SET 
+                            numero = {numero},
+                            chave = {chave},
+                            tipo_nota={tipo_nota},
+                            serie={serie},
+                            data_nota={data_nota},
+                            xml={xml},
+                            xml_cancelamento={xml_cancelamento},
+                            cliente_id={cliente_id},
+                            contador_id={cliente_id}
+                           where chave = {chave}""" 
+            
             cursor_notafiscal.execute(sql)
             print_log(f'Salvando nota {tipo_nota} - {chave}')
             cursor_notafiscal.close()
