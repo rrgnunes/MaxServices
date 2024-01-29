@@ -11,12 +11,16 @@ class threadxmlcontador(threading.Thread):
     def xmlcontador(self):
         print_log(f"Carrega configurações da thread - xmlcontador")
         intervalo = -1
+        dias_busca_nota = -15
+
         while intervalo == -1:
             path_config_thread = SCRIPT_PATH + "/config.json"
             if os.path.exists(path_config_thread):
                 with open(path_config_thread, 'r') as config_file:
                     config_thread = json.load(config_file)
             intervalo = config_thread['time_thread_xmlcontador']
+            dias_busca_nota = config_thread['xml_contador_dias_busca_nota']
+
         while not self.event.wait(intervalo):
             # Conexão com o banco de dados
             try:
@@ -47,8 +51,6 @@ class threadxmlcontador(threading.Thread):
                                 password=PASSMYSQL,
                                 database=BASEMYSQL
                             )
-
-                            dias_busca_nota = -50
                           
                             print_log(f"Inicia select das notas - xmlcontador")
                             if sistema_em_uso == '1':  # maxsuport
@@ -186,7 +188,7 @@ class threadxmlcontador(threading.Thread):
                                 if pasta_compartilhada_backup != None and \
                                         caminho_base_dados_gfil != None and \
                                         caminho_gbak_firebird_gfil != None:
-                                    con = fdb.conMYSQLect(
+                                    con = fdb.connect(
                                         host='localhost',
                                         database=caminho_base_dados_gfil,
                                         user='GFILMASTER',

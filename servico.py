@@ -10,6 +10,11 @@ import requests
 import urllib.request
 import win32event
 import time
+import subprocess
+import fdb
+import psutil
+import socket
+
 try:
     from thread_verifica_remoto import *
     from thread_backup_local import *
@@ -18,30 +23,10 @@ try:
 except:
     print('Erro ao carregar import')
 
-
-#21:47
-MAXSERVICES = 'MaxUpdate'
-SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/MaxUpdate.py'
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
-SERVICE_PATH = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), 'MaxUpdate.py')
 # Configuração do logger
 logger = logging.getLogger('my_logger')
-logger.setLevel(logging.DEBUG)
-# Configuração do handler
-log_file = SCRIPT_PATH + 'maxservices.log'
-max_bytes = 1024 * 1024  # 1 MB
-backup_count = 3  # Número de arquivos de backup a serem mantidos
-handler = RotatingFileHandler(
-    log_file, maxBytes=max_bytes, backupCount=backup_count)
-handler.setLevel(logging.DEBUG)
 
-# Formatação do log
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-# Adicionando o handler ao logger
-logger.addHandler(handler)
 
 def print_log(texto):
     data_hora = datetime.datetime.now()
@@ -49,10 +34,55 @@ def print_log(texto):
     logger.info(texto)
     print(f'{texto} - {data_hora_formatada}')
 
+def exibe_alerta(aviso):
+    # Envia Alerta
+    # Configurar as informações do servidor
+    host = 'localhost'  # Endereço IP ou nome do host do servidor
+    port = 15001  # Porta do servidor
+
+    # Criar um objeto de socket
+    client_socket = socket.socket(
+        socket.AF_INET, socket.SOCK_STREAM)
+
+    # Conectar ao servidor
+    client_socket.connect((host, port))
+    print_log(f"Conectado com o alerta - MaxServices")
+    # Envia comando
+    client_socket.send(aviso.encode('utf-8'))
+
+    # Receber a resposta do servidor
+    resposta = client_socket.recv(1024).decode('utf-8')
+    print_log(f"Resposta do servidor {resposta} - MaxServices")
+
+    # Fechar a conexão
+    client_socket.close()    
+
 class MaxServices(win32serviceutil.ServiceFramework):
     _svc_name_ = "MaxServices"
     _svc_display_name_ = "MaxServices"
     _svc_description_ = "Monitora uso de sistema e dados"
+
+    #21:47
+    MAXUPDATE = 'MaxUpdate'
+    SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/MaxUpdate.py'
+    SERVICE_PATH = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), 'MaxUpdate.py')
+
+    logger.setLevel(logging.DEBUG)
+    # Configuração do handler
+    log_file = SCRIPT_PATH + 'maxservices.log'
+    max_bytes = 1024 * 1024  # 1 MB
+    backup_count = 3  # Número de arquivos de backup a serem mantidos
+    handler = RotatingFileHandler(
+        log_file, maxBytes=max_bytes, backupCount=backup_count)
+    handler.setLevel(logging.DEBUG)
+
+    # Formatação do log
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    # Adicionando o handler ao logger
+    logger.addHandler(handler)
 
     def __init__(self, args):
         super().__init__(args)
@@ -65,7 +95,6 @@ class MaxServices(win32serviceutil.ServiceFramework):
             print_log('Erro no init: não carregou as threads')
         self.stop = False
     
-
     def SvcStop(self):
         try:
             self.timer_thread_remoto.event.set()
@@ -131,13 +160,13 @@ class MaxServices(win32serviceutil.ServiceFramework):
                 try:
                     # Desativar o serviço
                     try:
-                        win32serviceutil.StopService(MAXSERVICES)
+                        win32serviceutil.StopService(self.MAXUPDATE)
                         print_log('Serviço parado')
                     except:
                         print_log('Serviço nao encontrado')
 
                     try:
-                        win32serviceutil.RemoveService(MAXSERVICES)
+                        win32serviceutil.RemoveService(self.MAXUPDATE)
                         print_log('Serviço removido')
                     except:
                         print_log('Serviço nao removido')
@@ -150,22 +179,28 @@ class MaxServices(win32serviceutil.ServiceFramework):
 
                     # Instalar o novo serviço
                     try:
-                        subprocess.call(
-                            f'python {SERVICE_PATH} install', shell=True)
-                        print_log('Serviço instalado')
+                        comando = f'python "{self.SERVICE_PATH}" install'
+                        print_log(f'executando comando {comando}')
+
+                        subprocess.call(f'{comando}', shell=True)
+                        print_log(f'Serviço instalado {self.SERVICE_PATH}')
                     except:
                         print_log('Serviço nao instalado')
 
                     # Iniciar o novo serviço
                     try:
-                        subprocess.call(
-                            f'python {SERVICE_PATH} start', shell=True)
-                        print_log('Serviço iniciado')
+                        comando = f'python "{self.SERVICE_PATH}" start'
+                        print_log(f'executando comando {comando}')
+
+                        subprocess.call(f'{comando}', shell=True)
+                        print_log('Serviço iniciado {self.SERVICE_PATH}')
                     except:
                         print_log('Serviço nao iniciado')
 
                     with open(SCRIPT_PATH + 'versaoupdate.txt', 'w') as arquivo:
                         arquivo.write(str(versao_online))
+
+                    print_log('versão update salvo')
 
                     servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
                                         servicemanager.PYS_SERVICE_STARTED,
@@ -178,7 +213,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
             else:
                 # Check if the service is running
                 try:
-                    service_status = win32serviceutil.QueryServiceStatus(MAXSERVICES)[
+                    service_status = win32serviceutil.QueryServiceStatus(self.MAXUPDATE)[
                         1]
                     if service_status == win32service.SERVICE_RUNNING:
                         print_log("Serviço está rodando")
@@ -186,20 +221,18 @@ class MaxServices(win32serviceutil.ServiceFramework):
                         # Iniciar o novo serviço
                         try:
                             subprocess.call(
-                                f'python {SERVICE_PATH} start', shell=True)
-                            print_log('Serviço iniciado')
+                                f'python "{self.SERVICE_PATH}" start', shell=True)
+                            print_log(f'Serviço iniciado {self.SERVICE_PATH}')
                         except:
                             print_log('Serviço nao iniciado')
                 except:
                     # Instalar o novo serviço
                     try:
                         subprocess.call(
-                            f'python {SERVICE_PATH} install', shell=True)
-                        print_log('Serviço instalado')
+                            f'python "{self.SERVICE_PATH}" install', shell=True)
+                        print_log(f'Serviço instalado {self.SERVICE_PATH}')
                     except:
                         print_log('Serviço nao instalado')
-
-
 
             print_log('Start no verifica remoto')
 
@@ -225,7 +258,6 @@ class MaxServices(win32serviceutil.ServiceFramework):
                 self.timer_thread_xml_contador.start()
             except Exception as a:
                 print_log(f'Erro no start do xml contador - {a}');
-
         
             try:
                 print_log(f"pega dados local - MaxServices")

@@ -37,28 +37,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def exibe_alerta(aviso):
-    # Envia Alerta
-    # Configurar as informações do servidor
-    host = 'localhost'  # Endereço IP ou nome do host do servidor
-    port = 15001  # Porta do servidor
 
-    # Criar um objeto de socket
-    client_socket = socket.socket(
-        socket.AF_INET, socket.SOCK_STREAM)
-
-    # Conectar ao servidor
-    client_socket.connect((host, port))
-    print_log(f"Conectado com o alerta - MaxServices")
-    # Envia comando
-    client_socket.send(aviso.encode('utf-8'))
-
-    # Receber a resposta do servidor
-    resposta = client_socket.recv(1024).decode('utf-8')
-    print_log(f"Resposta do servidor {resposta} - MaxServices")
-
-    # Fechar a conexão
-    client_socket.close()
 
 
 def print_log(texto):
@@ -76,7 +55,15 @@ def SalvaNota(conn,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,c
                 VALUES('{numero}', '{chave}', '{tipo_nota}', '{serie}',
                         '{data_nota}', '{xml}', '{xml_cancelamento}',
                         '{cliente_id}', '{contador_id}')
-                        ON DUPLICATE KEY UPDATE chave = '{chave}'"""
+                        ON DUPLICATE KEY UPDATE 
+                            chave = VALUES('{chave}'),
+                            tipo_nota = VALUES('{tipo_nota}'),
+                            serie = VALUES('{serie}'),
+                            data_nota = VALUES('{data_nota}'),
+                            xml = VALUES('{xml}'),
+                            xml_cancelamento = VALUES('{xml_cancelamento}'),
+                            cliente_id = VALUES('{cliente_id}'),
+                            contador_id = VALUES('{contador_id}')"""
             #print(f'{sql}')
             cursor_notafiscal.execute(sql)
             print_log(f'Salvando nota {tipo_nota} - {chave}')

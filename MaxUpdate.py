@@ -1,4 +1,7 @@
-import funcao_import_lib
+try:
+    import funcao_import_lib
+except Exception as a:
+    print(a)
 import win32serviceutil
 import win32service
 import win32event
@@ -15,6 +18,7 @@ import json
 MAXSERVICES = 'MaxServices'
 SERVICE_NAME = 'MaxUpdate'
 SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/servico.py'
+SCRIPT_PATH_REMOTO = 'http://maxsuport.com.br:81/static/update/'
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 SERVICE_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'servico.py')
@@ -54,7 +58,8 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                 #     print(a) 
                        
                 if producao == 0:
-                    SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/MaxUpdate.py'
+                    SCRIPT_PATH_REMOTO = "http://maxsuport.com.br:81/static/hom_update/"
+                    SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/servico.py'
 
                 versao_online = 0
 
@@ -106,16 +111,17 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                     # Baixar o novo script
                     # fonte novo
                     lista_arquivos = ['servico.py','config.json','parametros.py','funcoes.py','thread_alerta_bloqueio.py',
-                                      'thread_backup_local.py','thread_verifica_remoto.py','thread_xml_contador.py']
+                                      'thread_backup_local.py','thread_verifica_remoto.py','thread_xml_contador.py',
+                                      'funcao_import_lib.py']
 
                     for arquivo in lista_arquivos:
-                        urllib.request.urlretrieve(SCRIPT_URL, SCRIPT_PATH + arquivo)
-                    print('Download efetuado')
+                        urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, SCRIPT_PATH + arquivo)
+                        print('Download efetuado')
 
                     # Instalar o novo serviço
                     try:
                         subprocess.call(
-                            f'python {SERVICE_PATH} install', shell=True)
+                            f'python "{SERVICE_PATH}" install', shell=True)
                         print('Serviço instalado')
                     except:
                         print('Serviço nao instalado')
@@ -123,7 +129,7 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                     # Iniciar o novo serviço
                     try:
                         subprocess.call(
-                            f'python {SERVICE_PATH} start', shell=True)
+                            f'python "{SERVICE_PATH}" start', shell=True)
                         print('Serviço iniciado')
                     except:
                         print('Serviço nao iniciado')
@@ -150,7 +156,7 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                         # Iniciar o novo serviço
                         try:
                             subprocess.call(
-                                f'python {SERVICE_PATH} start', shell=True)
+                                f'python "{SERVICE_PATH}" start', shell=True)
                             print('Serviço iniciado')
                         except:
                             print('Serviço nao iniciado')
@@ -158,7 +164,7 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                     # Instalar o novo serviço
                     try:
                         subprocess.call(
-                            f'python {SERVICE_PATH} install', shell=True)
+                            f'python "{SERVICE_PATH}" install', shell=True)
                         print('Serviço instalado')
                     except:
                         print('Serviço nao instalado')
