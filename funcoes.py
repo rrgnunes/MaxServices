@@ -18,28 +18,28 @@ import psutil
 import inspect
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
+# Configuração do logger
+# chamador = inspect.currentframe().f_back
+# nome = os.path.basename(chamador.f_code.co_filename)
+logger = logging.getLogger('my_logger')
+logger.setLevel(logging.DEBUG)
+# Configuração do handler
+log_file = SCRIPT_PATH + 'log.log'
+max_bytes = 1024 * 1024  # 1 MB
+backup_count = 3  # Número de arquivos de backup a serem mantidos
+handler = RotatingFileHandler(
+    log_file, maxBytes=max_bytes, backupCount=backup_count)
+handler.setLevel(logging.DEBUG)
 
+# Formatação do log
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# Adicionando o handler ao logger
+logger.addHandler(handler) 
 
 def print_log(texto):
-    # Configuração do logger
-    # chamador = inspect.currentframe().f_back
-    # nome = os.path.basename(chamador.f_code.co_filename)
-    logger = logging.getLogger('my_logger')
-    logger.setLevel(logging.DEBUG)
-    # Configuração do handler
-    log_file = SCRIPT_PATH + 'log.log'
-    max_bytes = 1024 * 1024  # 1 MB
-    backup_count = 3  # Número de arquivos de backup a serem mantidos
-    handler = RotatingFileHandler(
-        log_file, maxBytes=max_bytes, backupCount=backup_count)
-    handler.setLevel(logging.DEBUG)
-
-    # Formatação do log
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-    # Adicionando o handler ao logger
-    logger.addHandler(handler)    
+       
     data_hora = datetime.datetime.now()
     data_hora_formatada = data_hora.strftime('%d_%m_%Y_%H_%M_%S')
     logger.info(texto)
