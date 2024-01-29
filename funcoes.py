@@ -48,7 +48,7 @@ def print_log(texto):
 def SalvaNota(conn,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,cliente_id,contador_id):
         try:
             cursor_notafiscal = conn.cursor()
-            cursor_notafiscal.execute(f'select * from maxservices.notafiscal_notafiscal nn where nn nn.chave = "{chave}"')
+            cursor_notafiscal.execute(f'select * from maxservices.notafiscal_notafiscal nn where nn.chave = "{chave}"')
             rows_nota_fiscal = cursor_notafiscal.fetchall()
             if len(rows_nota_fiscal) == 0:
                 sql = f"""INSERT INTO maxservices.notafiscal_notafiscal 
