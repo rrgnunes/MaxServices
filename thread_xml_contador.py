@@ -164,7 +164,7 @@ class threadxmlcontador(threading.Thread):
 
                                         # vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É COMPRAS
                                         print_log(f"Inicia select COMPRAS- xmlcontador")
-                                        cur.execute(f"select n.nr_nota,n.chave,n.dtemissao,n.serie,n.empresa, n.xml from COMPRA N WHERE N.chave is not null and n.dtemissao > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)")
+                                        cur.execute(f"select n.nr_nota,n.chave,n.dtentrada,n.serie,n.empresa, n.xml from COMPRA N WHERE N.chave is not null and n.dtentrada > dateadd(DAY,{dias_busca_nota},CURRENT_DATE)")
                                         rowsNotas=cur.fetchall()
                                         rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
                                         for row_nota in rows_dict_notas:
@@ -172,7 +172,7 @@ class threadxmlcontador(threading.Thread):
                                             chave = row_nota['CHAVE']
                                             tipo_nota = 'COMP'
                                             serie = row_nota['SERIE']
-                                            data_nota = row_nota['DTEMISSAO']
+                                            data_nota = row_nota['DTENTRADA']
                                             xml = row_nota['XML']
                                             xml_cancelamento = ''
 

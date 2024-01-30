@@ -15,3 +15,5 @@ _deps
 .logs/
 venv/
 logs/
+log.log
+__pycache__/
