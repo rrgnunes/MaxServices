@@ -967,3 +967,201 @@
 2024-01-22 09:44:01,649 - INFO - Salvando nota NFE - 51231219775656000104550010000202561349269132
 2024-01-22 09:44:01,651 - INFO - Inicia select NFCE- xmlcontador
 2024-01-22 09:44:01,694 - INFO - Inicia select COMPRAS- xmlcontador
+2024-01-30 09:17:23,104 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 09:18:20,907 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 09:18:35,030 - INFO - Pega dados local - backuplocal
+2024-01-30 09:18:48,021 - INFO - Inicia backup - backuplocal
+2024-01-30 09:19:27,185 - INFO - [WinError 3] O sistema não pode encontrar o caminho especificado: 'C:\\BackupMaxSuport/maxsuport'
+2024-01-30 09:19:38,743 - INFO - Pega dados local - backuplocal
+2024-01-30 09:19:38,748 - INFO - Inicia backup - backuplocal
+2024-01-30 09:19:38,751 - INFO - [WinError 3] O sistema não pode encontrar o caminho especificado: 'C:\\BackupMaxSuport/maxsuport'
+2024-01-30 09:19:49,730 - INFO - Pega dados local - backuplocal
+2024-01-30 09:19:49,734 - INFO - Inicia backup - backuplocal
+2024-01-30 09:22:55,175 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:23:41,675 - INFO - criou arquivo compactado backup_2024_01_30_09_19_49_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:23:51,926 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:25:04,541 - INFO - '31486609000146/backup/maxsuport/backup_2024_01_30_09_19_49_maxsuport.fdb.xz' did not match pattern '(/(.|[\r\n])*)|(ns:[0-9]+(/.*)?)|(id:.*)'
+2024-01-30 09:25:52,826 - INFO - Pega dados local - backuplocal
+2024-01-30 09:25:52,831 - INFO - Inicia backup - backuplocal
+2024-01-30 09:26:02,362 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:26:04,948 - INFO - criou arquivo compactado backup_2024_01_30_09_25_52_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:26:05,077 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:27:07,326 - INFO - AuthError('7b64732ca2ef4f578095f7ef93e30325', AuthError('expired_access_token', None))
+2024-01-30 09:46:27,860 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 09:46:33,726 - INFO - Pega dados local - backuplocal
+2024-01-30 09:46:33,731 - INFO - Inicia backup - backuplocal
+2024-01-30 09:46:34,112 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:46:36,766 - INFO - criou arquivo compactado backup_2024_01_30_09_46_33_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:46:36,902 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:46:51,462 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:48:23,261 - INFO - Pega dados local - backuplocal
+2024-01-30 09:48:23,270 - INFO - Inicia backup - backuplocal
+2024-01-30 09:48:23,536 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:48:26,077 - INFO - criou arquivo compactado backup_2024_01_30_09_48_23_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:48:26,209 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:48:26,281 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:48:31,973 - INFO - Pega dados local - backuplocal
+2024-01-30 09:48:31,978 - INFO - Inicia backup - backuplocal
+2024-01-30 09:48:32,277 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:48:34,782 - INFO - criou arquivo compactado backup_2024_01_30_09_48_31_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:48:34,915 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:48:34,993 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:48:40,923 - INFO - Pega dados local - backuplocal
+2024-01-30 09:48:40,938 - INFO - Inicia backup - backuplocal
+2024-01-30 09:48:41,058 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:48:43,559 - INFO - criou arquivo compactado backup_2024_01_30_09_48_40_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:48:43,694 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:48:43,766 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:48:49,384 - INFO - Pega dados local - backuplocal
+2024-01-30 09:48:49,388 - INFO - Inicia backup - backuplocal
+2024-01-30 09:48:49,693 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:48:52,463 - INFO - criou arquivo compactado backup_2024_01_30_09_48_49_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:48:52,600 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:48:52,673 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:48:58,277 - INFO - Pega dados local - backuplocal
+2024-01-30 09:48:58,283 - INFO - Inicia backup - backuplocal
+2024-01-30 09:48:58,548 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:49:01,283 - INFO - criou arquivo compactado backup_2024_01_30_09_48_58_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:49:01,412 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:49:01,480 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:49:07,129 - INFO - Pega dados local - backuplocal
+2024-01-30 09:49:07,130 - INFO - Inicia backup - backuplocal
+2024-01-30 09:49:07,477 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:49:10,531 - INFO - criou arquivo compactado backup_2024_01_30_09_49_07_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:49:10,662 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:49:10,733 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:49:16,656 - INFO - Pega dados local - backuplocal
+2024-01-30 09:49:16,660 - INFO - Inicia backup - backuplocal
+2024-01-30 09:49:16,837 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:49:19,419 - INFO - criou arquivo compactado backup_2024_01_30_09_49_16_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:49:19,540 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:49:19,619 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:49:25,490 - INFO - Pega dados local - backuplocal
+2024-01-30 09:49:25,495 - INFO - Inicia backup - backuplocal
+2024-01-30 09:49:25,600 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:49:28,675 - INFO - criou arquivo compactado backup_2024_01_30_09_49_25_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:49:28,805 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:49:28,882 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:49:34,738 - INFO - Pega dados local - backuplocal
+2024-01-30 09:49:34,744 - INFO - Inicia backup - backuplocal
+2024-01-30 09:49:34,825 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:49:37,445 - INFO - criou arquivo compactado backup_2024_01_30_09_49_34_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:49:37,576 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:50:20,752 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:53:05,330 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 09:53:11,046 - INFO - Pega dados local - backuplocal
+2024-01-30 09:53:11,051 - INFO - Inicia backup - backuplocal
+2024-01-30 09:53:11,103 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:53:13,597 - INFO - criou arquivo compactado backup_2024_01_30_09_53_11_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:53:13,733 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:53:17,828 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:53:47,714 - INFO - Pega dados local - backuplocal
+2024-01-30 09:53:47,718 - INFO - Inicia backup - backuplocal
+2024-01-30 09:53:47,803 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:53:50,443 - INFO - criou arquivo compactado backup_2024_01_30_09_53_47_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:53:50,574 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:54:01,651 - INFO - 'int' object has no attribute 'close'
+2024-01-30 09:57:20,474 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 09:57:26,187 - INFO - Pega dados local - backuplocal
+2024-01-30 09:57:26,203 - INFO - Inicia backup - backuplocal
+2024-01-30 09:57:26,377 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:57:29,060 - INFO - criou arquivo compactado backup_2024_01_30_09_57_26_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:57:29,199 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:58:21,390 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 09:58:27,098 - INFO - Pega dados local - backuplocal
+2024-01-30 09:58:27,112 - INFO - Inicia backup - backuplocal
+2024-01-30 09:58:27,407 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:58:29,970 - INFO - criou arquivo compactado backup_2024_01_30_09_58_27_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:58:30,113 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:58:33,497 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:59:04,594 - INFO - Pega dados local - backuplocal
+2024-01-30 09:59:04,600 - INFO - Inicia backup - backuplocal
+2024-01-30 09:59:04,940 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:59:07,595 - INFO - criou arquivo compactado backup_2024_01_30_09_59_04_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:59:07,731 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:59:07,807 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:59:13,623 - INFO - Pega dados local - backuplocal
+2024-01-30 09:59:13,626 - INFO - Inicia backup - backuplocal
+2024-01-30 09:59:13,900 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:59:16,476 - INFO - criou arquivo compactado backup_2024_01_30_09_59_13_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:59:16,616 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:59:16,693 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:59:22,389 - INFO - Pega dados local - backuplocal
+2024-01-30 09:59:22,397 - INFO - Inicia backup - backuplocal
+2024-01-30 09:59:22,741 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 09:59:25,973 - INFO - criou arquivo compactado backup_2024_01_30_09_59_22_maxsuport.fdb.xz - backuplocal
+2024-01-30 09:59:26,109 - INFO - Executou update remoto - backuplocal
+2024-01-30 09:59:26,194 - INFO - cannot access local variable 'dbx' where it is not associated with a value
+2024-01-30 09:59:32,005 - INFO - Pega dados local - backuplocal
+2024-01-30 09:59:32,009 - INFO - Inicia backup - backuplocal
+2024-01-30 09:59:32,057 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:00:09,614 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 10:00:15,448 - INFO - Pega dados local - backuplocal
+2024-01-30 10:00:15,458 - INFO - Inicia backup - backuplocal
+2024-01-30 10:00:15,535 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:00:18,533 - INFO - criou arquivo compactado backup_2024_01_30_10_00_15_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:00:18,681 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:00:18,762 - INFO - name 'dbx' is not defined
+2024-01-30 10:00:24,801 - INFO - Pega dados local - backuplocal
+2024-01-30 10:00:24,805 - INFO - Inicia backup - backuplocal
+2024-01-30 10:00:24,841 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:00:27,257 - INFO - criou arquivo compactado backup_2024_01_30_10_00_24_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:00:27,387 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:00:27,466 - INFO - name 'dbx' is not defined
+2024-01-30 10:00:33,291 - INFO - Pega dados local - backuplocal
+2024-01-30 10:00:33,295 - INFO - Inicia backup - backuplocal
+2024-01-30 10:00:33,401 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:00:36,065 - INFO - criou arquivo compactado backup_2024_01_30_10_00_33_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:00:36,205 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:00:36,275 - INFO - name 'dbx' is not defined
+2024-01-30 10:00:41,907 - INFO - Pega dados local - backuplocal
+2024-01-30 10:00:41,916 - INFO - Inicia backup - backuplocal
+2024-01-30 10:00:41,973 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:00:44,615 - INFO - criou arquivo compactado backup_2024_01_30_10_00_41_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:00:44,748 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:01:18,682 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 10:01:24,478 - INFO - Pega dados local - backuplocal
+2024-01-30 10:01:24,480 - INFO - Inicia backup - backuplocal
+2024-01-30 10:01:24,518 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:01:27,208 - INFO - criou arquivo compactado backup_2024_01_30_10_01_24_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:01:27,340 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:01:30,572 - INFO - 'DropboxOAuth2FlowNoRedirect' object has no attribute 'obtain_access_token'
+2024-01-30 10:01:36,262 - INFO - Pega dados local - backuplocal
+2024-01-30 10:01:36,267 - INFO - Inicia backup - backuplocal
+2024-01-30 10:01:36,336 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:01:38,905 - INFO - criou arquivo compactado backup_2024_01_30_10_01_36_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:01:39,043 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:07:42,127 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 10:07:48,118 - INFO - Pega dados local - backuplocal
+2024-01-30 10:07:48,124 - INFO - Inicia backup - backuplocal
+2024-01-30 10:07:48,194 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:07:50,652 - INFO - criou arquivo compactado backup_2024_01_30_10_07_48_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:07:50,789 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:13:45,062 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 10:13:50,853 - INFO - Pega dados local - backuplocal
+2024-01-30 10:13:50,863 - INFO - Inicia backup - backuplocal
+2024-01-30 10:13:50,903 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:13:53,525 - INFO - criou arquivo compactado backup_2024_01_30_10_13_50_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:13:53,649 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:14:22,944 - INFO - OAuth2 access token or refresh token or app key/secret must be set
+2024-01-30 10:15:56,225 - INFO - Pega dados local - backuplocal
+2024-01-30 10:15:56,240 - INFO - Inicia backup - backuplocal
+2024-01-30 10:15:56,438 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:15:59,087 - INFO - criou arquivo compactado backup_2024_01_30_10_15_56_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:15:59,223 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:17:01,823 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 10:17:07,755 - INFO - Pega dados local - backuplocal
+2024-01-30 10:17:07,763 - INFO - Inicia backup - backuplocal
+2024-01-30 10:17:07,829 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 10:17:10,483 - INFO - criou arquivo compactado backup_2024_01_30_10_17_07_maxsuport.fdb.xz - backuplocal
+2024-01-30 10:17:10,618 - INFO - Executou update remoto - backuplocal
+2024-01-30 10:17:19,667 - INFO - BadInputError('3f6beff6c7dd40108b8118dacb75419d', 'Error in call to API function "files/upload": The given OAuth 2 access token is malformed.')
+2024-01-30 15:21:26,955 - INFO - Carrega configurações da thread - backuplocal
+2024-01-30 15:21:33,364 - INFO - Pega dados local - backuplocal
+2024-01-30 15:21:33,420 - INFO - Inicia backup - backuplocal
+2024-01-30 15:21:33,784 - INFO - Executou comando copy C:\MaxSuport\Dados\Dados.fdb C:\BackupMaxSuport\maxsuport\31486609000146 - backuplocal
+2024-01-30 15:21:36,474 - INFO - criou arquivo compactado backup_2024_01_30_15_21_33_maxsuport.fdb.xz - backuplocal
+2024-01-30 15:21:36,636 - INFO - Executou update remoto - backuplocal
+2024-01-30 15:22:07,020 - INFO - Arquivo C:\BackupMaxSuport/maxsuport/31486609000146/backup_2024_01_30_15_21_33_maxsuport.fdb.xz enviado para o Dropbox em /31486609000146/backup/maxsuport/backup_2024_01_30_15_21_33_maxsuport.fdb.xz - backuplocal
+2024-01-30 15:22:09,822 - INFO - Arquivo enviado com sucesso - backuplocal
+2024-01-30 15:22:32,464 - INFO - termina backup - backuplocal

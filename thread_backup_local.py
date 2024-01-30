@@ -1,5 +1,13 @@
 from funcoes import *
 
+try:
+    import dropbox
+    from dropbox.files import WriteMode
+    from dropbox.exceptions import AuthError
+except:
+    print('erro ao importar dropbox')
+
+
 # thread do backup
 class threadbackuplocal(threading.Thread):
     def __init__(self):
@@ -17,7 +25,7 @@ class threadbackuplocal(threading.Thread):
             if os.path.exists(path_config_thread):
                 with open(path_config_thread, 'r') as config_file:
                     config_thread = json.load(config_file)
-            intervalo = config_thread['time_thread_backuplocal']
+                    intervalo = config_thread['time_thread_backuplocal']
 
         while not self.event.wait(intervalo):
             try:
@@ -112,30 +120,19 @@ class threadbackuplocal(threading.Thread):
 
                             # Envia arquivo para servidor
                             # Configurações de conexão FTP
-                            hostname = 'maxsuport.vps-kinghost.net'
-                            username = 'dinheiro'
-                            password = 'MT49T3.6%B'
+                            # hostname = 'maxsuport.vps-kinghost.net'
+                            # username = 'dinheiro'
+                            # password = 'MT49T3.6%B'
 
                             pasta_sistema = 'gfil'
                             if sistema_em_uso == '1':  # maxsuport
                                 pasta_sistema = 'maxsuport'
 
-
-
                             # Caminho de destino no servidor FTP
                             # diretorio_remoto = f'/home/dinheiro/maxadmin/maxadmin/arquivos/{cnpj}/backup/{pasta_sistema}'
-                            diretorio_remoto = f'{cnpj}/backup/{pasta_sistema}'
-
+                            diretorio_remoto = f'/{cnpj}/backup/{pasta_sistema}'
 
                             try:
-                                import dropbox
-                                from dropbox.files import WriteMode
-
-                                # Substitua com suas próprias credenciais
-                                APP_KEY = 'pvj0rltelydr3z6'
-                                APP_SECRET = 'zm2xe1kbq3rnlnm'
-                                ACCESS_TOKEN = 'sl.BuQr6i7L86Kf_UJ99JrCKxasVjqPseFTAVtWcGm-bWJykYca2QUmCUnG73LnrDSVRQwiCxo4_ym8oGq3CdMvXFuYDUD1sAhc8or0HQObDlpreAecZ_SxvF2s3BV8OvP4bGx6oGVvVFn6dSjFvQ0jGK0'
-
                                 # Caminho local do arquivo que você deseja fazer upload
                                 arquivo_local = f'{caminho_arquivo_backup}/{nome_arquivo_compactado}'       
 
@@ -143,99 +140,120 @@ class threadbackuplocal(threading.Thread):
                                 arquivo_remoto = f'{diretorio_remoto}/{nome_arquivo_compactado}'
 
                                 # Configurar a autenticação com o Dropbox
-                                dbx = dropbox.Dropbox(ACCESS_TOKEN)
-
+                                obj_dropbox = dropbox.Dropbox(ACCESS_TOKEN_DROP_BOX)
+                
                                 # Fazer upload do arquivo
                                 with open(arquivo_local, 'rb') as arquivo:
-                                    dbx.files_upload(arquivo.read(), arquivo_remoto, mode=WriteMode('overwrite'))
+                                    obj_dropbox.files_upload(arquivo.read(), arquivo_remoto, mode=WriteMode('overwrite'))
 
-                                print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto} - backuplocal")
+                                print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto} - backuplocal")                                
+                                # # Cria uma instância do cliente FTP
+                                # cliente_ftp = FTP()
 
-                                # Cria uma instância do cliente FTP
-                                cliente_ftp = FTP()
+                                # # Conecta ao servidor FTP
+                                # cliente_ftp.connect(hostname)
+                                # cliente_ftp.login(username, password)
 
-                                # Conecta ao servidor FTP
-                                cliente_ftp.connect(hostname)
-                                cliente_ftp.login(username, password)
+                                # # Cria pastas nao existentes
+                                # cliente_ftp.cwd(
+                                #     '/home/dinheiro/maxadmin/maxadmin/arquivos/')
+                                # if not f'{cnpj}' in cliente_ftp.nlst():
+                                #     cliente_ftp.mkd(f'{cnpj}')
 
-                                # Cria pastas nao existentes
-                                cliente_ftp.cwd(
-                                    '/home/dinheiro/maxadmin/maxadmin/arquivos/')
-                                if not f'{cnpj}' in cliente_ftp.nlst():
-                                    cliente_ftp.mkd(f'{cnpj}')
+                                # cliente_ftp.cwd(
+                                #     f'/home/dinheiro/maxadmin/maxadmin/arquivos/{cnpj}/backup/')
+                                # if not f'{pasta_sistema}' in cliente_ftp.nlst():
+                                #     cliente_ftp.mkd(f'{pasta_sistema}')
 
-                                cliente_ftp.cwd(
-                                    f'/home/dinheiro/maxadmin/maxadmin/arquivos/{cnpj}/backup/')
-                                if not f'{pasta_sistema}' in cliente_ftp.nlst():
-                                    cliente_ftp.mkd(f'{pasta_sistema}')
+                                # # Entra no diretório remoto
+                                # cliente_ftp.cwd(diretorio_remoto)
 
-                                # Entra no diretório remoto
-                                cliente_ftp.cwd(diretorio_remoto)
-
-                                # Abre o arquivo local em modo de leitura binária
-                                with open(arquivo_local, 'rb') as arquivo:
-                                    # Envia o arquivo para o servidor remoto
-                                    cliente_ftp.storbinary(
-                                        f'STOR {nome_arquivo_compactado}', arquivo)
+                                # # Abre o arquivo local em modo de leitura binária
+                                # with open(arquivo_local, 'rb') as arquivo:
+                                #     # Envia o arquivo para o servidor remoto
+                                #     cliente_ftp.storbinary(
+                                #         f'STOR {nome_arquivo_compactado}', arquivo)
 
                                 print_log(
                                     'Arquivo enviado com sucesso - backuplocal')
 
-                                # Extensão dos arquivos que deseja excluir
-                                extensao = '.xz'
-                                num_arquivos_a_manter = int(timer_minutos_backup)
-                                # Lista todos os arquivos na pasta remota
 
-                                lista_arquivos = cliente_ftp.nlst()
+                                # Consultar a lista de arquivos na pasta remota
+                                try:
+                                    result = obj_dropbox.files_list_folder(diretorio_remoto)
+                                    arquivos_na_pasta = result.entries
+                                except dropbox.exceptions.ApiError as e:
+                                    print(f"Erro ao listar arquivos na pasta remota: {e}")
+                                    arquivos_na_pasta = []
 
-                                # Filtra os arquivos pela extensão desejada
-                                arquivos_filtrados = [
-                                    arquivo for arquivo in lista_arquivos if arquivo.endswith(extensao)]
-                                # Verifica se existem mais de max_arquivos arquivos
-                                if len(arquivos_filtrados) > num_arquivos_a_manter:
-                                    # Classifica os arquivos pela data de modificação
-                                    arquivos_filtrados.sort(
-                                        key=lambda arquivo: cliente_ftp.voidcmd('MDTM ' + arquivo)[4:])
+                                # Verificar se há mais de 30 arquivos e excluir o mais antigo se necessário
+                                if len(arquivos_na_pasta) > 30:
+                                    # Ordenar os arquivos pela data de modificação (o mais antigo primeiro)
+                                    arquivos_na_pasta.sort(key=lambda entry: entry.server_modified)
 
-                                    # Calcula o número de arquivos excedentes
-                                    num_arquivos_excedentes = len(
-                                        arquivos_filtrados) - num_arquivos_a_manter
+                                    # Excluir o arquivo mais antigo
+                                    try:
+                                        obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
+                                        print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.")
+                                    except dropbox.exceptions.ApiError as e:
+                                        print(f"Erro ao excluir o arquivo mais antigo: {e}")
 
-                                    # Remove os arquivos excedentes
-                                    arquivos_excedentes = arquivos_filtrados[:num_arquivos_excedentes]
-                                    for arquivo in arquivos_excedentes:
-                                        cliente_ftp.delete(arquivo)
-                                        print_log(
-                                            f"Arquivo excluído remoto: {arquivo}")
+                                # # Extensão dos arquivos que deseja excluir
+                                # extensao = '.xz'
+                                # num_arquivos_a_manter = int(timer_minutos_backup)
+                                # # Lista todos os arquivos na pasta remota
 
-                                # Lista todos os arquivos na pasta com a extensão desejada
-                                arquivos = glob.glob(os.path.join(
-                                    caminho_arquivo_backup, '*' + extensao))
+                                # lista_arquivos = cliente_ftp.nlst()
 
-                                # Ordena os arquivos pela data de modificação
-                                arquivos.sort(
-                                    key=lambda arquivo: os.path.getmtime(arquivo))
+                                # # Filtra os arquivos pela extensão desejada
+                                # arquivos_filtrados = [
+                                #     arquivo for arquivo in lista_arquivos if arquivo.endswith(extensao)]
+                                # # Verifica se existem mais de max_arquivos arquivos
+                                # if len(arquivos_filtrados) > num_arquivos_a_manter:
+                                #     # Classifica os arquivos pela data de modificação
+                                #     arquivos_filtrados.sort(
+                                #         key=lambda arquivo: cliente_ftp.voidcmd('MDTM ' + arquivo)[4:])
 
-                                # Verifica se existem mais de max_arquivos arquivos
-                                if len(arquivos) > num_arquivos_a_manter:
-                                    # Calcula o número de arquivos excedentes
-                                    num_arquivos_excedentes = len(
-                                        arquivos) - num_arquivos_a_manter
+                                #     # Calcula o número de arquivos excedentes
+                                #     num_arquivos_excedentes = len(
+                                #         arquivos_filtrados) - num_arquivos_a_manter
 
-                                    # Remove os arquivos excedentes
-                                    arquivos_excedentes = arquivos[:num_arquivos_excedentes]
-                                    for arquivo in arquivos_excedentes:
-                                        os.remove(arquivo)
-                                        print_log(
-                                            f"Arquivo excluído local: {arquivo}")
+                                #     # Remove os arquivos excedentes
+                                #     arquivos_excedentes = arquivos_filtrados[:num_arquivos_excedentes]
+                                #     for arquivo in arquivos_excedentes:
+                                #         cliente_ftp.delete(arquivo)
+                                #         print_log(
+                                #             f"Arquivo excluído remoto: {arquivo}")
+
+                                # # Lista todos os arquivos na pasta com a extensão desejada
+                                # arquivos = glob.glob(os.path.join(
+                                #     caminho_arquivo_backup, '*' + extensao))
+
+                                # # Ordena os arquivos pela data de modificação
+                                # arquivos.sort(
+                                #     key=lambda arquivo: os.path.getmtime(arquivo))
+
+                                # # Verifica se existem mais de max_arquivos arquivos
+                                # if len(arquivos) > num_arquivos_a_manter:
+                                #     # Calcula o número de arquivos excedentes
+                                #     num_arquivos_excedentes = len(
+                                #         arquivos) - num_arquivos_a_manter
+
+                                #     # Remove os arquivos excedentes
+                                #     arquivos_excedentes = arquivos[:num_arquivos_excedentes]
+                                #     for arquivo in arquivos_excedentes:
+                                #         os.remove(arquivo)
+                                #         print_log(
+                                #             f"Arquivo excluído local: {arquivo}")
 
                                 print_log('termina backup - backuplocal')
                             finally:
+                                print('')
                                 # Fecha a conexão FTP
-                                cliente_ftp.quit()
+                                obj_dropbox.close()
 
             except Exception as a:
                 # self.logger.error(f"{self._svc_name_} {a}.")
                 print_log(a)
 
-            time.sleep(intervalo)
+            #time.sleep(intervalo)

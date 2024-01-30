@@ -17,6 +17,7 @@ import fdb
 import psutil
 import inspect
 
+
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 # Configuração do logger
 # chamador = inspect.currentframe().f_back

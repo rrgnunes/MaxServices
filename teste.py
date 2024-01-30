@@ -1,5 +1,5 @@
-from thread_xml_contador import *
+from thread_backup_local import *
 
 
-oThreadXML = threadxmlcontador()
+oThreadXML = threadbackuplocal()
 oThreadXML.start()
