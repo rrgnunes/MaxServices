@@ -25,20 +25,15 @@ auth_code = input("Enter the authorization code here: ").strip()
 try:
     oauth_result = auth_flow3.finish(auth_code)
     print(oauth_result)
-    # authorization has all granted user scopes
-    assert 'account_info.read' in oauth_result.scope
-    assert 'files.metadata.read' in oauth_result.scope
-    assert 'files.content.read' in oauth_result.scope
-    assert 'files.content.write' in oauth_result.scope
-    print(oauth_result.scope)  # Printing for example
+    print("Successfully set up client!")
 except Exception as e:
     print('Error: %s' % (e,))
     exit(1)
 
-with dropbox.Dropbox(oauth2_access_token=oauth_result.access_token,
-                     oauth2_access_token_expiration=oauth_result.expires_at,
-                     oauth2_refresh_token=oauth_result.refresh_token,
-                     app_key=APP_KEY,
-                     app_secret=APP_SECRET) as dbx:
-    dbx.users_get_current_account()
-    print("Successfully set up client!")
+# with dropbox.Dropbox(oauth2_access_token=oauth_result.access_token,
+#                      oauth2_access_token_expiration=oauth_result.expires_at,
+#                      oauth2_refresh_token=oauth_result.refresh_token,
+#                      app_key=APP_KEY,
+#                      app_secret=APP_SECRET) as dbx:
+#     dbx.users_get_current_account()
+    
