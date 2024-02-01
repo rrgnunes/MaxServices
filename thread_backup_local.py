@@ -199,8 +199,8 @@ class threadbackuplocal(threading.Thread):
                                         print(f"Erro ao excluir o arquivo mais antigo: {e}")
 
                                 # # Extensão dos arquivos que deseja excluir
-                                # extensao = '.xz'
-                                # num_arquivos_a_manter = int(timer_minutos_backup)
+                                extensao = '.xz'
+                                num_arquivos_a_manter = int(timer_minutos_backup)
                                 # # Lista todos os arquivos na pasta remota
 
                                 # lista_arquivos = cliente_ftp.nlst()
@@ -225,26 +225,26 @@ class threadbackuplocal(threading.Thread):
                                 #         print_log(
                                 #             f"Arquivo excluído remoto: {arquivo}")
 
-                                # # Lista todos os arquivos na pasta com a extensão desejada
-                                # arquivos = glob.glob(os.path.join(
-                                #     caminho_arquivo_backup, '*' + extensao))
+                                # Lista todos os arquivos na pasta com a extensão desejada
+                                arquivos = glob.glob(os.path.join(
+                                    caminho_arquivo_backup, '*' + extensao))
 
-                                # # Ordena os arquivos pela data de modificação
-                                # arquivos.sort(
-                                #     key=lambda arquivo: os.path.getmtime(arquivo))
+                                # Ordena os arquivos pela data de modificação
+                                arquivos.sort(
+                                    key=lambda arquivo: os.path.getmtime(arquivo))
 
-                                # # Verifica se existem mais de max_arquivos arquivos
-                                # if len(arquivos) > num_arquivos_a_manter:
-                                #     # Calcula o número de arquivos excedentes
-                                #     num_arquivos_excedentes = len(
-                                #         arquivos) - num_arquivos_a_manter
+                                # Verifica se existem mais de max_arquivos arquivos
+                                if len(arquivos) > num_arquivos_a_manter:
+                                    # Calcula o número de arquivos excedentes
+                                    num_arquivos_excedentes = len(
+                                        arquivos) - num_arquivos_a_manter
 
-                                #     # Remove os arquivos excedentes
-                                #     arquivos_excedentes = arquivos[:num_arquivos_excedentes]
-                                #     for arquivo in arquivos_excedentes:
-                                #         os.remove(arquivo)
-                                #         print_log(
-                                #             f"Arquivo excluído local: {arquivo}")
+                                    # Remove os arquivos excedentes
+                                    arquivos_excedentes = arquivos[:num_arquivos_excedentes]
+                                    for arquivo in arquivos_excedentes:
+                                        os.remove(arquivo)
+                                        print_log(
+                                            f"Arquivo excluído local: {arquivo}")
 
                                 print_log('termina backup - backuplocal')
                             finally:
