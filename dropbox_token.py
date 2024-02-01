@@ -12,7 +12,7 @@ REFRESH_TOKEN = REFRESH_TOKEN_DROP_BOX
 
 auth_flow3 = DropboxOAuth2FlowNoRedirect(APP_KEY,
                                          consumer_secret=APP_SECRET,
-                                         token_access_type='offline',
+                                         token_access_type='legacy',
                                          scope=['files.content.read', 'files.content.write'],
                                          include_granted_scopes='user')
 
