@@ -177,7 +177,7 @@ class threadbackuplocal(threading.Thread):
                                 print_log(
                                     'Arquivo enviado com sucesso - backuplocal')
 
-
+                                num_arquivos_a_manter = int(timer_minutos_backup)
                                 # Consultar a lista de arquivos na pasta remota
                                 try:
                                     result = obj_dropbox.files_list_folder(diretorio_remoto)
@@ -187,7 +187,7 @@ class threadbackuplocal(threading.Thread):
                                     arquivos_na_pasta = []
 
                                 # Verificar se há mais de 30 arquivos e excluir o mais antigo se necessário
-                                if len(arquivos_na_pasta) > 30:
+                                if len(arquivos_na_pasta) > num_arquivos_a_manter:
                                     # Ordenar os arquivos pela data de modificação (o mais antigo primeiro)
                                     arquivos_na_pasta.sort(key=lambda entry: entry.server_modified)
 
@@ -200,7 +200,7 @@ class threadbackuplocal(threading.Thread):
 
                                 # # Extensão dos arquivos que deseja excluir
                                 extensao = '.xz'
-                                num_arquivos_a_manter = int(timer_minutos_backup)
+                                
                                 # # Lista todos os arquivos na pasta remota
 
                                 # lista_arquivos = cliente_ftp.nlst()
