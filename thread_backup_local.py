@@ -140,7 +140,36 @@ class threadbackuplocal(threading.Thread):
                                 arquivo_remoto = f'{diretorio_remoto}/{nome_arquivo_compactado}'
 
                                 # Configurar a autenticação com o Dropbox
-                                obj_dropbox = dropbox.Dropbox(ACCESS_TOKEN_DROP_BOX)
+                                # efetua refresh e tudo
+                                configuracao = select("select * from configuracao_configuracao")[0]
+                                ACCESS_TOKEN_DROP_BOX = configuracao['access_token_drop_box']
+                                REFRESH_TOKEN_DROP_BOX = configuracao['refresh_token_drop_box']
+                                APP_KEY_DROP_BOX = configuracao['app_key_drop_box']
+                                APP_SECRET_DROP_BOX = configuracao['app_secret_drop_box']
+                                data_agora = datetime.datetime.now()
+
+                                obj_dropbox = dropbox.Dropbox(oauth2_access_token=ACCESS_TOKEN_DROP_BOX,
+                                                              oauth2_refresh_token=REFRESH_TOKEN_DROP_BOX,
+                                                              app_key=APP_KEY_DROP_BOX,
+                                                              app_secret=APP_SECRET_DROP_BOX)
+                                obj_dropbox.check_and_refresh_access_token()
+                                sql = '''update configuracao_configuracao set access_token_drop_box = %s,
+                                                  refresh_token_drop_box = %s'''
+
+                                update(sql,(obj_dropbox._oauth2_access_token,
+                                            obj_dropbox._oauth2_refresh_token))
+
+
+                                # if (configuracao['expira_em'] - data_agora) < datetime.timedelta(minutes=2):
+                                #     obj_dropbox = dropbox.Dropbox(oauth2_refresh_token=configuracao['refresh_token_drop_box'], app_key=configuracao['app_key_drop_box'], app_secret=configuracao['app_secret_drop_box'])
+                                #     # Obtendo um novo token de acesso
+                                #     novo_access_token = obj_dropbox.auth_oauth2_token_from_refresh()
+                                #     ACCESS_TOKEN_DROP_BOX = novo_access_token
+                                #     sql = '''update configuracao_configuracao set access_token_drop_box = %s'''
+
+                                #     insert(sql,(novo_access_token))
+
+                                # obj_dropbox = dropbox.Dropbox(ACCESS_TOKEN_DROP_BOX)
                 
                                 # Fazer upload do arquivo
                                 with open(arquivo_local, 'rb') as arquivo:
@@ -247,8 +276,10 @@ class threadbackuplocal(threading.Thread):
                                             f"Arquivo excluído local: {arquivo}")
 
                                 print_log('termina backup - backuplocal')
+                            except Exception as e:
+                                print_log(e)
                             finally:
-                                print('')
+                                print_log('Finalizado - backuplocal')
                                 # Fecha a conexão FTP
                                 obj_dropbox.close()
 

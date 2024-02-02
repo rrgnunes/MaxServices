@@ -157,7 +157,7 @@ def update(sql_query, values):
 def select(sql_query, values=None):
     try:
         connection = get_db_connection()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
 
         if values:
             cursor.execute(sql_query, values)

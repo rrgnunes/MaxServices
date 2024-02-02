@@ -1165,3 +1165,425 @@
 2024-01-30 15:22:07,020 - INFO - Arquivo C:\BackupMaxSuport/maxsuport/31486609000146/backup_2024_01_30_15_21_33_maxsuport.fdb.xz enviado para o Dropbox em /31486609000146/backup/maxsuport/backup_2024_01_30_15_21_33_maxsuport.fdb.xz - backuplocal
 2024-01-30 15:22:09,822 - INFO - Arquivo enviado com sucesso - backuplocal
 2024-01-30 15:22:32,464 - INFO - termina backup - backuplocal
+2024-02-02 10:30:46,644 - INFO - Carrega configurações da thread - backuplocal
+2024-02-02 10:30:52,185 - INFO - Pega dados local - backuplocal
+2024-02-02 10:30:52,193 - INFO - Inicia backup - backuplocal
+2024-02-02 10:30:52,506 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 10:31:34,184 - INFO - criou arquivo compactado backup_2024_02_02_10_30_52_maxsuport.fdb.xz - backuplocal
+2024-02-02 10:31:34,315 - INFO - Executou update remoto - backuplocal
+2024-02-02 10:32:43,481 - INFO - Carrega configurações da thread - backuplocal
+2024-02-02 10:32:48,885 - INFO - Pega dados local - backuplocal
+2024-02-02 10:32:48,890 - INFO - Inicia backup - backuplocal
+2024-02-02 10:32:49,192 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 10:33:33,253 - INFO - criou arquivo compactado backup_2024_02_02_10_32_48_maxsuport.fdb.xz - backuplocal
+2024-02-02 10:33:33,334 - INFO - Executou update remoto - backuplocal
+2024-02-02 10:36:48,624 - INFO - Carrega configurações da thread - backuplocal
+2024-02-02 10:36:54,159 - INFO - Pega dados local - backuplocal
+2024-02-02 10:36:54,166 - INFO - Inicia backup - backuplocal
+2024-02-02 10:36:54,462 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 10:37:35,874 - INFO - criou arquivo compactado backup_2024_02_02_10_36_54_maxsuport.fdb.xz - backuplocal
+2024-02-02 10:37:35,977 - INFO - Executou update remoto - backuplocal
+2024-02-02 10:41:07,496 - INFO - Carrega configurações da thread - backuplocal
+2024-02-02 10:41:13,098 - INFO - Pega dados local - backuplocal
+2024-02-02 10:41:13,107 - INFO - Inicia backup - backuplocal
+2024-02-02 10:41:13,391 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 10:41:54,779 - INFO - criou arquivo compactado backup_2024_02_02_10_41_13_maxsuport.fdb.xz - backuplocal
+2024-02-02 10:41:54,881 - INFO - Executou update remoto - backuplocal
+2024-02-02 10:44:52,765 - INFO - Carrega configurações da thread - backuplocal
+2024-02-02 10:44:58,266 - INFO - Pega dados local - backuplocal
+2024-02-02 10:44:58,273 - INFO - Inicia backup - backuplocal
+2024-02-02 10:44:58,541 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 10:45:41,386 - INFO - criou arquivo compactado backup_2024_02_02_10_44_58_maxsuport.fdb.xz - backuplocal
+2024-02-02 10:45:41,488 - INFO - Executou update remoto - backuplocal
+2024-02-02 10:57:26,504 - INFO - Carrega configurações da thread - backuplocal
+2024-02-02 10:57:31,918 - INFO - Pega dados local - backuplocal
+2024-02-02 10:57:31,924 - INFO - Inicia backup - backuplocal
+2024-02-02 10:57:32,214 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 10:58:14,883 - INFO - criou arquivo compactado backup_2024_02_02_10_57_31_maxsuport.fdb.xz - backuplocal
+2024-02-02 10:58:15,239 - INFO - Executou update remoto - backuplocal
+2024-02-02 11:02:46,070 - INFO - Carrega configurações da thread - backuplocal
+2024-02-02 11:02:51,594 - INFO - Pega dados local - backuplocal
+2024-02-02 11:02:51,598 - INFO - Inicia backup - backuplocal
+2024-02-02 11:02:51,864 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 11:03:34,294 - INFO - criou arquivo compactado backup_2024_02_02_11_02_51_maxsuport.fdb.xz - backuplocal
+2024-02-02 11:03:34,399 - INFO - Executou update remoto - backuplocal
+2024-02-02 11:04:30,810 - INFO - Arquivo C:\BackupMaxSuport/maxsuport/19775656000104/backup_2024_02_02_11_02_51_maxsuport.fdb.xz enviado para o Dropbox em /19775656000104/backup/maxsuport/backup_2024_02_02_11_02_51_maxsuport.fdb.xz - backuplocal
+2024-02-02 11:04:30,816 - INFO - Arquivo enviado com sucesso - backuplocal
+2024-02-02 11:04:31,305 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_39_44_maxsuport.fdb.xz
+2024-02-02 11:04:31,312 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_40_42_maxsuport.fdb.xz
+2024-02-02 11:04:31,318 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_41_36_maxsuport.fdb.xz
+2024-02-02 11:04:31,323 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_42_30_maxsuport.fdb.xz
+2024-02-02 11:04:31,326 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_43_25_maxsuport.fdb.xz
+2024-02-02 11:04:31,334 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_44_32_maxsuport.fdb.xz
+2024-02-02 11:04:31,337 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_45_31_maxsuport.fdb.xz
+2024-02-02 11:04:31,349 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_46_25_maxsuport.fdb.xz
+2024-02-02 11:04:31,352 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_47_18_maxsuport.fdb.xz
+2024-02-02 11:04:31,358 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_48_12_maxsuport.fdb.xz
+2024-02-02 11:04:31,370 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_48_48_maxsuport.fdb.xz
+2024-02-02 11:04:31,379 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_48_54_maxsuport.fdb.xz
+2024-02-02 11:04:31,384 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_50_00_maxsuport.fdb.xz
+2024-02-02 11:04:31,387 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_51_14_maxsuport.fdb.xz
+2024-02-02 11:04:31,393 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_52_07_maxsuport.fdb.xz
+2024-02-02 11:04:31,400 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_53_03_maxsuport.fdb.xz
+2024-02-02 11:04:31,404 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_53_56_maxsuport.fdb.xz
+2024-02-02 11:04:31,414 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_54_54_maxsuport.fdb.xz
+2024-02-02 11:04:31,417 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_56_01_maxsuport.fdb.xz
+2024-02-02 11:04:31,419 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_57_08_maxsuport.fdb.xz
+2024-02-02 11:04:31,421 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_58_01_maxsuport.fdb.xz
+2024-02-02 11:04:31,430 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_59_01_maxsuport.fdb.xz
+2024-02-02 11:04:31,443 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_13_59_56_maxsuport.fdb.xz
+2024-02-02 11:04:31,463 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_00_49_maxsuport.fdb.xz
+2024-02-02 11:04:31,476 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_01_44_maxsuport.fdb.xz
+2024-02-02 11:04:31,483 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_02_38_maxsuport.fdb.xz
+2024-02-02 11:04:31,515 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_03_32_maxsuport.fdb.xz
+2024-02-02 11:04:31,518 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_04_25_maxsuport.fdb.xz
+2024-02-02 11:04:31,529 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_05_18_maxsuport.fdb.xz
+2024-02-02 11:04:31,533 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_06_11_maxsuport.fdb.xz
+2024-02-02 11:04:31,535 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_07_05_maxsuport.fdb.xz
+2024-02-02 11:04:31,539 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_07_57_maxsuport.fdb.xz
+2024-02-02 11:04:31,551 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_08_50_maxsuport.fdb.xz
+2024-02-02 11:04:31,554 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_10_03_maxsuport.fdb.xz
+2024-02-02 11:04:31,565 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_11_03_maxsuport.fdb.xz
+2024-02-02 11:04:31,571 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_11_57_maxsuport.fdb.xz
+2024-02-02 11:04:31,579 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_12_57_maxsuport.fdb.xz
+2024-02-02 11:04:31,582 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_14_05_maxsuport.fdb.xz
+2024-02-02 11:04:31,584 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_15_08_maxsuport.fdb.xz
+2024-02-02 11:04:31,587 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_16_15_maxsuport.fdb.xz
+2024-02-02 11:04:31,602 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_17_14_maxsuport.fdb.xz
+2024-02-02 11:04:31,605 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_18_09_maxsuport.fdb.xz
+2024-02-02 11:04:31,615 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_19_13_maxsuport.fdb.xz
+2024-02-02 11:04:31,619 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_20_08_maxsuport.fdb.xz
+2024-02-02 11:04:31,625 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_21_06_maxsuport.fdb.xz
+2024-02-02 11:04:31,630 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_22_05_maxsuport.fdb.xz
+2024-02-02 11:04:31,632 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_23_02_maxsuport.fdb.xz
+2024-02-02 11:04:31,634 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_23_54_maxsuport.fdb.xz
+2024-02-02 11:04:31,639 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_24_48_maxsuport.fdb.xz
+2024-02-02 11:04:31,646 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_25_43_maxsuport.fdb.xz
+2024-02-02 11:04:31,649 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_26_36_maxsuport.fdb.xz
+2024-02-02 11:04:31,651 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_27_30_maxsuport.fdb.xz
+2024-02-02 11:04:31,658 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_28_24_maxsuport.fdb.xz
+2024-02-02 11:04:31,665 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_29_17_maxsuport.fdb.xz
+2024-02-02 11:04:31,667 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_30_15_maxsuport.fdb.xz
+2024-02-02 11:04:31,669 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_31_11_maxsuport.fdb.xz
+2024-02-02 11:04:31,675 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_32_04_maxsuport.fdb.xz
+2024-02-02 11:04:31,679 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_33_02_maxsuport.fdb.xz
+2024-02-02 11:04:31,681 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_33_55_maxsuport.fdb.xz
+2024-02-02 11:04:31,684 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_34_51_maxsuport.fdb.xz
+2024-02-02 11:04:31,693 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_35_45_maxsuport.fdb.xz
+2024-02-02 11:04:31,698 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_36_50_maxsuport.fdb.xz
+2024-02-02 11:04:31,702 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_37_43_maxsuport.fdb.xz
+2024-02-02 11:04:31,710 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_38_37_maxsuport.fdb.xz
+2024-02-02 11:04:31,719 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_39_30_maxsuport.fdb.xz
+2024-02-02 11:04:31,729 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_40_33_maxsuport.fdb.xz
+2024-02-02 11:04:31,734 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_41_32_maxsuport.fdb.xz
+2024-02-02 11:04:31,741 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_42_27_maxsuport.fdb.xz
+2024-02-02 11:04:31,746 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_43_27_maxsuport.fdb.xz
+2024-02-02 11:04:31,749 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_44_22_maxsuport.fdb.xz
+2024-02-02 11:04:31,753 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_45_31_maxsuport.fdb.xz
+2024-02-02 11:04:31,763 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_46_25_maxsuport.fdb.xz
+2024-02-02 11:04:31,767 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_47_23_maxsuport.fdb.xz
+2024-02-02 11:04:31,774 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_48_19_maxsuport.fdb.xz
+2024-02-02 11:04:31,782 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_49_13_maxsuport.fdb.xz
+2024-02-02 11:04:31,786 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_49_31_maxsuport.fdb.xz
+2024-02-02 11:04:31,798 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_50_04_maxsuport.fdb.xz
+2024-02-02 11:04:31,802 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_50_59_maxsuport.fdb.xz
+2024-02-02 11:04:31,818 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_51_53_maxsuport.fdb.xz
+2024-02-02 11:04:31,822 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_52_45_maxsuport.fdb.xz
+2024-02-02 11:04:31,831 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_53_46_maxsuport.fdb.xz
+2024-02-02 11:04:31,835 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_55_02_maxsuport.fdb.xz
+2024-02-02 11:04:31,843 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_55_57_maxsuport.fdb.xz
+2024-02-02 11:04:31,847 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_57_09_maxsuport.fdb.xz
+2024-02-02 11:04:31,853 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_58_04_maxsuport.fdb.xz
+2024-02-02 11:04:31,860 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_14_59_03_maxsuport.fdb.xz
+2024-02-02 11:04:31,866 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_00_04_maxsuport.fdb.xz
+2024-02-02 11:04:31,877 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_01_02_maxsuport.fdb.xz
+2024-02-02 11:04:31,882 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_02_00_maxsuport.fdb.xz
+2024-02-02 11:04:31,885 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_03_00_maxsuport.fdb.xz
+2024-02-02 11:04:31,896 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_04_05_maxsuport.fdb.xz
+2024-02-02 11:04:31,900 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_05_11_maxsuport.fdb.xz
+2024-02-02 11:04:31,910 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_06_09_maxsuport.fdb.xz
+2024-02-02 11:04:31,914 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_07_03_maxsuport.fdb.xz
+2024-02-02 11:04:31,918 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_08_06_maxsuport.fdb.xz
+2024-02-02 11:04:31,926 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_09_23_maxsuport.fdb.xz
+2024-02-02 11:04:31,930 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_10_26_maxsuport.fdb.xz
+2024-02-02 11:04:31,933 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_11_32_maxsuport.fdb.xz
+2024-02-02 11:04:31,986 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_12_26_maxsuport.fdb.xz
+2024-02-02 11:04:31,990 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_13_28_maxsuport.fdb.xz
+2024-02-02 11:04:32,051 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_14_22_maxsuport.fdb.xz
+2024-02-02 11:04:32,062 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_15_32_maxsuport.fdb.xz
+2024-02-02 11:04:32,077 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_16_40_maxsuport.fdb.xz
+2024-02-02 11:04:32,135 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_17_39_maxsuport.fdb.xz
+2024-02-02 11:04:32,152 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_18_36_maxsuport.fdb.xz
+2024-02-02 11:04:32,159 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_19_37_maxsuport.fdb.xz
+2024-02-02 11:04:32,232 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_20_46_maxsuport.fdb.xz
+2024-02-02 11:04:32,309 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_26_51_maxsuport.fdb.xz
+2024-02-02 11:04:32,312 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_27_51_maxsuport.fdb.xz
+2024-02-02 11:04:32,358 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_29_14_maxsuport.fdb.xz
+2024-02-02 11:04:32,370 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_30_26_maxsuport.fdb.xz
+2024-02-02 11:04:32,424 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_31_34_maxsuport.fdb.xz
+2024-02-02 11:04:32,429 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_32_29_maxsuport.fdb.xz
+2024-02-02 11:04:32,446 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_33_24_maxsuport.fdb.xz
+2024-02-02 11:04:32,463 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_34_30_maxsuport.fdb.xz
+2024-02-02 11:04:32,481 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_35_42_maxsuport.fdb.xz
+2024-02-02 11:04:32,502 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_36_38_maxsuport.fdb.xz
+2024-02-02 11:04:32,513 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_37_33_maxsuport.fdb.xz
+2024-02-02 11:04:32,528 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_38_31_maxsuport.fdb.xz
+2024-02-02 11:04:32,545 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_39_54_maxsuport.fdb.xz
+2024-02-02 11:04:32,548 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_40_53_maxsuport.fdb.xz
+2024-02-02 11:04:32,552 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_41_48_maxsuport.fdb.xz
+2024-02-02 11:04:32,558 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_42_42_maxsuport.fdb.xz
+2024-02-02 11:04:32,561 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_43_42_maxsuport.fdb.xz
+2024-02-02 11:04:32,564 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_44_39_maxsuport.fdb.xz
+2024-02-02 11:04:32,567 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_45_34_maxsuport.fdb.xz
+2024-02-02 11:04:32,570 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_46_31_maxsuport.fdb.xz
+2024-02-02 11:04:32,573 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_47_30_maxsuport.fdb.xz
+2024-02-02 11:04:32,576 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_48_31_maxsuport.fdb.xz
+2024-02-02 11:04:32,579 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_49_28_maxsuport.fdb.xz
+2024-02-02 11:04:32,590 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_50_31_maxsuport.fdb.xz
+2024-02-02 11:04:32,594 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_51_30_maxsuport.fdb.xz
+2024-02-02 11:04:32,598 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_52_23_maxsuport.fdb.xz
+2024-02-02 11:04:32,602 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_53_19_maxsuport.fdb.xz
+2024-02-02 11:04:32,610 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_54_19_maxsuport.fdb.xz
+2024-02-02 11:04:32,622 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_55_29_maxsuport.fdb.xz
+2024-02-02 11:04:32,636 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_56_41_maxsuport.fdb.xz
+2024-02-02 11:04:32,646 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_57_30_maxsuport.fdb.xz
+2024-02-02 11:04:32,649 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_57_35_maxsuport.fdb.xz
+2024-02-02 11:04:32,653 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_58_34_maxsuport.fdb.xz
+2024-02-02 11:04:32,657 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_15_59_27_maxsuport.fdb.xz
+2024-02-02 11:04:32,663 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_00_35_maxsuport.fdb.xz
+2024-02-02 11:04:32,672 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_01_31_maxsuport.fdb.xz
+2024-02-02 11:04:32,684 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_03_13_maxsuport.fdb.xz
+2024-02-02 11:04:32,703 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_04_49_maxsuport.fdb.xz
+2024-02-02 11:04:32,729 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_06_25_maxsuport.fdb.xz
+2024-02-02 11:04:32,749 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_08_01_maxsuport.fdb.xz
+2024-02-02 11:04:32,795 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_09_39_maxsuport.fdb.xz
+2024-02-02 11:04:32,869 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_11_16_maxsuport.fdb.xz
+2024-02-02 11:04:32,883 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_12_53_maxsuport.fdb.xz
+2024-02-02 11:04:32,897 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_14_33_maxsuport.fdb.xz
+2024-02-02 11:04:32,912 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_16_12_maxsuport.fdb.xz
+2024-02-02 11:04:32,925 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_17_48_maxsuport.fdb.xz
+2024-02-02 11:04:32,932 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_19_26_maxsuport.fdb.xz
+2024-02-02 11:04:32,934 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_21_02_maxsuport.fdb.xz
+2024-02-02 11:04:32,946 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_22_39_maxsuport.fdb.xz
+2024-02-02 11:04:32,950 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_24_16_maxsuport.fdb.xz
+2024-02-02 11:04:32,952 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_25_53_maxsuport.fdb.xz
+2024-02-02 11:04:32,964 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_27_30_maxsuport.fdb.xz
+2024-02-02 11:04:32,966 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_29_07_maxsuport.fdb.xz
+2024-02-02 11:04:32,969 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_30_43_maxsuport.fdb.xz
+2024-02-02 11:04:32,979 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_32_20_maxsuport.fdb.xz
+2024-02-02 11:04:32,982 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_33_58_maxsuport.fdb.xz
+2024-02-02 11:04:32,984 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_35_35_maxsuport.fdb.xz
+2024-02-02 11:04:32,988 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_37_12_maxsuport.fdb.xz
+2024-02-02 11:04:32,998 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_38_21_maxsuport.fdb.xz
+2024-02-02 11:04:33,001 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_38_49_maxsuport.fdb.xz
+2024-02-02 11:04:33,030 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_40_27_maxsuport.fdb.xz
+2024-02-02 11:04:33,033 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_42_03_maxsuport.fdb.xz
+2024-02-02 11:04:33,036 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_43_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,045 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_45_17_maxsuport.fdb.xz
+2024-02-02 11:04:33,048 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_46_54_maxsuport.fdb.xz
+2024-02-02 11:04:33,052 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_48_31_maxsuport.fdb.xz
+2024-02-02 11:04:33,064 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_50_07_maxsuport.fdb.xz
+2024-02-02 11:04:33,067 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_51_43_maxsuport.fdb.xz
+2024-02-02 11:04:33,070 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_53_19_maxsuport.fdb.xz
+2024-02-02 11:04:33,078 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_54_57_maxsuport.fdb.xz
+2024-02-02 11:04:33,081 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_56_33_maxsuport.fdb.xz
+2024-02-02 11:04:33,084 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_58_10_maxsuport.fdb.xz
+2024-02-02 11:04:33,086 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_16_59_47_maxsuport.fdb.xz
+2024-02-02 11:04:33,092 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_01_25_maxsuport.fdb.xz
+2024-02-02 11:04:33,099 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_03_03_maxsuport.fdb.xz
+2024-02-02 11:04:33,101 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_04_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,109 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_06_17_maxsuport.fdb.xz
+2024-02-02 11:04:33,115 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_07_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,118 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_09_00_maxsuport.fdb.xz
+2024-02-02 11:04:33,128 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_09_34_maxsuport.fdb.xz
+2024-02-02 11:04:33,131 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_55_36_maxsuport.fdb.xz
+2024-02-02 11:04:33,135 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_56_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,137 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_58_19_maxsuport.fdb.xz
+2024-02-02 11:04:33,147 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_17_59_57_maxsuport.fdb.xz
+2024-02-02 11:04:33,149 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_01_35_maxsuport.fdb.xz
+2024-02-02 11:04:33,152 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_03_13_maxsuport.fdb.xz
+2024-02-02 11:04:33,159 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_04_49_maxsuport.fdb.xz
+2024-02-02 11:04:33,162 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_05_46_maxsuport.fdb.xz
+2024-02-02 11:04:33,165 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_06_47_maxsuport.fdb.xz
+2024-02-02 11:04:33,167 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_07_47_maxsuport.fdb.xz
+2024-02-02 11:04:33,171 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_08_43_maxsuport.fdb.xz
+2024-02-02 11:04:33,181 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_09_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,187 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_10_08_maxsuport.fdb.xz
+2024-02-02 11:04:33,198 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_10_30_maxsuport.fdb.xz
+2024-02-02 11:04:33,200 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_11_30_maxsuport.fdb.xz
+2024-02-02 11:04:33,203 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_12_37_maxsuport.fdb.xz
+2024-02-02 11:04:33,213 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_13_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,216 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_14_45_maxsuport.fdb.xz
+2024-02-02 11:04:33,219 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_15_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,231 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_17_21_maxsuport.fdb.xz
+2024-02-02 11:04:33,234 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_18_14_maxsuport.fdb.xz
+2024-02-02 11:04:33,245 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_19_17_maxsuport.fdb.xz
+2024-02-02 11:04:33,250 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_20_21_maxsuport.fdb.xz
+2024-02-02 11:04:33,259 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_21_19_maxsuport.fdb.xz
+2024-02-02 11:04:33,264 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_22_30_maxsuport.fdb.xz
+2024-02-02 11:04:33,267 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_23_25_maxsuport.fdb.xz
+2024-02-02 11:04:33,271 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_24_18_maxsuport.fdb.xz
+2024-02-02 11:04:33,281 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_25_26_maxsuport.fdb.xz
+2024-02-02 11:04:33,285 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_26_34_maxsuport.fdb.xz
+2024-02-02 11:04:33,295 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_27_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,299 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_28_34_maxsuport.fdb.xz
+2024-02-02 11:04:33,309 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_29_41_maxsuport.fdb.xz
+2024-02-02 11:04:33,316 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_30_35_maxsuport.fdb.xz
+2024-02-02 11:04:33,329 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_31_44_maxsuport.fdb.xz
+2024-02-02 11:04:33,336 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_33_07_maxsuport.fdb.xz
+2024-02-02 11:04:33,350 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_34_03_maxsuport.fdb.xz
+2024-02-02 11:04:33,365 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_34_56_maxsuport.fdb.xz
+2024-02-02 11:04:33,369 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_35_53_maxsuport.fdb.xz
+2024-02-02 11:04:33,381 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_36_48_maxsuport.fdb.xz
+2024-02-02 11:04:33,386 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_37_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,389 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_38_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,406 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_40_04_maxsuport.fdb.xz
+2024-02-02 11:04:33,412 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_40_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,415 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_41_10_maxsuport.fdb.xz
+2024-02-02 11:04:33,427 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_42_17_maxsuport.fdb.xz
+2024-02-02 11:04:33,431 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_43_28_maxsuport.fdb.xz
+2024-02-02 11:04:33,434 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_44_54_maxsuport.fdb.xz
+2024-02-02 11:04:33,443 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_45_49_maxsuport.fdb.xz
+2024-02-02 11:04:33,448 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_46_44_maxsuport.fdb.xz
+2024-02-02 11:04:33,452 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_47_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,462 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_48_39_maxsuport.fdb.xz
+2024-02-02 11:04:33,465 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_49_35_maxsuport.fdb.xz
+2024-02-02 11:04:33,468 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_50_29_maxsuport.fdb.xz
+2024-02-02 11:04:33,479 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_51_29_maxsuport.fdb.xz
+2024-02-02 11:04:33,481 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_52_21_maxsuport.fdb.xz
+2024-02-02 11:04:33,487 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_53_19_maxsuport.fdb.xz
+2024-02-02 11:04:33,497 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_54_26_maxsuport.fdb.xz
+2024-02-02 11:04:33,505 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_55_56_maxsuport.fdb.xz
+2024-02-02 11:04:33,510 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_57_03_maxsuport.fdb.xz
+2024-02-02 11:04:33,513 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_58_23_maxsuport.fdb.xz
+2024-02-02 11:04:33,519 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_18_59_20_maxsuport.fdb.xz
+2024-02-02 11:04:33,529 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_00_26_maxsuport.fdb.xz
+2024-02-02 11:04:33,533 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_01_24_maxsuport.fdb.xz
+2024-02-02 11:04:33,536 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_02_17_maxsuport.fdb.xz
+2024-02-02 11:04:33,546 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_03_43_maxsuport.fdb.xz
+2024-02-02 11:04:33,548 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_04_47_maxsuport.fdb.xz
+2024-02-02 11:04:33,552 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_05_54_maxsuport.fdb.xz
+2024-02-02 11:04:33,560 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_06_48_maxsuport.fdb.xz
+2024-02-02 11:04:33,564 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_07_44_maxsuport.fdb.xz
+2024-02-02 11:04:33,567 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_08_38_maxsuport.fdb.xz
+2024-02-02 11:04:33,569 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_09_34_maxsuport.fdb.xz
+2024-02-02 11:04:33,581 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_10_27_maxsuport.fdb.xz
+2024-02-02 11:04:33,583 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_11_40_maxsuport.fdb.xz
+2024-02-02 11:04:33,586 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_12_07_maxsuport.fdb.xz
+2024-02-02 11:04:33,598 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_12_59_maxsuport.fdb.xz
+2024-02-02 11:04:33,602 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_14_14_maxsuport.fdb.xz
+2024-02-02 11:04:33,613 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_15_23_maxsuport.fdb.xz
+2024-02-02 11:04:33,616 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_16_16_maxsuport.fdb.xz
+2024-02-02 11:04:33,624 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_17_32_maxsuport.fdb.xz
+2024-02-02 11:04:33,634 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_18_30_maxsuport.fdb.xz
+2024-02-02 11:04:33,644 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_19_35_maxsuport.fdb.xz
+2024-02-02 11:04:33,648 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_21_05_maxsuport.fdb.xz
+2024-02-02 11:04:33,653 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_22_11_maxsuport.fdb.xz
+2024-02-02 11:04:33,675 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_23_12_maxsuport.fdb.xz
+2024-02-02 11:04:33,679 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_24_05_maxsuport.fdb.xz
+2024-02-02 11:04:33,681 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_25_18_maxsuport.fdb.xz
+2024-02-02 11:04:33,683 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_26_29_maxsuport.fdb.xz
+2024-02-02 11:04:33,687 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_27_33_maxsuport.fdb.xz
+2024-02-02 11:04:33,698 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_28_42_maxsuport.fdb.xz
+2024-02-02 11:04:33,700 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_29_49_maxsuport.fdb.xz
+2024-02-02 11:04:33,703 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_30_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,711 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_31_52_maxsuport.fdb.xz
+2024-02-02 11:04:33,714 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_32_47_maxsuport.fdb.xz
+2024-02-02 11:04:33,716 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_33_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,730 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_34_48_maxsuport.fdb.xz
+2024-02-02 11:04:33,733 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_35_46_maxsuport.fdb.xz
+2024-02-02 11:04:33,736 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_36_38_maxsuport.fdb.xz
+2024-02-02 11:04:33,746 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_37_30_maxsuport.fdb.xz
+2024-02-02 11:04:33,749 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_38_44_maxsuport.fdb.xz
+2024-02-02 11:04:33,754 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_39_39_maxsuport.fdb.xz
+2024-02-02 11:04:33,778 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_40_46_maxsuport.fdb.xz
+2024-02-02 11:04:33,797 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_41_53_maxsuport.fdb.xz
+2024-02-02 11:04:33,801 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_42_08_maxsuport.fdb.xz
+2024-02-02 11:04:33,813 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_42_43_maxsuport.fdb.xz
+2024-02-02 11:04:33,816 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_43_52_maxsuport.fdb.xz
+2024-02-02 11:04:33,819 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_44_51_maxsuport.fdb.xz
+2024-02-02 11:04:33,834 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_45_44_maxsuport.fdb.xz
+2024-02-02 11:04:33,848 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_46_56_maxsuport.fdb.xz
+2024-02-02 11:04:33,852 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_48_16_maxsuport.fdb.xz
+2024-02-02 11:04:33,862 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_49_12_maxsuport.fdb.xz
+2024-02-02 11:04:33,865 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_50_08_maxsuport.fdb.xz
+2024-02-02 11:04:33,868 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_51_00_maxsuport.fdb.xz
+2024-02-02 11:04:33,870 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_52_22_maxsuport.fdb.xz
+2024-02-02 11:04:33,881 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_53_24_maxsuport.fdb.xz
+2024-02-02 11:04:33,883 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_54_31_maxsuport.fdb.xz
+2024-02-02 11:04:33,890 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_55_30_maxsuport.fdb.xz
+2024-02-02 11:04:33,898 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_56_37_maxsuport.fdb.xz
+2024-02-02 11:04:33,900 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_57_43_maxsuport.fdb.xz
+2024-02-02 11:04:33,903 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_58_49_maxsuport.fdb.xz
+2024-02-02 11:04:33,917 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_19_59_55_maxsuport.fdb.xz
+2024-02-02 11:04:33,919 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_01_02_maxsuport.fdb.xz
+2024-02-02 11:04:33,926 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_01_57_maxsuport.fdb.xz
+2024-02-02 11:04:33,931 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_02_53_maxsuport.fdb.xz
+2024-02-02 11:04:33,933 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_03_53_maxsuport.fdb.xz
+2024-02-02 11:04:33,936 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_04_49_maxsuport.fdb.xz
+2024-02-02 11:04:33,948 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_05_47_maxsuport.fdb.xz
+2024-02-02 11:04:33,951 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_06_44_maxsuport.fdb.xz
+2024-02-02 11:04:33,956 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_07_51_maxsuport.fdb.xz
+2024-02-02 11:04:33,963 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_08_46_maxsuport.fdb.xz
+2024-02-02 11:04:33,966 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_09_42_maxsuport.fdb.xz
+2024-02-02 11:04:33,977 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_10_37_maxsuport.fdb.xz
+2024-02-02 11:04:33,982 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_11_35_maxsuport.fdb.xz
+2024-02-02 11:04:33,995 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_12_43_maxsuport.fdb.xz
+2024-02-02 11:04:33,997 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_12_52_maxsuport.fdb.xz
+2024-02-02 11:04:34,001 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_13_44_maxsuport.fdb.xz
+2024-02-02 11:04:34,007 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_14_45_maxsuport.fdb.xz
+2024-02-02 11:04:34,013 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_15_44_maxsuport.fdb.xz
+2024-02-02 11:04:34,015 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_16_39_maxsuport.fdb.xz
+2024-02-02 11:04:34,018 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_17_34_maxsuport.fdb.xz
+2024-02-02 11:04:34,024 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_18_28_maxsuport.fdb.xz
+2024-02-02 11:04:34,029 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_19_25_maxsuport.fdb.xz
+2024-02-02 11:04:34,032 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_20_28_maxsuport.fdb.xz
+2024-02-02 11:04:34,035 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_21_21_maxsuport.fdb.xz
+2024-02-02 11:04:34,041 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_22_17_maxsuport.fdb.xz
+2024-02-02 11:04:34,046 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_23_10_maxsuport.fdb.xz
+2024-02-02 11:04:34,050 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_24_08_maxsuport.fdb.xz
+2024-02-02 11:04:34,059 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_25_18_maxsuport.fdb.xz
+2024-02-02 11:04:34,066 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_26_15_maxsuport.fdb.xz
+2024-02-02 11:04:34,069 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_27_26_maxsuport.fdb.xz
+2024-02-02 11:04:34,077 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_28_21_maxsuport.fdb.xz
+2024-02-02 11:04:34,081 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_29_23_maxsuport.fdb.xz
+2024-02-02 11:04:34,083 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_30_32_maxsuport.fdb.xz
+2024-02-02 11:04:34,096 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_31_28_maxsuport.fdb.xz
+2024-02-02 11:04:34,100 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_32_22_maxsuport.fdb.xz
+2024-02-02 11:04:34,112 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_33_21_maxsuport.fdb.xz
+2024-02-02 11:04:34,115 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_34_27_maxsuport.fdb.xz
+2024-02-02 11:04:34,118 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_35_27_maxsuport.fdb.xz
+2024-02-02 11:04:34,122 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_36_24_maxsuport.fdb.xz
+2024-02-02 11:04:34,135 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_37_31_maxsuport.fdb.xz
+2024-02-02 11:04:34,147 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_38_51_maxsuport.fdb.xz
+2024-02-02 11:04:34,151 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_39_52_maxsuport.fdb.xz
+2024-02-02 11:04:34,162 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_40_44_maxsuport.fdb.xz
+2024-02-02 11:04:34,167 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_41_45_maxsuport.fdb.xz
+2024-02-02 11:04:34,179 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_42_54_maxsuport.fdb.xz
+2024-02-02 11:04:34,183 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_43_54_maxsuport.fdb.xz
+2024-02-02 11:04:34,185 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_44_01_maxsuport.fdb.xz
+2024-02-02 11:04:34,199 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_44_47_maxsuport.fdb.xz
+2024-02-02 11:04:34,202 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_45_49_maxsuport.fdb.xz
+2024-02-02 11:04:34,209 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_46_50_maxsuport.fdb.xz
+2024-02-02 11:04:34,214 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_47_45_maxsuport.fdb.xz
+2024-02-02 11:04:34,216 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_48_40_maxsuport.fdb.xz
+2024-02-02 11:04:34,219 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_49_34_maxsuport.fdb.xz
+2024-02-02 11:04:34,232 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_50_41_maxsuport.fdb.xz
+2024-02-02 11:04:34,235 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_51_45_maxsuport.fdb.xz
+2024-02-02 11:04:34,249 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_52_51_maxsuport.fdb.xz
+2024-02-02 11:04:34,258 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_53_44_maxsuport.fdb.xz
+2024-02-02 11:04:34,263 - INFO - termina backup - backuplocal
+2024-02-02 11:04:34,266 - INFO - Finalizado - backuplocal
+2024-02-02 11:04:39,804 - INFO - Pega dados local - backuplocal
+2024-02-02 11:04:39,809 - INFO - Inicia backup - backuplocal
+2024-02-02 11:04:40,333 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal
+2024-02-02 11:05:22,264 - INFO - criou arquivo compactado backup_2024_02_02_11_04_39_maxsuport.fdb.xz - backuplocal
+2024-02-02 11:05:22,376 - INFO - Executou update remoto - backuplocal
+2024-02-02 11:05:29,685 - INFO - Arquivo C:\BackupMaxSuport/maxsuport/19775656000104/backup_2024_02_02_11_04_39_maxsuport.fdb.xz enviado para o Dropbox em /19775656000104/backup/maxsuport/backup_2024_02_02_11_04_39_maxsuport.fdb.xz - backuplocal
+2024-02-02 11:05:29,689 - INFO - Arquivo enviado com sucesso - backuplocal
+2024-02-02 11:05:30,085 - INFO - Arquivo excluído local: C:\BackupMaxSuport/maxsuport/19775656000104\backup_2024_02_01_20_54_38_maxsuport.fdb.xz
+2024-02-02 11:05:30,087 - INFO - termina backup - backuplocal
+2024-02-02 11:05:30,090 - INFO - Finalizado - backuplocal
+2024-02-02 11:05:35,572 - INFO - Pega dados local - backuplocal
+2024-02-02 11:05:35,578 - INFO - Inicia backup - backuplocal
+2024-02-02 11:05:35,893 - INFO - Executou comando copy C:\MaxSuport\Dados\DADOS.fdb C:\BackupMaxSuport\maxsuport\19775656000104 - backuplocal

@@ -11,9 +11,10 @@ import json
 ACCESS_TOKEN = ACCESS_TOKEN_DROP_BOX
 REFRESH_TOKEN = REFRESH_TOKEN_DROP_BOX
 
-result_dropbox = select("select * from configuracao_configuracao")
-APP_KEY = result_dropbox[0][1]
-APP_SECRET = result_dropbox[0][2]
+result_dropbox = select("select * from configuracao_configuracao")[0]
+APP_KEY = result_dropbox['app_key_drop_box']
+APP_SECRET = result_dropbox['app_secret_drop_box']
+ACCESS_TOKEN = result_dropbox['access_token_drop_box']
 
 auth_flow3 = DropboxOAuth2FlowNoRedirect(consumer_key=APP_KEY,
                                          consumer_secret=APP_SECRET,
@@ -29,9 +30,15 @@ auth_code = input("Cole o código aqui: ").strip()
 
 try:
     oauth_result = auth_flow3.finish(auth_code)
-    oauth_result_json = json.dumps(oauth_result, indent=2)
-    print(oauth_result_json)
+    
+    sql = '''update configuracao_configuracao set access_token_drop_box = %s,
+                                                  refresh_token_drop_box = %s,
+                                                  account_id_drop_box = %s,
+                                                  expira_em = %s,
+                                                  user_id_drop_box = %s'''
 
+    update(sql,(oauth_result.access_token,oauth_result.refresh_token,oauth_result.account_id,oauth_result.expires_at,oauth_result.user_id))
+    print("Tudo finalizado papito")
 except Exception as e:
     print(f"Erro durante a autenticação: {e}")
 
