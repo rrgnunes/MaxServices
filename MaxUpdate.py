@@ -58,15 +58,15 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                 #     print(a) 
                        
                 if producao == 0:
-                    SCRIPT_PATH_REMOTO = "http://maxsuport.com.br:81/static/hom_update/"
-                    SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/servico.py'
+                    SCRIPT_PATH_REMOTO = "http://maxsuport.com.br/static/hom_update/"
+                    SCRIPT_URL = 'http://maxsuport.com.br/static/hom_update/servico.py'
 
                 versao_online = 0
 
                 # Substitua pelo URL da página que deseja obter o conteúdo
-                url = "http://maxsuport.com.br:81/static/update/versao.txt"
+                url = "http://maxsuport.com.br/static/update/versao.txt"
                 if producao == 0:
-                    url = "http://maxsuport.com.br:81/static/hom_update/versao.txt"
+                    url = "http://maxsuport.com.br/static/hom_update/versao.txt"
 
                 # Faz a requisição GET para a página
                 response = requests.get(url, timeout=5)

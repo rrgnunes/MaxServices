@@ -38,7 +38,7 @@ def exibe_alerta(aviso):
     # Envia Alerta
     # Configurar as informações do servidor
     host = 'localhost'  # Endereço IP ou nome do host do servidor
-    port = 15001  # Porta do servidor
+    port = 3060  # Porta do servidor
 
     # Criar um objeto de socket
     client_socket = socket.socket(
@@ -64,7 +64,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
 
     #21:47
     MAXUPDATE = 'MaxUpdate'
-    SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/MaxUpdate.py'
+    SCRIPT_URL = 'https://maxsuport.com.br/static/update/MaxUpdate.py'
     SERVICE_PATH = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), 'MaxUpdate.py')
 
@@ -111,16 +111,17 @@ class MaxServices(win32serviceutil.ServiceFramework):
         self.ReportServiceStatus(win32service.SERVICE_RUNNING)
         while not self.stop:
             # Verifico se é produção ou homologação
-            producao = 0
+            producao = 1
 
-            path_config_thread = SCRIPT_PATH + "/config.json"
-            if os.path.exists(path_config_thread):
-                with open(path_config_thread, 'r') as config_file:
-                    config_thread = json.load(config_file)
-                    producao = config_thread['producao']
-
+            # path_config_thread = SCRIPT_PATH + "/config.json"
+            # if os.path.exists(path_config_thread):
+            #     with open(path_config_thread, 'r') as config_file:
+            #         config_thread = json.load(config_file)
+            #         producao = config_thread['producao']
+            
+            SCRIPT_URL = 'https://maxsuport.com.br/static/update/MaxUpdate.py'
             if producao == 0:
-                SCRIPT_URL = 'http://maxsuport.com.br:81/static/hom_update/MaxUpdate.py'
+                SCRIPT_URL = 'https://maxsuport.com.br/static/hom_update/MaxUpdate.py'
 
 
             try:
@@ -128,9 +129,9 @@ class MaxServices(win32serviceutil.ServiceFramework):
                 versao_online = 0
 
                 # Substitua pelo URL da página que deseja obter o conteúdo
-                url = "http://maxsuport.com.br:81/static/update/versaoupdate.txt"
+                url = "https://maxsuport.com.br/static/update/versaoupdate.txt"
                 if producao == 0:
-                    url = "http://maxsuport.com.br:81/static/hom_update/versaoupdate.txt"
+                    url = "https://maxsuport.com.br/static/hom_update/versaoupdate.txt"
 
                 # Faz a requisição GET para a página
                 response = requests.get(url, timeout=5)

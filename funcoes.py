@@ -179,4 +179,28 @@ def select(sql_query, values=None):
     finally:
         if connection.is_connected():
             cursor.close()
-            connection.close()            
+            connection.close()        
+            
+                
+def exibe_alerta(aviso):
+    # Envia Alerta
+    # Configurar as informações do servidor
+    host = 'localhost'  # Endereço IP ou nome do host do servidor
+    port = 3060  # Porta do servidor
+
+    # Criar um objeto de socket
+    client_socket = socket.socket(
+        socket.AF_INET, socket.SOCK_STREAM)
+
+    # Conectar ao servidor
+    client_socket.connect((host, port))
+    print_log(f"Conectado com o alerta - MaxServices")
+    # Envia comando
+    client_socket.send(aviso.encode('utf-8'))
+
+    # Receber a resposta do servidor
+    resposta = client_socket.recv(1024).decode('utf-8')
+    print_log(f"Resposta do servidor {resposta} - MaxServices")
+
+    # Fechar a conexão
+    client_socket.close()    

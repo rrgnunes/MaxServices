@@ -1,4 +1,5 @@
 from funcoes import *
+from servico import exibe_alerta
 
 # thread do alerta bloqueio
 class threadalertabloqueio(threading.Thread):
