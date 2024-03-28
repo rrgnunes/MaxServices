@@ -1,7 +1,8 @@
+from funcoes import print_log, criar_tarefa_minuto,create_task_from_xml, cria_tarefa_login,VerificaVersaoOnline
 try:
     import funcao_import_lib
 except Exception as a:
-    print(a)
+    print_log(a)
 import win32serviceutil
 import win32service
 import win32event
@@ -14,16 +15,18 @@ import requests
 import time
 import json
 
+import psutil
+import ctypes
+
 #21:44
 MAXSERVICES = 'MaxServices'
 SERVICE_NAME = 'MaxUpdate'
-SCRIPT_URL = 'http://maxsuport.com.br:81/static/update/servico.py'
-SCRIPT_PATH_REMOTO = 'http://maxsuport.com.br:81/static/update/'
+SCRIPT_URL = 'https://maxsuport.com.br/static/update/servico.py'
+SCRIPT_PATH_REMOTO = 'https://maxsuport.com.br/static/update/'
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 SERVICE_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'servico.py')
 SERVICE_DISPLAY_NAME = 'MaxUpdate'
-print(SERVICE_PATH)
 
 
 class MaxUpdate(win32serviceutil.ServiceFramework):
@@ -44,29 +47,12 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
     def SvcDoRun(self):
         while self._executar:
             try:
-                print('Bem... Vamos lá')
-
-                producao = 0
-
-                # try:
-                #     path_config_thread = SCRIPT_PATH + "/config.json"
-                #     if os.path.exists(path_config_thread):
-                #         with open(path_config_thread, 'r') as config_file:
-                #             config_thread = json.load(config_file)
-                #             producao = config_thread['producao']
-                # except Exception as a:
-                #     print(a) 
-                       
-                if producao == 0:
-                    SCRIPT_PATH_REMOTO = "http://maxsuport.com.br/static/hom_update/"
-                    SCRIPT_URL = 'http://maxsuport.com.br/static/hom_update/servico.py'
+                print_log('Bem... Vamos lá')
 
                 versao_online = 0
 
                 # Substitua pelo URL da página que deseja obter o conteúdo
-                url = "http://maxsuport.com.br/static/update/versao.txt"
-                if producao == 0:
-                    url = "http://maxsuport.com.br/static/hom_update/versao.txt"
+                url = "https://maxsuport.com.br/static/update/versao.txt"
 
                 # Faz a requisição GET para a página
                 response = requests.get(url, timeout=5)
@@ -75,64 +61,64 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                 if response.status_code == 200:
                     # Obtém o conteúdo da página como uma string
                     versao_online = int(response.text)
-                    print('Versão online ' + str(versao_online))
+                    print_log('Versão online ' + str(versao_online))
 
                 else:
-                    print("Erro ao obter o conteúdo da página:",
+                    print_log("Erro ao obter o conteúdo da página:",
                           response.status_code)
             except Exception as a:
-                print(a)
+                print_log(a)
 
             versao_local = 0
             try:
                 with open(SCRIPT_PATH + 'versao.txt', 'r') as arquivo:
                     versao_local = int(arquivo.read())
             except:
-                print('Arquivo da versão local não encontrado')
+                print_log('Arquivo da versão local não encontrado')
 
-            print('Versão local ' + str(versao_local))
+            print_log('Versão local ' + str(versao_local))
 
             if versao_online > versao_local:
-                print('Então vamos atualizar')
+                print_log('Então vamos atualizar')
                 try:
                     # Desativar o serviço
                     try:
                         win32serviceutil.StopService(MAXSERVICES)
-                        print('Serviço parado')
+                        print_log('Serviço parado')
                     except:
-                        print('Serviço nao encontrado')
+                        print_log('Serviço nao encontrado')
 
                     try:
                         win32serviceutil.RemoveService(MAXSERVICES)
-                        print('Serviço removido')
+                        print_log('Serviço removido')
                     except:
-                        print('Serviço nao removido')
+                        print_log('Serviço nao removido')
 
                     # Baixar o novo script
                     # fonte novo
                     lista_arquivos = ['servico.py','config.json','parametros.py','funcoes.py','thread_alerta_bloqueio.py',
                                       'thread_backup_local.py','thread_verifica_remoto.py','thread_xml_contador.py',
-                                      'funcao_import_lib.py']
+                                      'funcao_import_lib.py','Task.xml']
 
                     for arquivo in lista_arquivos:
                         urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, SCRIPT_PATH + arquivo)
-                        print('Download efetuado')
+                        print_log('Download efetuado do arquivo ' + arquivo)
 
                     # Instalar o novo serviço
                     try:
                         subprocess.call(
                             f'python "{SERVICE_PATH}" install', shell=True)
-                        print('Serviço instalado')
+                        print_log('Serviço instalado')
                     except:
-                        print('Serviço nao instalado')
+                        print_log('Serviço nao instalado')
 
                     # Iniciar o novo serviço
                     try:
                         subprocess.call(
                             f'python "{SERVICE_PATH}" start', shell=True)
-                        print('Serviço iniciado')
+                        print_log('Serviço iniciado')
                     except:
-                        print('Serviço nao iniciado')
+                        print_log('Serviço nao iniciado')
 
                     with open(SCRIPT_PATH + 'versao.txt', 'w') as arquivo:
                         arquivo.write(str(versao_online))
@@ -141,7 +127,7 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                                           servicemanager.PYS_SERVICE_STARTED,
                                           (SERVICE_DISPLAY_NAME, ''))
                 except Exception as e:
-                    print(e)
+                    print_log(e)
                     # Lidar com erros de download, atualização ou instalação
                     servicemanager.LogErrorMsg(
                         f"Erro: {str(e)}")
@@ -151,25 +137,92 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                     service_status = win32serviceutil.QueryServiceStatus(MAXSERVICES)[
                         1]
                     if service_status == win32service.SERVICE_RUNNING:
-                        print("Serviço está rodando")
+                        print_log("Serviço está rodando")
                     else:
                         # Iniciar o novo serviço
                         try:
                             subprocess.call(
                                 f'python "{SERVICE_PATH}" start', shell=True)
-                            print('Serviço iniciado')
+                            print_log('Serviço iniciado')
                         except:
-                            print('Serviço nao iniciado')
+                            print_log('Serviço nao iniciado')
                 except:
                     # Instalar o novo serviço
                     try:
                         subprocess.call(
                             f'python "{SERVICE_PATH}" install', shell=True)
-                        print('Serviço instalado')
+                        print_log('Serviço instalado')
                     except:
-                        print('Serviço nao instalado')
+                        print_log('Serviço nao instalado')
+
+            #Verifico a atualização do maxservices  
+            try:
+                versao_online = VerificaVersaoOnline('versaomaxservices')
+                versao_local = 0
+                try:
+                    with open(SCRIPT_PATH + 'versaomaxservices.txt', 'r') as arquivo:
+                        versao_local = int(arquivo.read())
+                except:
+                    print_log('Arquivo da versão maxservices local não encontrado')
+
+                if versao_online > versao_local:
+                    print_log('Então vamos atualizar o MaxServices')
+                    try:
+                        # Desativar o executavel
+                        try:
+                            win32serviceutil.StopService(MAXSERVICES)
+
+                            for proc in psutil.process_iter(['name', 'exe']):
+                                if 'MaxServices' in proc.info['name']:
+                                   proc.kill()
+                            print_log('Executavel parado')
+                        except:
+                            print_log('Executavel nao encontrado')
+
+                        # Baixar o novo executavel
+                        lista_arquivos = ['MaxServices.exe']
+
+                        SCRIPT_PATH_REMOTO = "https://maxsuport.com.br/static/update/"
+                        PASTA_MAXSUPORT = 'c:/maxsuport/'
+
+                        for arquivo in lista_arquivos:
+                            urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, PASTA_MAXSUPORT + arquivo)
+                            print_log(f'Download do MaxServices {SCRIPT_PATH_REMOTO}{arquivo}')
+                            print_log(f'Na Pasta {PASTA_MAXSUPORT}{arquivo}')
+                            print_log(f'Download do MaxServices efetuado')
+
+                        # Cria tarefas no agendador windows
+                        try:
+                            print_log('Criando tarefa MaxServices')
+
+                            #create_task_from_xml('MaxServices')
+                            criar_tarefa_minuto('MaxServices')
+
+                            print_log('Criado tarefa MaxServices')
+                        except Exception as e:
+                            print_log(e)
+
+                        with open(SCRIPT_PATH + 'versaomaxservices.txt', 'w') as arquivo:
+                            arquivo.write(str(versao_online))
+
+                        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
+                                            servicemanager.PYS_SERVICE_STARTED,
+                                            (SERVICE_DISPLAY_NAME, ''))
+                    except Exception as e:
+                        print_log(e)
+                        # Lidar com erros de download, atualização ou instalação
+                        servicemanager.LogErrorMsg(
+                            f"Erro: {str(e)}")
+                        
+            except Exception as e:
+                print_log(e)
+                # Lidar com erros de download, atualização ou instalação
+                servicemanager.LogErrorMsg(
+                    f"Erro: {str(e)}")
+
+
             # Aguardar antes de verificar novamente por atualizações
-            print('Agora vou dormir 10 segundos')
+            print_log('Agora vou dormir 10 segundos')
             time.sleep(10)
 
 

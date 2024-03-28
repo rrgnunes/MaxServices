@@ -110,6 +110,9 @@ class MaxServices(win32serviceutil.ServiceFramework):
         self.ReportServiceStatus(win32service.SERVICE_START_PENDING)
         self.ReportServiceStatus(win32service.SERVICE_RUNNING)
         while not self.stop:
+            # Verifico se é servidor ou estação
+
+
             # Verifico se é produção ou homologação
             producao = 1
 
@@ -120,9 +123,6 @@ class MaxServices(win32serviceutil.ServiceFramework):
             #         producao = config_thread['producao']
             
             SCRIPT_URL = 'https://maxsuport.com.br/static/update/MaxUpdate.py'
-            if producao == 0:
-                SCRIPT_URL = 'https://maxsuport.com.br/static/hom_update/MaxUpdate.py'
-
 
             try:
                 print_log('Bem... Vamos lá')
@@ -130,8 +130,6 @@ class MaxServices(win32serviceutil.ServiceFramework):
 
                 # Substitua pelo URL da página que deseja obter o conteúdo
                 url = "https://maxsuport.com.br/static/update/versaoupdate.txt"
-                if producao == 0:
-                    url = "https://maxsuport.com.br/static/hom_update/versaoupdate.txt"
 
                 # Faz a requisição GET para a página
                 response = requests.get(url, timeout=5)
@@ -262,11 +260,13 @@ class MaxServices(win32serviceutil.ServiceFramework):
         
             try:
                 print_log(f"pega dados local - MaxServices")
+
                 if os.path.exists("C:/Users/Public/config.json"):
                     with open('C:/Users/Public/config.json', 'r') as config_file:
                         config = json.load(config_file)
                     # Ler arquivo INI
                     # Acessar valor
+                        
                     for cnpj in config['sistema']:
                         parametros = config['sistema'][cnpj]
                         ativo = parametros['sistema_ativo']

@@ -14,10 +14,7 @@ class threadxmlcontador(threading.Thread):
         dias_busca_nota = -15
 
         while intervalo == -1:
-            path_config_thread = SCRIPT_PATH + "/config.json"
-            if os.path.exists(path_config_thread):
-                with open(path_config_thread, 'r') as config_file:
-                    config_thread = json.load(config_file)
+            config_thread = lerconfig()
             intervalo = config_thread['time_thread_xmlcontador']
             dias_busca_nota = config_thread['xml_contador_dias_busca_nota']
 
@@ -358,10 +355,12 @@ class threadxmlcontador(threading.Thread):
                                         SalvaNota(conMYSQL,numero,chave,tipo_nota,serie,data_nota,xml,xml_cancelamento,cliente_id,contador_id)
 
                                     conMYSQL.commit() 
-                time.sleep(intervalo)
+                
 
             except Exception as a:
                 # self.logger.error(f"{self._svc_name_} {a}.")
                 conMYSQL.rollback()
                 print_log(a)
+
+
 
