@@ -1,18 +1,18 @@
 import fdb
-from funcoes import threading,os,json,datetime, extrair_metadados,gerar_scripts_diferencas,executar_scripts_sql,print_log,check_atualizar
+from funcoes import threading,os,json,datetime, marca_banco_atualizado,extrair_metadados,gerar_scripts_diferencas,executar_scripts_sql,print_log,check_banco_atualizar
 
 
 
 # thread do backup
-class threadbackuplocal(threading.Thread):
+class threadatualizabanco(threading.Thread):
     def __init__(self):
         super().__init__()
         self.event = threading.Event()
 
     def run(self):
-        self.backup()
+        self.atualizabanco()
         
-    def backup(self):
+    def atualizabanco(self):
         while not self.event.wait(10):
             #carrega config
             if os.path.exists("C:/Users/Public/config.json"):
@@ -28,9 +28,11 @@ class threadbackuplocal(threading.Thread):
                     data_hora = datetime.datetime.now()
                     data_hora_formatada = data_hora.strftime(
                         '%Y_%m_%d_%H_%M_%S')
-                    if ativo == 1 and sistema_em_uso == 1:
+                    print_log('Vou validar para atualizar - Atualiza Banco')
+                    if ativo == 1 and sistema_em_uso == '1':
                         banco_sqlite = os.path.dirname(caminho_base_dados_maxsuport) + '/dados.db'
-                        if check_atualizar(banco_sqlite)['ATUALIZAR_BANCO']:
+                        print_log('Vou checar se é para atualizar - Atualiza Banco')
+                        if check_banco_atualizar() == 1:
                             # Parâmetros da conexão, incluindo a porta
                             server_origem = "177.153.69.3"
                             port_origem = 3050  # Substitua pelo número da porta real, se diferente
@@ -70,4 +72,6 @@ class threadbackuplocal(threading.Thread):
                             else:
                                 print_log("Todos os scripts foram executados com sucesso.")
 
-                            print_log('Finalizado')
+                            marca_banco_atualizado()
+                            print_log('Tabela atualizada')
+                            

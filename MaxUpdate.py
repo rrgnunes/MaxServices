@@ -1,4 +1,4 @@
-from funcoes import print_log, criar_tarefa_minuto,create_task_from_xml, cria_tarefa_login,VerificaVersaoOnline
+from funcoes import print_log, criar_tarefa_minuto,atualizar_versao_nova_exe, cria_tarefa_login,VerificaVersaoOnline,marca_versao_nova_exe
 try:
     import funcao_import_lib
 except Exception as a:
@@ -46,7 +46,9 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
 
     def SvcDoRun(self):
         while self._executar:
+            SCRIPT_PATH_REMOTO = "https://maxsuport.com.br/static/update/"
             try:
+                
                 print_log('Bem... Vamos lá')
 
                 versao_online = 0
@@ -98,7 +100,7 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                     # fonte novo
                     lista_arquivos = ['servico.py','config.json','parametros.py','funcoes.py','thread_alerta_bloqueio.py',
                                       'thread_backup_local.py','thread_verifica_remoto.py','thread_xml_contador.py',
-                                      'funcao_import_lib.py','Task.xml']
+                                      'funcao_import_lib.py','thread_atualiza_banco.py']
 
                     for arquivo in lista_arquivos:
                         urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, SCRIPT_PATH + arquivo)
@@ -166,53 +168,58 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                     print_log('Arquivo da versão maxservices local não encontrado')
 
                 if versao_online > versao_local:
-                    print_log('Então vamos atualizar o MaxServices')
-                    try:
-                        # Desativar o executavel
+                    print_log('Achei versão nova do executável')
+                    marca_versao_nova_exe()
+                    if atualizar_versao_nova_exe() == 1:
                         try:
-                            win32serviceutil.StopService(MAXSERVICES)
+                            # Desativar o executavel
+                            try:
+                                for proc in psutil.process_iter(['name', 'exe']):
+                                    if 'MaxServices' in proc.info['name']:
+                                        proc.kill()
+                                print_log('Executavel parado')
+                            except:
+                                print_log('Executavel nao encontrado')
 
-                            for proc in psutil.process_iter(['name', 'exe']):
-                                if 'MaxServices' in proc.info['name']:
-                                   proc.kill()
-                            print_log('Executavel parado')
-                        except:
-                            print_log('Executavel nao encontrado')
+                            # Baixar o novo executavel
+                            lista_arquivos = ['MaxServices.exe','dados.db']
 
-                        # Baixar o novo executavel
-                        lista_arquivos = ['MaxServices.exe']
+                            
+                            PASTA_MAXSUPORT = 'c:/maxsuport/'
 
-                        SCRIPT_PATH_REMOTO = "https://maxsuport.com.br/static/update/"
-                        PASTA_MAXSUPORT = 'c:/maxsuport/'
+                            for arquivo in lista_arquivos:
+                                if arquivo == 'dados.db':
+                                    if not os.path.isfile(PASTA_MAXSUPORT + 'dados/' + arquivo):
+                                        urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, PASTA_MAXSUPORT + 'dados/'+ arquivo)
+                                else:
+                                    urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, PASTA_MAXSUPORT + arquivo)
 
-                        for arquivo in lista_arquivos:
-                            urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, PASTA_MAXSUPORT + arquivo)
-                            print_log(f'Download do MaxServices {SCRIPT_PATH_REMOTO}{arquivo}')
-                            print_log(f'Na Pasta {PASTA_MAXSUPORT}{arquivo}')
-                            print_log(f'Download do MaxServices efetuado')
+                                print_log(f'Download do MaxServices {SCRIPT_PATH_REMOTO}{arquivo}')
+                                print_log(f'Na Pasta {PASTA_MAXSUPORT}{arquivo}')
+                                print_log(f'Download do MaxServices efetuado')
 
-                        # Cria tarefas no agendador windows
-                        try:
-                            print_log('Criando tarefa MaxServices')
+                            # Cria tarefas no agendador windows
+                            try:
+                                print_log('Criando tarefa MaxServices')
 
-                            #create_task_from_xml('MaxServices')
-                            criar_tarefa_minuto('MaxServices')
+                                #create_task_from_xml('MaxServices')
+                                criar_tarefa_minuto('MaxServices')
 
-                            print_log('Criado tarefa MaxServices')
+                                print_log('Criado tarefa MaxServices')
+                            except Exception as e:
+                                print_log(e)
+
+                            with open(SCRIPT_PATH + 'versaomaxservices.txt', 'w') as arquivo:
+                                arquivo.write(str(versao_online))
+
+                            servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
+                                                servicemanager.PYS_SERVICE_STARTED,
+                                                (SERVICE_DISPLAY_NAME, ''))
                         except Exception as e:
                             print_log(e)
-
-                        with open(SCRIPT_PATH + 'versaomaxservices.txt', 'w') as arquivo:
-                            arquivo.write(str(versao_online))
-
-                        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
-                                            servicemanager.PYS_SERVICE_STARTED,
-                                            (SERVICE_DISPLAY_NAME, ''))
-                    except Exception as e:
-                        print_log(e)
-                        # Lidar com erros de download, atualização ou instalação
-                        servicemanager.LogErrorMsg(
-                            f"Erro: {str(e)}")
+                            # Lidar com erros de download, atualização ou instalação
+                            servicemanager.LogErrorMsg(
+                                f"Erro: {str(e)}")
                         
             except Exception as e:
                 print_log(e)

@@ -3,8 +3,8 @@
 # oThreadXML = threadbackuplocal()
 # oThreadXML.start()
 
-from funcoes import check_atualizar
+from servico import exibe_alerta
 
-a = check_atualizar('c:/maxsuport/dados/dados.db')
+a = exibe_alerta('c:/maxsuport/dados/dados.db')
 
 a = ''

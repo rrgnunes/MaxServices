@@ -8,18 +8,19 @@ import json
 from logging.handlers import RotatingFileHandler
 import requests
 import urllib.request
-import win32event
 import time
 import subprocess
 import fdb
 import psutil
-import socket
+import ctypes
+from ctypes.wintypes import DWORD, LPWSTR, BOOL
 
 try:
     from thread_verifica_remoto import *
     from thread_backup_local import *
-    from thread_alerta_bloqueio import *
+    #from thread_alerta_bloqueio import *
     from thread_xml_contador import *
+    from thread_atualiza_banco import *
 except:
     print('Erro ao carregar import')
 
@@ -34,28 +35,10 @@ def print_log(texto):
     logger.info(texto)
     print(f'{texto} - {data_hora_formatada}')
 
-def exibe_alerta(aviso):
-    # Envia Alerta
-    # Configurar as informações do servidor
-    host = 'localhost'  # Endereço IP ou nome do host do servidor
-    port = 3060  # Porta do servidor
-
-    # Criar um objeto de socket
-    client_socket = socket.socket(
-        socket.AF_INET, socket.SOCK_STREAM)
-
-    # Conectar ao servidor
-    client_socket.connect((host, port))
-    print_log(f"Conectado com o alerta - MaxServices")
-    # Envia comando
-    client_socket.send(aviso.encode('utf-8'))
-
-    # Receber a resposta do servidor
-    resposta = client_socket.recv(1024).decode('utf-8')
-    print_log(f"Resposta do servidor {resposta} - MaxServices")
-
-    # Fechar a conexão
-    client_socket.close()    
+def exibe_alerta():
+    comando = f'start http://maxsuport.com.br/alerta.html'
+    # Executando o comando
+    subprocess.run(comando, shell=True)
 
 class MaxServices(win32serviceutil.ServiceFramework):
     _svc_name_ = "MaxServices"
@@ -89,8 +72,9 @@ class MaxServices(win32serviceutil.ServiceFramework):
         try:
             self.timer_thread_remoto = threadverificaremoto()
             self.timer_thread_backup = threadbackuplocal()  
-            self.timer_thread_alerta_bloqueio = threadalertabloqueio()
+            #self.timer_thread_alerta_bloqueio = threadalertabloqueio()
             self.timer_thread_xml_contador = threadxmlcontador()
+            self.timer_thread_atualiza_banco = threadatualizabanco()
         except Exception as a:
             print_log('Erro no init: não carregou as threads')
         self.stop = False
@@ -99,8 +83,9 @@ class MaxServices(win32serviceutil.ServiceFramework):
         try:
             self.timer_thread_remoto.event.set()
             self.timer_thread_backup.event.set()
-            self.timer_thread_alerta_bloqueio.event.set()
+            #self.timer_thread_alerta_bloqueio.event.set()
             self.timer_thread_xml_contador.event.set()
+            self.timer_thread_atualiza_banco.event.set()
         except Exception as a:
             print_log('Erro no stop: Não parou as threads ')        
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
@@ -246,20 +231,26 @@ class MaxServices(win32serviceutil.ServiceFramework):
             except Exception as a:
                 print_log(f'Erro no start do backup- {a}');        
 
-            print_log('Start no alerta de bloqueio')
-            try:
-                self.timer_thread_alerta_bloqueio.start()
-            except Exception as a:
-                print_log(f'Erro no start do alerta de bloqueio - {a}');        
+            # print_log('Start no alerta de bloqueio')
+            # try:
+            #     self.timer_thread_alerta_bloqueio.start()
+            # except Exception as a:
+            #     print_log(f'Erro no start do alerta de bloqueio - {a}');        
             
             print_log('Start no xml contador')
             try:
                 self.timer_thread_xml_contador.start()
             except Exception as a:
                 print_log(f'Erro no start do xml contador - {a}');
+            
+            print_log('Start no Atualiza Banco')
+            try:
+                self.timer_thread_atualiza_banco.start()
+            except Exception as a:
+                print_log(f'Erro no start do Atualiza Banco - {a}');            
         
             try:
-                print_log(f"pega dados local - MaxServices")
+                print_log(f"pega dados local - MaxServices") 
 
                 if os.path.exists("C:/Users/Public/config.json"):
                     with open('C:/Users/Public/config.json', 'r') as config_file:
@@ -294,8 +285,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
                                         proc.kill()
                                         print_log(
                                             f"Iniciar conexão com alerta - MaxServices")
-                                        exibe_alerta(
-                                            "1Sistema bloqueado por inadimplência de mensalidades.\nEntre em contato com o suporte!\n(66) 99926-4708\n(66) 99635-3159\n(66) 99935-3355\n-------------------------------\nAtenciosamente\nMax Suport Sistemas;")
+                                        exibe_alerta()
 
                         if sistema_em_uso == "1":
                             data_cripto = '80E854C4A6929988F97AE2'

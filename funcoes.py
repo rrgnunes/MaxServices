@@ -1,18 +1,10 @@
 import datetime
 import os
-import threading
-import time
 from parametros import *
 import mysql.connector
 import json
 import subprocess
-import lzma
-from ftplib import FTP
-import glob
 import socket
-import zlib
-import fdb
-import psutil
 import inspect
 import requests
 import win32com.client
@@ -31,8 +23,9 @@ DB_PASSWORD = PASSMYSQL
 DB_DATABASE = BASEMYSQL
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
+arquivo_db = 'c:/maxsuport/dados/dados.db'
 
-def consultar_sqlite(arquivo_db, consulta_sql):
+def consultar_sqlite(consulta_sql):
     """
     Conecta a um banco de dados SQLite, executa uma consulta SQL, e retorna os resultados como uma lista de dicionários.
     
@@ -47,22 +40,39 @@ def consultar_sqlite(arquivo_db, consulta_sql):
     cursor = conexao.cursor()
 
     try:
-        cursor.execute(consulta_sql)
-        # Recuperar os resultados usando um dicionário
-        resultados = [dict(linha) for linha in cursor.fetchall()]
-        return resultados
+        if 'select' in consulta_sql.lower():
+            cursor.execute(consulta_sql)
+            # Recuperar os resultados usando um dicionário
+            resultados = [dict(linha) for linha in cursor.fetchall()]
+            return resultados
+        else:
+            cursor.execute(consulta_sql)
+            conexao.commit()
+            return None
+        
     except sqlite3.Error as erro:
         print(f"Ocorreu um erro ao executar a consulta SQL: {erro}")
         return None
     finally:
         conexao.close()
 
-def check_atualizar(arquivo_db):
-    retorno = consultar_sqlite(arquivo_db,'select ATUALIZAR_BANCO from config')
+def check_banco_atualizar():
+    retorno = consultar_sqlite('select ATUALIZAR_BANCO from config')
     if retorno is not None:
-        retorno = retorno[0]
+        retorno = retorno[0]['ATUALIZAR_BANCO']
     return retorno
 
+def marca_banco_atualizado():
+    consultar_sqlite('UPDATE config set ATUALIZAR_BANCO = 0')
+
+def marca_versao_nova_exe():
+    consultar_sqlite('UPDATE config set VERSAO_NOVA = 1')  
+
+def atualizar_versao_nova_exe():
+    retorno = consultar_sqlite('select ATUALIZAR_SISTEMA from config')
+    if retorno is not None:
+        retorno = retorno[0]['ATUALIZAR_SISTEMA']
+    return retorno   
 
 
 def lerconfig():
