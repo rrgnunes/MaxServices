@@ -1,4 +1,4 @@
-from funcoes import print_log, criar_tarefa_minuto,atualizar_versao_nova_exe, cria_tarefa_login,VerificaVersaoOnline,marca_versao_nova_exe
+from funcoes import *
 try:
     import funcao_import_lib
 except Exception as a:
@@ -98,9 +98,9 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
 
                     # Baixar o novo script
                     # fonte novo
-                    lista_arquivos = ['servico.py','config.json','parametros.py','funcoes.py','thread_alerta_bloqueio.py',
+                    lista_arquivos = ['servico.py','config.json','parametros.py','funcoes.py',
                                       'thread_backup_local.py','thread_verifica_remoto.py','thread_xml_contador.py',
-                                      'funcao_import_lib.py','thread_atualiza_banco.py']
+                                      'funcao_import_lib.py','thread_atualiza_banco.py','thread_servidor_socket.py']
 
                     for arquivo in lista_arquivos:
                         urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, SCRIPT_PATH + arquivo)
@@ -175,14 +175,14 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                             # Desativar o executavel
                             try:
                                 for proc in psutil.process_iter(['name', 'exe']):
-                                    if 'MaxServices' in proc.info['name']:
+                                    if 'Retaguarda' in proc.info['name']:
                                         proc.kill()
                                 print_log('Executavel parado')
                             except:
                                 print_log('Executavel nao encontrado')
 
                             # Baixar o novo executavel
-                            lista_arquivos = ['MaxServices.exe','dados.db']
+                            lista_arquivos = ['Retaguarda.exe','dados.db']
 
                             
                             PASTA_MAXSUPORT = 'c:/maxsuport/'
@@ -200,12 +200,10 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
 
                             # Cria tarefas no agendador windows
                             try:
-                                print_log('Criando tarefa MaxServices')
+                                print_log('Versão atualizada com sucesso')
 
-                                #create_task_from_xml('MaxServices')
-                                criar_tarefa_minuto('MaxServices')
+                                marca_versao_atualizada()
 
-                                print_log('Criado tarefa MaxServices')
                             except Exception as e:
                                 print_log(e)
 
@@ -235,3 +233,4 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
 
 if __name__ == '__main__':
     win32serviceutil.HandleCommandLine(MaxUpdate)
+    

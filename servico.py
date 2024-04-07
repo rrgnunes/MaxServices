@@ -18,7 +18,7 @@ from ctypes.wintypes import DWORD, LPWSTR, BOOL
 try:
     from thread_verifica_remoto import *
     from thread_backup_local import *
-    #from thread_alerta_bloqueio import *
+    from thread_servidor_socket import *
     from thread_xml_contador import *
     from thread_atualiza_banco import *
 except:
@@ -72,7 +72,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
         try:
             self.timer_thread_remoto = threadverificaremoto()
             self.timer_thread_backup = threadbackuplocal()  
-            #self.timer_thread_alerta_bloqueio = threadalertabloqueio()
+            self.timer_thread_servidor_socket = threadservidorsocket()
             self.timer_thread_xml_contador = threadxmlcontador()
             self.timer_thread_atualiza_banco = threadatualizabanco()
         except Exception as a:
@@ -83,7 +83,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
         try:
             self.timer_thread_remoto.event.set()
             self.timer_thread_backup.event.set()
-            #self.timer_thread_alerta_bloqueio.event.set()
+            self.timer_thread_servidor_socket.event.set()
             self.timer_thread_xml_contador.event.set()
             self.timer_thread_atualiza_banco.event.set()
         except Exception as a:
@@ -248,6 +248,12 @@ class MaxServices(win32serviceutil.ServiceFramework):
                 self.timer_thread_atualiza_banco.start()
             except Exception as a:
                 print_log(f'Erro no start do Atualiza Banco - {a}');            
+            
+            print_log('Start no Servidor Socket')
+            try:
+                self.timer_thread_servidor_socket.start()
+            except Exception as a:
+                print_log(f'Erro no start do Servidor Socket - {a}');                 
         
             try:
                 print_log(f"pega dados local - MaxServices") 
@@ -292,6 +298,9 @@ class MaxServices(win32serviceutil.ServiceFramework):
                             if ativo == "1":
                                 data_cripto = '80E854C4A6929988F879E1'
                             try:
+                                path_dll = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
+                                fdb.load_api(path_dll)
+                                print_log(f'Carregando dll: {path_dll}')
                                 con = fdb.connect(
                                     host='localhost',
                                     database=caminho_base_dados_maxsuport,
@@ -319,7 +328,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
                                 print_log("Erro ao executar consulta:" + e)
             
             except Exception as a:
-                print_log(f"local valor {self._svc_name_} {a} - MaxServices")
+                print_log(f"Erro: {self._svc_name_} {a} - MaxServices")
 
 
                         # Aguardar antes de verificar novamente por atualizações

@@ -16,6 +16,9 @@ import ctypes
 import sys
 import sqlite3
 
+# Adiciono por causa dos outros forms
+import threading
+
 # Variáveis globais para os parâmetros do banco de dados
 DB_HOST = HOSTMYSQL
 DB_USER = USERMYSQL
@@ -25,36 +28,23 @@ DB_DATABASE = BASEMYSQL
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 arquivo_db = 'c:/maxsuport/dados/dados.db'
 
-def consultar_sqlite(consulta_sql):
-    """
-    Conecta a um banco de dados SQLite, executa uma consulta SQL, e retorna os resultados como uma lista de dicionários.
-    
-    :param arquivo_db: Caminho para o arquivo do banco de dados SQLite.
-    :param consulta_sql: String contendo a consulta SQL a ser executada.
-    :return: Resultados da consulta como uma lista de dicionários.
-    """
-    conexao = sqlite3.connect(arquivo_db)
-    # Configurar a conexão para retornar linhas como dicionários
-    conexao.row_factory = sqlite3.Row
-    
-    cursor = conexao.cursor()
-
+def consultar_sqlite(comando_sql):
+    db_path = arquivo_db  # Atualize com o caminho do seu banco de dados
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
     try:
-        if 'select' in consulta_sql.lower():
-            cursor.execute(consulta_sql)
-            # Recuperar os resultados usando um dicionário
-            resultados = [dict(linha) for linha in cursor.fetchall()]
-            return resultados
+        cursor.execute(comando_sql)
+        if comando_sql.strip().lower().startswith('select'):
+            colunas = [descricao[0] for descricao in cursor.description]
+            resultados = [dict(zip(colunas, row)) for row in cursor.fetchall()]
+            return {"sucesso": True, "dados": resultados}
         else:
-            cursor.execute(consulta_sql)
-            conexao.commit()
-            return None
-        
-    except sqlite3.Error as erro:
-        print(f"Ocorreu um erro ao executar a consulta SQL: {erro}")
-        return None
+            conn.commit()
+            return {"sucesso": True, "mensagem": "Comando executado com sucesso."}
+    except Exception as e:
+        return {"sucesso": False, "erro": str(e)}
     finally:
-        conexao.close()
+        conn.close()
 
 def check_banco_atualizar():
     retorno = consultar_sqlite('select ATUALIZAR_BANCO from config')
@@ -74,6 +64,8 @@ def atualizar_versao_nova_exe():
         retorno = retorno[0]['ATUALIZAR_SISTEMA']
     return retorno   
 
+def marca_versao_atualizada():
+    consultar_sqlite('UPDATE config set ATUALIZAR_SISTEMA = 0')
 
 def lerconfig():
     path_config_thread = SCRIPT_PATH + "/config.json"
