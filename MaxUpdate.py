@@ -100,7 +100,8 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                     # fonte novo
                     lista_arquivos = ['servico.py','config.json','parametros.py','funcoes.py',
                                       'thread_backup_local.py','thread_verifica_remoto.py','thread_xml_contador.py',
-                                      'funcao_import_lib.py','thread_atualiza_banco.py','thread_servidor_socket.py']
+                                      'funcao_import_lib.py','thread_atualiza_banco.py','thread_servidor_socket.py',
+                                      'funcoes_zap.py','thread_zap_automato.py']
 
                     for arquivo in lista_arquivos:
                         urllib.request.urlretrieve(SCRIPT_PATH_REMOTO + arquivo, SCRIPT_PATH + arquivo)
@@ -159,13 +160,13 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
 
             #Verifico a atualização do maxservices  
             try:
-                versao_online = VerificaVersaoOnline('versaomaxservices')
+                versao_online = VerificaVersaoOnline('versaosistema')
                 versao_local = 0
                 try:
-                    with open(SCRIPT_PATH + 'versaomaxservices.txt', 'r') as arquivo:
+                    with open(SCRIPT_PATH + 'versaosistema.txt', 'r') as arquivo:
                         versao_local = int(arquivo.read())
                 except:
-                    print_log('Arquivo da versão maxservices local não encontrado')
+                    print_log('Arquivo da versão sistema local não encontrado')
 
                 if versao_online > versao_local:
                     print_log('Achei versão nova do executável')

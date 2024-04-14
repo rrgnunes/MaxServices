@@ -17,3 +17,4 @@ def instalar_biblioteca(biblioteca):
 # Exemplo de uso
 biblioteca_desejada = "dropbox"
 instalar_biblioteca(biblioteca_desejada)
+instalar_biblioteca('Pillow')

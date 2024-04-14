@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 import ctypes
 import sys
 import sqlite3
+from funcoes_zap import *
 
 # Adiciono por causa dos outros forms
 import threading
@@ -198,7 +199,6 @@ def select(sql_query, values=None):
             cursor.close()
             connection.close()        
 
-
 def exibe_alerta(aviso):
     # Envia Alerta
     # Configurar as informações do servidor
@@ -221,7 +221,6 @@ def exibe_alerta(aviso):
 
     # Fechar a conexão
     client_socket.close()    
-
 
 def VerificaVersaoOnline(arquivo_versao):
     versao_online = 0
@@ -392,35 +391,33 @@ def create_task_from_xml(task_name):
     return result.stdout, result.stderr        
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
-    """Escreve uma mensagem de log em um arquivo sem exceder o tamanho máximo especificado, incluindo detalhes adicionais.
-    
-    Args:
-        mensagem (str): Mensagem a ser logada.
-        caminho_log (str): Caminho do arquivo de log.
-        max_tamanho (int): Tamanho máximo do arquivo de log em bytes. Padrão é 1MB.
-    """
-    caminho_log = f'{SCRIPT_PATH}/{caminho_log}'
-    # Obtém a data e hora atual
-    agora = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    caminho_completo_log = os.path.join(SCRIPT_PATH, caminho_log)
+    agora = datetime.datetime.now()
+    timestamp_formatado = agora.strftime('%Y-%m-%d %H:%M:%S')
+    timestamp_para_arquivo = agora.strftime('%Y%m%d_%H%M%S')
 
-    # Obtém o nome da função que chamou escrever_log
     nome_funcao = inspect.stack()[1][3]
-
-    # Obtém o nome do script
     nome_script = os.path.basename(inspect.stack()[1].filename)
 
-    # Monta a mensagem de log com as informações adicionais
-    mensagem_log = f"{agora} - {nome_script} - {nome_funcao} - {mensagem}"
+    mensagem_log = f"{timestamp_formatado} - {nome_script} - {nome_funcao} - {mensagem}"
     print(mensagem_log)
 
-    # Verifica se o arquivo de log existe e se excede o tamanho máximo
-    if Path(caminho_log).exists() and os.path.getsize(caminho_log) >= max_tamanho:
-        # Arquiva o log atual e cria um novo
-        os.rename(caminho_log, f"{caminho_log}.old")
-    
-    # Escreve a mensagem no arquivo de log
-    with open(caminho_log, 'a') as arquivo_log:
+    if os.path.exists(caminho_completo_log) and os.path.getsize(caminho_completo_log) >= max_tamanho:
+        novo_nome_arquivo = f"{caminho_completo_log}.{timestamp_para_arquivo}.old"
+        os.rename(caminho_completo_log, novo_nome_arquivo)
+
+    with open(caminho_completo_log, 'a') as arquivo_log:
         arquivo_log.write(mensagem_log + '\n')
+
+    # Ajustando para usar apenas o nome do arquivo no padrão glob
+    padrao_arquivos_old = f"{os.path.basename(caminho_log)}.*.old"
+    caminho_pasta_log = os.path.dirname(caminho_completo_log)
+    arquivos_old = list(Path(caminho_pasta_log).glob(padrao_arquivos_old))
+    arquivos_old.sort(key=os.path.getmtime)
+
+    # Exclui arquivos, mantendo apenas os 5 mais recentes
+    for arquivo in arquivos_old[:-5]:
+        os.remove(arquivo)
 
 def extrair_metadados(conexao):
     cursor = conexao.cursor()
@@ -510,6 +507,7 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
     return scripts_sql
 
 def executar_scripts_sql(conexao, scripts_sql):
+
     erros = []  # Lista para armazenar os erros
 
     for script in scripts_sql:
@@ -523,3 +521,132 @@ def executar_scripts_sql(conexao, scripts_sql):
             erros.append({'script': script, 'erro': str(e)})
     
     return erros   
+
+def config_zap(conexao):
+    cursor = conexao.cursor()
+
+    cursor.execute("""
+        SELECT ENVIAR_MENSAGEM_ANIVERSARIO,ENVIAR_MENSAGEM_PROMOCAO, 
+            ENVIAR_MENSAGEM_DIARIO,MENSAGEM_ANIVERSARIO,
+            MENSAGEM_PROMOCAO,MENSAGEM_DIARIO,DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA,    
+            ULTIMO_ENVIO_ANIVERSARIO,ULTIMO_ENVIO_DIARIO,ULTIMO_ENVIO_PROMOCAO
+        FROM CONFIG P
+    """)
+    # Obtém os nomes das colunas
+    colunas = [coluna[0] for coluna in cursor.description]
+
+    # Constrói uma lista de dicionários, onde cada dicionário representa uma linha
+    resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+
+    return resultados_em_dicionario[0]
+
+def retorna_pessoas(conexao):
+    cursor = conexao.cursor()
+    cursor.execute("""
+        SELECT CODIGO,FANTASIA,CELULAR1,ANO_ENVIO_MENSAGEM_ANIVERSARIO FROM PESSOA P 
+        WHERE P.CLI = 'S' AND P.ATIVO = 'S'
+            AND P.CELULAR1 <> ''''  
+            AND EXTRACT(MONTH FROM P.DT_NASC) = EXTRACT(MONTH FROM CURRENT_DATE)
+            AND EXTRACT(DAY FROM P.DT_NASC) = EXTRACT(DAY FROM CURRENT_DATE)
+    """)
+    # Obtém os nomes das colunas
+    colunas = [coluna[0] for coluna in cursor.description]
+
+    a = cursor.fetchall()
+
+    # Constrói uma lista de dicionários, onde cada dicionário representa uma linha
+    resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in a]
+
+    return resultados_em_dicionario
+
+def insere_mensagem_zap(conexao, mensagem, numero):
+    # Parâmetros a serem inseridos
+    codigo = numerador(conexao,'MENSAGEM_ZAP','CODIGO','N','','')
+    data_hora_atual = datetime.datetime.now()
+    data_str = data_hora_atual.strftime('%Y-%m-%d')
+    hora_str = data_hora_atual.strftime('%H:%M:%S')
+    fone = numero[0:2] + numero[3:]  # Substitua pelo número de telefone
+    status = 'PENDENTE'  # Exemplo de status
+
+    cursor = conexao.cursor()
+    cursor.execute("""
+                    
+                        INSERT INTO MENSAGEM_ZAP
+                        (CODIGO, "DATA", MENSAGEM, FONE, STATUS, HORA)
+                        VALUES(?, ?, ?, ?, ?, ?);
+                    
+                    """, (codigo, data_str, mensagem, fone, status, hora_str))
+
+    # Confirmando a inserção
+    conexao.commit()
+
+def numerador(conexao, tabela, campo, filtra, where, valor):
+    resultado = 0
+    cursor = conexao.cursor()
+    if filtra == 'N':
+        cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela}")
+    elif filtra == 'S':
+        cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela} WHERE {where} = {valor}")
+    # Obtém os nomes das colunas
+    colunas = [coluna[0] for coluna in cursor.description]
+    # Constrói uma lista de dicionários, onde cada dicionário representa uma linha
+    resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+    if resultados_em_dicionario != None:
+        resultado = resultados_em_dicionario[0]['MAIOR'] + 1
+    return resultado
+
+def atualiza_ano_cliente(conexao, codigo, ano):
+    cursor = conexao.cursor()
+    cursor.execute("""
+                        UPDATE PESSOA
+                        SET ANO_ENVIO_MENSAGEM_ANIVERSARIO = ?
+                        WHERE CODIGO = ?;
+                    """, (ano,codigo))
+
+    # Confirmando a inserção
+    conexao.commit()
+
+def atualiza_mensagem(conexao, codigo, status):
+    cursor = conexao.cursor()
+    cursor.execute("""
+                        UPDATE MENSAGEM_ZAP
+                        SET STATUS = ?
+                        WHERE CODIGO = ?;
+                    """, (status,codigo))
+
+    # Confirmando a inserção
+    conexao.commit()
+
+def envia_mensagem(conexao,session):
+    cursor = conexao.cursor()
+    cursor.execute("""
+        SELECT CODIGO, MENSAGEM, FONE, STATUS FROM MENSAGEM_ZAP WHERE STATUS = 'PENDENTE'
+    """)
+    # Obtém os nomes das colunas
+    colunas = [coluna[0] for coluna in cursor.description]
+
+    a = cursor.fetchall()
+
+    
+    # Constrói uma lista de dicionários, onde cada dicionário representa uma linha
+    resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in a]
+    name_session = session
+
+    #nomeie antes a sessão para fechar depois
+    #name_session = 'Gessica'
+
+    if parametros.TOKEN_ZAP == '':
+        token_gerado = generate_token(name_session)
+        parametros.TOKEN_ZAP = token_gerado['token']
+
+    # Feche depois do token
+    
+    #close_zap(name_session)
+
+    retorno = start_session(name_session)
+    gera_qrcode(str(retorno['qrcode']).split(',')[1])
+    retorno = status_session(name_session)
+
+    for resultado in resultados_em_dicionario:
+        if envia_mensagem_zap(session, resultado['FONE'], resultado['MENSAGEM']):
+            atualiza_mensagem(conexao, resultado['CODIGO'], 'ENVIADA')

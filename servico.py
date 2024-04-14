@@ -21,6 +21,7 @@ try:
     from thread_servidor_socket import *
     from thread_xml_contador import *
     from thread_atualiza_banco import *
+    from thread_zap_automato import *
 except:
     print('Erro ao carregar import')
 
@@ -75,6 +76,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
             self.timer_thread_servidor_socket = threadservidorsocket()
             self.timer_thread_xml_contador = threadxmlcontador()
             self.timer_thread_atualiza_banco = threadatualizabanco()
+            self.timer_thread_zap_automato= threadzapautomato()
         except Exception as a:
             print_log('Erro no init: não carregou as threads')
         self.stop = False
@@ -86,6 +88,7 @@ class MaxServices(win32serviceutil.ServiceFramework):
             self.timer_thread_servidor_socket.event.set()
             self.timer_thread_xml_contador.event.set()
             self.timer_thread_atualiza_banco.event.set()
+            self.timer_thread_zap_automato.event.set()
         except Exception as a:
             print_log('Erro no stop: Não parou as threads ')        
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
@@ -253,7 +256,13 @@ class MaxServices(win32serviceutil.ServiceFramework):
             try:
                 self.timer_thread_servidor_socket.start()
             except Exception as a:
-                print_log(f'Erro no start do Servidor Socket - {a}');                 
+                print_log(f'Erro no start do Servidor Socket - {a}');         
+
+            print_log('Start no Zap automato')
+            try:
+                self.timer_thread_zap_automato.start()
+            except Exception as a:
+                print_log(f'Erro no start do Zap automato - {a}');                        
         
             try:
                 print_log(f"pega dados local - MaxServices") 
