@@ -17,8 +17,11 @@ import sys
 import sqlite3
 from funcoes_zap import *
 
+
 # Adiciono por causa dos outros forms
 import threading
+import fdb
+import lzma
 
 # Variáveis globais para os parâmetros do banco de dados
 DB_HOST = HOSTMYSQL
@@ -26,26 +29,102 @@ DB_USER = USERMYSQL
 DB_PASSWORD = PASSMYSQL
 DB_DATABASE = BASEMYSQL
 
-SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
-arquivo_db = 'c:/maxsuport/dados/dados.db'
+SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\'
+
+def verifica_sqlite():
+    parametros.PASTA_MAXSUPORT = SCRIPT_PATH.split('\\')[0] + '\\' + SCRIPT_PATH.split('\\')[1]
+    if parametros.BANCO_SQLITE == '':
+        parametros.BANCO_SQLITE = os.path.join(parametros.PASTA_MAXSUPORT,'dados','dados.db')
+
+    #parametros.BANCO_SQLITE = 'c:\\maxsuport\\dados\\dados.db'
+
+    if not os.path.exists(parametros.BANCO_SQLITE):
+        # Cria o banco de dados e as tabelas
+        comandos_sql = [
+            """
+            CREATE TABLE IF NOT EXISTS CLIENTE (
+                CODIGO INTEGER PRIMARY KEY AUTOINCREMENT,
+                CLIENTE TEXT (150),
+                CNPJCPF TEXT (14)
+            );
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS CONFIG (
+                CODIGO INTEGER PRIMARY KEY AUTOINCREMENT,
+                ATUALIZAR_BANCO INTEGER DEFAULT (0),
+                ATUALIZAR_SISTEMA INTEGER DEFAULT (0),
+                VERSAO_NOVA INTEGER DEFAULT (0)
+            );
+            """,
+            """
+            INSERT INTO CONFIG (
+                       VERSAO_NOVA,
+                       ATUALIZAR_SISTEMA,
+                       ATUALIZAR_BANCO,
+                       CODIGO
+                   )
+                   VALUES (
+                       0,
+                       0,
+                       0,
+                       1
+                   );
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS SISTEMA (
+                CODIGO INTEGER PRIMARY KEY AUTOINCREMENT,
+                CODIGOCLIENTE INTEGER REFERENCES CLIENTE (CODIGO) ON DELETE CASCADE,
+                SISTEMA_ATIVO INTEGER,
+                ALERTA_BLOQUEIO INTEGER,
+                SISTEMA_EM_USO_ID INTEGER,
+                PASTA_COMPARTILHADA_BACKUP TEXT (200),
+                CAMINHO_BASE_DADOS_MAXSUPORT TEXT (200),
+                CAMINHO_GBAK_FIREBIRD_MAXSUPORT TEXT (200),
+                PORTA_FIREBIRD_MAXSUPORT INTEGER,
+                CAMINHO_BASE_DADOS_GFIL TEXT (200),
+                CAMINHO_GBAK_FIREBIRD_GFIL TEXT (200),
+                PORTA_FIREBIRD_GFIL INTEGER,
+                TIMER_MINUTOS_BACKUP INTEGER,
+                IP TEXT (15)
+            );
+            """
+        ]
+        
+        for comando_sql in comandos_sql:
+            resultado = consultar_sqlite(comando_sql)
+            print_log(f"Tabela criada")
+
+            if not resultado.get('sucesso'):
+                print_log(f"Erro ao executar comando SQL: {resultado.get('erro')}")
+                break    
 
 def consultar_sqlite(comando_sql):
-    db_path = arquivo_db  # Atualize com o caminho do seu banco de dados
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
     try:
+        parametros.PASTA_MAXSUPORT = SCRIPT_PATH.split('\\')[0] + '\\' + SCRIPT_PATH.split('\\')[1]
+        if parametros.BANCO_SQLITE == '':
+            parametros.BANCO_SQLITE = os.path.join(parametros.PASTA_MAXSUPORT,'dados','dados.db')        
+        # Atualize com o caminho do seu banco de dados
+        conn = sqlite3.connect(parametros.BANCO_SQLITE)
+        cursor = conn.cursor()        
         cursor.execute(comando_sql)
         if comando_sql.strip().lower().startswith('select'):
             colunas = [descricao[0] for descricao in cursor.description]
             resultados = [dict(zip(colunas, row)) for row in cursor.fetchall()]
-            return {"sucesso": True, "dados": resultados}
+            retorno = resultados
+            print_log(retorno)
+            return retorno
         else:
             conn.commit()
-            return {"sucesso": True, "mensagem": "Comando executado com sucesso."}
+            retorno = {"sucesso": True, "mensagem": "Comando executado com sucesso."}
+            print_log(retorno)
+            return retorno
     except Exception as e:
-        return {"sucesso": False, "erro": str(e)}
+        retorno = {"sucesso": False, "erro": str(e)}
+        print_log(retorno)
+        return retorno        
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
 
 def check_banco_atualizar():
     retorno = consultar_sqlite('select ATUALIZAR_BANCO from config')
@@ -58,6 +137,7 @@ def marca_banco_atualizado():
 
 def marca_versao_nova_exe():
     consultar_sqlite('UPDATE config set VERSAO_NOVA = 1')  
+    
 
 def atualizar_versao_nova_exe():
     retorno = consultar_sqlite('select ATUALIZAR_SISTEMA from config')
@@ -69,7 +149,7 @@ def marca_versao_atualizada():
     consultar_sqlite('UPDATE config set ATUALIZAR_SISTEMA = 0')
 
 def lerconfig():
-    path_config_thread = SCRIPT_PATH + "/config.json"
+    path_config_thread = SCRIPT_PATH + "\\config.json"
     if os.path.exists(path_config_thread):
         with open(path_config_thread, 'r') as config_file:
             config_thread = json.load(config_file)
@@ -274,8 +354,8 @@ def cria_tarefa_login(nome_executavel):
 
     # Define a ação para executar MaxServices.exe
     action = task_definition.Actions.Create(0)  # 0 é TASK_ACTION_EXEC
-    action.Path = f'C:/maxsuport/{nome_executavel}.exe'
-    action.WorkingDirectory = 'C:/maxsuport/'
+    action.Path = f'C:\\maxsuport\\{nome_executavel}.exe'
+    action.WorkingDirectory = 'C:\\maxsuport\\'
 
     # Configura a tarefa para ser executada com o máximo de privilégios
     task_definition.Principal.RunLevel = 1  # TASK_RUNLEVEL_HIGHEST
@@ -322,8 +402,8 @@ def criar_tarefa_minuto(nome_executavel):
 
     # Cria uma ação para a tarefa que executa o MaxServices.exe
     action = task_def.Actions.Create(0)  # TASK_ACTION_EXEC
-    action.Path = f'c:/maxsuport/{nome_executavel}.exe'
-    action.WorkingDirectory = 'C:/maxsuport/'
+    action.Path = f'c:\\maxsuport\\{nome_executavel}.exe'
+    action.WorkingDirectory = 'C:\\maxsuport\\'
 
     # Define informações adicionais da tarefa
     task_def.RegistrationInfo.Description = f'Executa {nome_executavel}.exe a cada minuto'
@@ -363,8 +443,8 @@ def create_task_from_xml(task_name):
     - stderr (str): Error (if any) from the schtasks command.
     """
     # Definir o nome do arquivo XML
-    arquivo_xml = 'c:/maxsuport/SERVER/task.xml'
-    arquivo_xml_novo = f'c:/maxsuport/SERVER/task_{task_name}.xml'
+    arquivo_xml = 'c:\\maxsuport\\SERVER\\task.xml'
+    arquivo_xml_novo = f'c:\\maxsuport\\SERVER\\task_{task_name}.xml'
 
     # Definir as variáveis
     nome_agenda = task_name
@@ -487,11 +567,15 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
         else:
             # Tabela existe, verificar colunas
             for coluna, propriedades in colunas_origem.items():
-                tipo_origem = mapear_tipo_firebird_para_sql(int(propriedades['tipo']))  # Garante a definição de 'tipo_origem'
-                tamanho_origem = propriedades.get('tamanho', '')
+                tipo = mapear_tipo_firebird_para_sql(int(propriedades['tipo']))
+                tamanho = propriedades.get('tamanho', '')
+                null = 'NULL'
                 if coluna not in metadados_destino[tabela_origem]:
                     # Adiciona coluna que não existe no destino
-                    coluna_def = f"{coluna} {tipo_origem}" + (f"({tamanho_origem})" if tamanho_origem else "")
+                    if propriedades['tipo'] in (8,16,35,13,7,10) :
+                        coluna_def = f"{coluna} {tipo} "
+                    else:
+                        coluna_def = f"{coluna} {tipo} " + (f"({tamanho})" if tamanho else "") + " "
                     scripts_sql.append(f"ALTER TABLE {tabela_origem} ADD {coluna_def};")
                 else:
                     # Coluna existe, verificar tipo e tamanho
@@ -499,8 +583,8 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
                     tipo_destino = mapear_tipo_firebird_para_sql(int(prop_destino['tipo']))
                     tamanho_destino = prop_destino.get('tamanho', '')
                     # Correção da referência à variável 'tipo_origem' e 'tamanho_origem'
-                    if tipo_origem != tipo_destino or int(tamanho_origem) > int(tamanho_destino):
-                        coluna_def = f"{tipo_origem}" + (f"({tamanho_origem})" if tamanho_origem else "")
+                    if tipo != tipo_destino or int(tamanho) > int(tamanho_destino):
+                        coluna_def = f"{tipo}" + (f"({tamanho})" if tamanho else "")
                         # Dependendo do SGBD, a sintaxe de alteração pode variar. Verifique a compatibilidade.
                         scripts_sql.append(f"ALTER TABLE {tabela_origem} ALTER COLUMN {coluna} TYPE {coluna_def};")
 
@@ -644,8 +728,9 @@ def envia_mensagem(conexao,session):
     #close_zap(name_session)
 
     retorno = start_session(name_session)
-    gera_qrcode(str(retorno['qrcode']).split(',')[1])
-    retorno = status_session(name_session)
+    if retorno['status'] != 'CONNECTED':
+        gera_qrcode(str(retorno['qrcode']).split(',')[1])
+        retorno = status_session(name_session)
 
     for resultado in resultados_em_dicionario:
         if envia_mensagem_zap(session, resultado['FONE'], resultado['MENSAGEM']):

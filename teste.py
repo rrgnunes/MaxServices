@@ -1,7 +1,10 @@
-from thread_zap_automato import threadzapautomato
+# from funcoes import *
 
+# parametros.BANCO_SQLITE = 'c:\\maxsuport\\dados\\dados.db'
+# retorno_atualizacao = check_banco_atualizar()
+# a = ''
 
-a = threadzapautomato()
+from thread_atualiza_banco import *
+
+a = threadatualizabanco()
 a.start()
-
-a.join

@@ -285,6 +285,8 @@ class MaxServices(win32serviceutil.ServiceFramework):
                         caminho_gbak_firebird_maxsuport = parametros['caminho_gbak_firebird_maxsuport']
                         porta_firebird_maxsuport = parametros['porta_firebird_maxsuport']
                         ip = parametros['ip']
+ 
+                        BANCO_SQLITE = os.path.dirname(caminho_base_dados_maxsuport)
 
                         print_log(
                             f"local valor {ativo} do cnpj {cnpj} - MaxServices")

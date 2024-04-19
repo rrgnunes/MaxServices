@@ -27,6 +27,7 @@ SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 SERVICE_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'servico.py')
 SERVICE_DISPLAY_NAME = 'MaxUpdate'
+PASTA_MAXSUPORT = SCRIPT_PATH.split('/')[0] + '/' + SCRIPT_PATH.split('/')[1]
 
 
 class MaxUpdate(win32serviceutil.ServiceFramework):
@@ -50,6 +51,12 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
             try:
                 
                 print_log('Bem... Vamos lá')
+
+                print_log('Vou verificar se o banco.db existe, senão criarei')
+
+                verifica_sqlite()
+
+                print_log('Tudo ok com o banco de dados sqlite')
 
                 versao_online = 0
 
@@ -171,7 +178,8 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
                 if versao_online > versao_local:
                     print_log('Achei versão nova do executável')
                     marca_versao_nova_exe()
-                    if atualizar_versao_nova_exe() == 1:
+                    retorno_atualizacao = atualizar_versao_nova_exe()
+                    if ((retorno_atualizacao is None) or (retorno_atualizacao == 1)):
                         try:
                             # Desativar o executavel
                             try:
@@ -184,9 +192,6 @@ class MaxUpdate(win32serviceutil.ServiceFramework):
 
                             # Baixar o novo executavel
                             lista_arquivos = ['Retaguarda.exe','dados.db']
-
-                            
-                            PASTA_MAXSUPORT = 'c:/maxsuport/'
 
                             for arquivo in lista_arquivos:
                                 if arquivo == 'dados.db':

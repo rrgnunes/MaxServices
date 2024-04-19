@@ -1051,3 +1051,34 @@
 2024-04-13 15:59:06 - thread_zap_automato.py - zapautomato - Vou validar para enviar mensagem - zap automato
 2024-04-13 15:59:06 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos - zap automato
 2024-04-13 15:59:06 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos - zap automato
+2024-04-19 15:01:38 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:01:46 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:01:50 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:06:40 - funcoes.py - consultar_sqlite - {'sucesso': False, 'erro': 'no such table: config'}
+2024-04-19 15:08:40 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:11:46 - funcoes.py - consultar_sqlite - {'sucesso': True, 'dados': []}
+2024-04-19 15:12:41 - funcoes.py - consultar_sqlite - {'sucesso': True, 'dados': []}
+2024-04-19 15:16:03 - funcoes.py - consultar_sqlite - {'sucesso': False, 'erro': 'unable to open database file'}
+2024-04-19 15:17:04 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:17:04 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:17:04 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:17:04 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:17:04 - funcoes.py - consultar_sqlite - {'sucesso': False, 'erro': 'table CONFIG has 4 columns but 3 values were supplied'}
+2024-04-19 15:17:04 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:17:04 - funcoes.py - verifica_sqlite - Erro ao executar comando SQL: table CONFIG has 4 columns but 3 values were supplied
+2024-04-19 15:17:04 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:17:30 - funcoes.py - consultar_sqlite - {'sucesso': True, 'dados': []}
+2024-04-19 15:19:34 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:19:34 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:19:34 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:19:34 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:19:34 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:19:34 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:19:34 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:19:34 - funcoes.py - verifica_sqlite - Tabela criada
+2024-04-19 15:19:34 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:19:34 - funcoes.py - consultar_sqlite - {'sucesso': True, 'dados': [{'ATUALIZAR_SISTEMA': 0}]}
+2024-04-19 15:20:32 - funcoes.py - consultar_sqlite - {'sucesso': True, 'mensagem': 'Comando executado com sucesso.'}
+2024-04-19 15:20:32 - funcoes.py - consultar_sqlite - [{'ATUALIZAR_SISTEMA': 0}]
+2024-04-19 15:22:35 - funcoes.py - consultar_sqlite - [{'ATUALIZAR_BANCO': 0}]
+2024-04-19 15:57:23 - funcoes.py - consultar_sqlite - {'sucesso': False, 'erro': 'no such table: config'}

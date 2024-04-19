@@ -1,4 +1,5 @@
 from funcoes import *
+import fdb
 
 class threadxmlcontador(threading.Thread):
     def __init__(self):

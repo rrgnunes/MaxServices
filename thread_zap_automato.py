@@ -14,7 +14,7 @@ class threadzapautomato(threading.Thread):
         nome_servico = 'zap automato'
         while not self.event.wait(10):
             #carrega config
-            print_log(f'Iniciando - {nome_servico}')
+            print_log(f'Iniciando',nome_servico)
             if os.path.exists("C:/Users/Public/config.json"):
                 with open('C:/Users/Public/config.json', 'r') as config_file:
                     config = json.load(config_file)
@@ -29,10 +29,10 @@ class threadzapautomato(threading.Thread):
                         data_hora = datetime.datetime.now()
                         data_hora_formatada = data_hora.strftime(
                             '%Y_%m_%d_%H_%M_%S')
-                        print_log(f'Vou validar para enviar mensagem - {nome_servico}')
+                        print_log(f'Vou validar para enviar mensagem',nome_servico)
 
                         if ativo == 1 and sistema_em_uso == '1':
-                            server = "127.0.0.1"
+                            server = "localhost"
                             port = porta_firebird_maxsuport  # Substitua pelo número da porta real, se diferente
                             path = caminho_base_dados_maxsuport
                             user = "SYSDBA"
@@ -42,7 +42,7 @@ class threadzapautomato(threading.Thread):
                             conexao = fdb.connect(dsn=dsn, user=user, password=password)
                             cfg_zap = config_zap(conexao)
 
-                            print_log(f'Dados da configuração recebidos - {nome_servico}')
+                            print_log(f'Dados da configuração recebidos',nome_servico)
 
                             ENVIAR_MENSAGEM_ANIVERSARIO = cfg_zap['ENVIAR_MENSAGEM_ANIVERSARIO'] = 1
                             ENVIAR_MENSAGEM_PROMOCAO    = cfg_zap['ENVIAR_MENSAGEM_PROMOCAO'] = 1
@@ -56,7 +56,7 @@ class threadzapautomato(threading.Thread):
                             ULTIMO_ENVIO_DIARIO         = cfg_zap['ULTIMO_ENVIO_DIARIO']
                             ULTIMO_ENVIO_PROMOCAO       = cfg_zap['ULTIMO_ENVIO_PROMOCAO']                         
 
-                            print_log(f'Dados da configuração recebidos - {nome_servico}')
+                            print_log(f'Dados da configuração recebidos',nome_servico)
 
                             pessoas = retorna_pessoas(conexao)
 
@@ -66,8 +66,8 @@ class threadzapautomato(threading.Thread):
                                     MENSAGEM_ANIVERSARIO = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
                                     insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO, pessoa['CELULAR1'])
                                     atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
-                                    print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]} - {nome_servico}')
+                                    print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}',nome_servico)
 
                             envia_mensagem(conexao,cnpj)
                     except Exception as a:
-                        print_log(f'{a} - {nome_servico}')
+                        print_log(f'{a}',nome_servico)
