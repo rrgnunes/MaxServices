@@ -4,7 +4,13 @@
 # retorno_atualizacao = check_banco_atualizar()
 # a = ''
 
-from thread_atualiza_banco import *
+# from thread_atualiza_banco import *
 
-a = threadatualizabanco()
+# a = threadatualizabanco()
+# a.start()
+
+from thread_api_maxsuport import *
+
+a = threadapimaxsuport()
 a.start()
+a.join()

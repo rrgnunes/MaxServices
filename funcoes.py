@@ -18,10 +18,12 @@ import sqlite3
 from funcoes_zap import *
 
 
+
 # Adiciono por causa dos outros forms
 import threading
 import fdb
 import lzma
+import glob
 
 # Variáveis globais para os parâmetros do banco de dados
 DB_HOST = HOSTMYSQL

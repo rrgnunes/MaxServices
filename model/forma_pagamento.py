@@ -1,0 +1,43 @@
+from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+class Forma_pagamento(Base):
+    __tablename__ = 'forma_pagamento'
+    codigo = Column(INTEGER, primary_key=True)
+    descricao = Column(VARCHAR)
+    geracr = Column(VARCHAR)
+    gerach = Column(VARCHAR)
+    ecartao = Column(VARCHAR)
+    usavd = Column(VARCHAR)
+    usacr = Column(VARCHAR)
+    ativo = Column(VARCHAR)
+    parcelas = Column(INTEGER)
+    intervalo = Column(INTEGER)
+    taxa = Column(DECIMAL)
+    entrada = Column(DECIMAL)
+    tipo = Column(VARCHAR)
+    dias = Column(SMALLINT)
+    fkcontadestino = Column(INTEGER)
+    cod_bema = Column(VARCHAR)
+    cod_daru = Column(VARCHAR)
+    cod_elgi = Column(VARCHAR)
+    cod_epso = Column(VARCHAR)
+    geracc = Column(VARCHAR)
+    geracx = Column(VARCHAR)
+    observacao = Column(VARCHAR)
+    resumo = Column(VARCHAR)
+    max_parcela = Column(INTEGER)
+    fk_empresa = Column(INTEGER)
+    usa_tef = Column(SMALLINT)
+    transmite_nota_auto = Column(INTEGER)
+    antecipacao_auto = Column(INTEGER)
+    chave_pix = Column(VARCHAR)
+    cliente_id = Column(VARCHAR)
+    arquivo_chave_privada = Column(VARCHAR)
+    arquivo_certificado = Column(VARCHAR)
+    api = Column(VARCHAR)
+    tipo_chave = Column(VARCHAR)
+    cliente_secret = Column(VARCHAR)

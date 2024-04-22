@@ -1,5 +1,5 @@
 import fdb
-from funcoes import threading,os,json,datetime, marca_banco_atualizado,extrair_metadados,gerar_scripts_diferencas,executar_scripts_sql,print_log,check_banco_atualizar
+from funcoes import threading,os,json,datetime,parametros, marca_banco_atualizado,extrair_metadados,gerar_scripts_diferencas,executar_scripts_sql,print_log,check_banco_atualizar
 
 
 
@@ -20,12 +20,12 @@ class threadatualizabanco(threading.Thread):
                     config = json.load(config_file)
                     
                 for cnpj in config['sistema']:
-                    parametros = config['sistema'][cnpj]
-                    ativo = parametros['sistema_ativo'] == '1'
-                    sistema_em_uso = parametros['sistema_em_uso_id']
-                    caminho_base_dados_maxsuport = parametros['caminho_base_dados_maxsuport']
-                    porta_firebird_maxsuport = parametros['porta_firebird_maxsuport']
-                    caminho_gbak_firebird_maxsuport = parametros['caminho_gbak_firebird_maxsuport']
+                    dados_cnpj = config['sistema'][cnpj]
+                    ativo = dados_cnpj['sistema_ativo'] == '1'
+                    sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+                    caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+                    porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+                    caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
                     data_hora = datetime.datetime.now()
                     data_hora_formatada = data_hora.strftime(
                         '%Y_%m_%d_%H_%M_%S')
@@ -39,8 +39,8 @@ class threadatualizabanco(threading.Thread):
                             server_origem = "177.153.69.3"
                             port_origem = 3050  # Substitua pelo número da porta real, se diferente
                             path_origem = "/home/maxsuport/base/maxsuport/dados.fdb"
-                            user_origem = "sysdba"
-                            password_origem = "masterkey"
+                            user_origem = parametros.USERFB
+                            password_origem = parametros.PASSFB
 
                             server_destino = "127.0.0.1"
                             port_destino = porta_firebird_maxsuport  # Substitua pelo número da porta real, se diferente

@@ -3,6 +3,10 @@ USERMYSQL="dinheiro"
 PASSMYSQL="MT49T3.6%B"
 BASEMYSQL="maxservices"
 
+USERFB='maxsuport'
+PASSFB='oC8qUsDp'
+
+
 # Substitua com suas próprias credenciais
 APP_KEY_DROP_BOX = ''
 APP_SECRET_DROP_BOX = ''

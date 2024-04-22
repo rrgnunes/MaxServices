@@ -315,8 +315,8 @@ class MaxServices(win32serviceutil.ServiceFramework):
                                 con = fdb.connect(
                                     host='localhost',
                                     database=caminho_base_dados_maxsuport,
-                                    user='sysdba',
-                                    password='masterkey',
+                                    user='maxsuport',
+                                    password='oC8qUsDp',
                                     port=int(porta_firebird_maxsuport)
                                 )
                                 comando = 'Liberar'

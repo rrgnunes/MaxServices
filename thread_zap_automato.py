@@ -1,5 +1,5 @@
 import fdb
-from funcoes import threading,os,json,datetime, envia_mensagem, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap
+from funcoes import threading,os,json,datetime, parametros, envia_mensagem, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap
 
 # thread do backup
 class threadzapautomato(threading.Thread):
@@ -20,12 +20,12 @@ class threadzapautomato(threading.Thread):
                     config = json.load(config_file)
                 for cnpj in config['sistema']:
                     try:
-                        parametros = config['sistema'][cnpj]
-                        ativo = parametros['sistema_ativo'] == '1'
-                        sistema_em_uso = parametros['sistema_em_uso_id']
-                        caminho_base_dados_maxsuport = parametros['caminho_base_dados_maxsuport']
-                        porta_firebird_maxsuport = parametros['porta_firebird_maxsuport']
-                        caminho_gbak_firebird_maxsuport = parametros['caminho_gbak_firebird_maxsuport']
+                        dados_cnpj = config['sistema'][cnpj]
+                        ativo = dados_cnpj['sistema_ativo'] == '1'
+                        sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+                        caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+                        porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+                        caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
                         data_hora = datetime.datetime.now()
                         data_hora_formatada = data_hora.strftime(
                             '%Y_%m_%d_%H_%M_%S')
@@ -35,8 +35,8 @@ class threadzapautomato(threading.Thread):
                             server = "localhost"
                             port = porta_firebird_maxsuport  # Substitua pelo número da porta real, se diferente
                             path = caminho_base_dados_maxsuport
-                            user = "SYSDBA"
-                            password = "masterkey"
+                            user = parametros.USERFB
+                            password = parametros.PASSFB
                             dsn = f"{server}/{port}:{path}"
                             fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
                             conexao = fdb.connect(dsn=dsn, user=user, password=password)

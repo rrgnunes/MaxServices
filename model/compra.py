@@ -1,0 +1,43 @@
+from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+class Compra(Base):
+    __tablename__ = 'compra'
+    id = Column(INTEGER, primary_key=True)
+    empresa = Column(SMALLINT)
+    dtentrada = Column(DATE)
+    dtemissao = Column(DATE)
+    fornecedor = Column(INTEGER)
+    modelo = Column(VARCHAR)
+    serie = Column(VARCHAR)
+    chave = Column(VARCHAR)
+    nr_nota = Column(VARCHAR)
+    subtotal = Column(DECIMAL)
+    frete = Column(DECIMAL)
+    despesas = Column(DECIMAL)
+    seguro = Column(DECIMAL)
+    desconto = Column(DECIMAL)
+    base_ipi = Column(DECIMAL)
+    total_ipi = Column(DECIMAL)
+    base_icm = Column(DECIMAL)
+    total_icm = Column(DECIMAL)
+    base_st = Column(DECIMAL)
+    total_st = Column(DECIMAL)
+    base_pis = Column(DECIMAL)
+    total_pis = Column(DECIMAL)
+    base_cof = Column(DECIMAL)
+    total_cof = Column(DECIMAL)
+    total = Column(DECIMAL)
+    gera_cp = Column(VARCHAR)
+    gera_es = Column(VARCHAR)
+    ajusta_pc = Column(VARCHAR)
+    ajusta_pv = Column(VARCHAR)
+    ehfiscal = Column(VARCHAR)
+    leuxml = Column(VARCHAR)
+    status = Column(VARCHAR)
+    xml = Column(BLOB)
+    tipo = Column(VARCHAR)
+    ajusta_margem = Column(VARCHAR)

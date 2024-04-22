@@ -27,20 +27,20 @@ class threadxmlcontador(threading.Thread):
                     with open('C:/Users/Public/config.json', 'r') as config_file:
                         config = json.load(config_file)
                     for cnpj in config['sistema']:
-                        parametros = config['sistema'][cnpj]
-                        ativo = parametros['sistema_ativo'] == '1'
-                        sistema_em_uso = parametros['sistema_em_uso_id']
-                        pasta_compartilhada_backup = parametros['pasta_compartilhada_backup']
-                        caminho_base_dados_maxsuport = parametros['caminho_base_dados_maxsuport']
-                        caminho_gbak_firebird_maxsuport = parametros['caminho_gbak_firebird_maxsuport']
-                        porta_firebird_maxsuport = parametros['porta_firebird_maxsuport']
-                        caminho_base_dados_gfil = parametros['caminho_base_dados_gfil']
-                        caminho_gbak_firebird_gfil = parametros['caminho_gbak_firebird_gfil']
-                        porta_firebird_gfil = parametros['porta_firebird_gfil']
+                        dados_cnpj = config['sistema'][cnpj]
+                        ativo = dados_cnpj['sistema_ativo'] == '1'
+                        sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+                        pasta_compartilhada_backup = dados_cnpj['pasta_compartilhada_backup']
+                        caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+                        caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
+                        porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+                        caminho_base_dados_gfil = dados_cnpj['caminho_base_dados_gfil']
+                        caminho_gbak_firebird_gfil = dados_cnpj['caminho_gbak_firebird_gfil']
+                        porta_firebird_gfil = dados_cnpj['porta_firebird_gfil']
                         data_hora = datetime.datetime.now()
                         data_hora_formatada = data_hora.strftime(
                             '%Y_%m_%d_%H_%M_%S')
-                        timer_minutos_backup = parametros['timer_minutos_backup']
+                        timer_minutos_backup = dados_cnpj['timer_minutos_backup']
 
                         if ativo:
                             conMYSQL = mysql.connector.connect(
@@ -61,8 +61,8 @@ class threadxmlcontador(threading.Thread):
                                     con = fdb.connect(
                                         host='localhost',
                                         database=caminho_base_dados_maxsuport,
-                                        user='sysdba',
-                                        password='masterkey',
+                                        user=parametros.USERFB,
+                                        password=parametros.PASSFB,
                                         port=int(porta_firebird_maxsuport)
                                     )
 

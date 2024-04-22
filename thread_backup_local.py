@@ -41,15 +41,15 @@ class threadbackuplocal(threading.Thread):
                     with open('C:/Users/Public/config.json', 'r') as config_file:
                         config = json.load(config_file)
                     for cnpj in config['sistema']:
-                        parametros = config['sistema'][cnpj]
-                        ativo = parametros['sistema_ativo'] == '1'
-                        sistema_em_uso = parametros['sistema_em_uso_id']
-                        pasta_compartilhada_backup = parametros['pasta_compartilhada_backup']
-                        caminho_base_dados_maxsuport = parametros['caminho_base_dados_maxsuport']
-                        caminho_gbak_firebird_maxsuport = parametros['caminho_gbak_firebird_maxsuport']
-                        porta_firebird_maxsuport = parametros['porta_firebird_maxsuport']
-                        caminho_base_dados_gfil = parametros['caminho_base_dados_gfil']
-                        caminho_gbak_firebird_gfil = parametros['caminho_gbak_firebird_gfil']
+                        dados_cnpj = config['sistema'][cnpj]
+                        ativo = dados_cnpj['sistema_ativo'] == '1'
+                        sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+                        pasta_compartilhada_backup = dados_cnpj['pasta_compartilhada_backup']
+                        caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+                        caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
+                        porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+                        caminho_base_dados_gfil = dados_cnpj['caminho_base_dados_gfil']
+                        caminho_gbak_firebird_gfil = dados_cnpj['caminho_gbak_firebird_gfil']
                         data_hora = datetime.datetime.now()
                         data_hora_formatada = data_hora.strftime(
                             '%Y_%m_%d_%H_%M_%S')
@@ -70,8 +70,8 @@ class threadbackuplocal(threading.Thread):
                                         os.mkdir(path)
 
                                     caminho_arquivo_backup = path
-                                    usuario = "sysdba"
-                                    senha = "masterkey"
+                                    usuario = parametros.USERFB
+                                    senha = parametros.PASSFB
                                     banco_de_dados = caminho_base_dados_maxsuport
                                     nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fdb'
                                     nome_arquivo = 'Dados.fdb'
