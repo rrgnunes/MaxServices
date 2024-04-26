@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Devolucao_compra_d(Base):
+class Devolucao_compra_d(db.Model):
     __tablename__ = 'devolucao_compra_d'
     codigo = Column(INTEGER, primary_key=True)
     fk_devolucao_compra_m = Column(INTEGER)

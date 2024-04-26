@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Sped_config(Base):
+class Sped_config(db.Model):
     __tablename__ = 'sped_config'
     fk_empresa = Column(INTEGER, primary_key=True)
     ind_perfil = Column(VARCHAR)

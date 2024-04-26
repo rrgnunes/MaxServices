@@ -1,12 +1,11 @@
-from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
+from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessï¿½rio
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Ibpt(Base):
+class Ibpt(db.Model):
     __tablename__ = 'ibpt'
-    codigo = Column(VARCHAR, primary_key=True)
+    codigo = Column(VARCHAR,primary_key=True)
     ex = Column(VARCHAR)
     tipo = Column(VARCHAR)
     descricao = Column(VARCHAR)
@@ -18,4 +17,4 @@ class Ibpt(Base):
     vigenciafim = Column(VARCHAR)
     chave = Column(VARCHAR)
     fonte = Column(VARCHAR)
-    versao = Column(VARCHAR, primary_key=True)
+    versao = Column(VARCHAR)

@@ -16,7 +16,10 @@ import ctypes
 import sys
 import sqlite3
 from funcoes_zap import *
-
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_restx import Api, Resource, fields
 
 
 # Adiciono por causa dos outros forms
@@ -24,6 +27,7 @@ import threading
 import fdb
 import lzma
 import glob
+import importlib
 
 # Variáveis globais para os parâmetros do banco de dados
 DB_HOST = HOSTMYSQL
@@ -32,6 +36,28 @@ DB_PASSWORD = PASSMYSQL
 DB_DATABASE = BASEMYSQL
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\'
+
+if os.path.exists("C:/Users/Public/config.json"):
+    with open('C:/Users/Public/config.json', 'r') as config_file:
+        config = json.load(config_file)
+        
+    for cnpj in config['sistema']:
+        dados_cnpj = config['sistema'][cnpj]
+        ativo = dados_cnpj['sistema_ativo'] == '1'
+        sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+        caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+        porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+        caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
+
+        
+
+model_path = os.path.join(os.path.dirname(__file__), 'model')
+fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = f'firebird+fdb://{parametros.USERFB}:{parametros.PASSFB}@localhost/{caminho_base_dados_maxsuport}?charset=ISO8859_1'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+api = Api(app, version='1.0', title='API MaxSuport', description='Uma API para modelos do banco', doc='/api-docs/')
 
 def verifica_sqlite():
     parametros.PASTA_MAXSUPORT = SCRIPT_PATH.split('\\')[0] + '\\' + SCRIPT_PATH.split('\\')[1]

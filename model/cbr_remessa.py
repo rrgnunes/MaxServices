@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Cbr_remessa(Base):
+class Cbr_remessa(db.Model):
     __tablename__ = 'cbr_remessa'
     id_empresa = Column(INTEGER, primary_key=True)
     id_cbr_remessa = Column(BIGINT, primary_key=True)

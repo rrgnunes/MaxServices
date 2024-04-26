@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Sped_c100(Base):
+class Sped_c100(db.Model):
     __tablename__ = 'sped_c100'
     codigo = Column(INTEGER, primary_key=True)
     ind_oper = Column(VARCHAR)

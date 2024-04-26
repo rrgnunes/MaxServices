@@ -1,132 +1,149 @@
-import fdb
-from funcoes import threading,os,json,datetime,print_log,parametros
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import Session,sessionmaker,declarative_base
-from model.mesa import Base, Mesa
-from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException, Depends, Body
-from sqlalchemy.ext.declarative import declarative_base
-from typing import Type, Generic, TypeVar, List, Dict, Any
+from flask import Flask, request, jsonify
+from flask_restx import Api, Resource, fields, Namespace
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine,INTEGER,FLOAT,BOOLEAN,DATETIME, func
 import os
-import importlib.util
+import json
+from funcoes import parametros, importlib, db,api,app
+import datetime
+from decimal import Decimal
 
-Base = declarative_base()
+models_path = os.path.join(os.path.dirname(__file__), 'model')
+models = {}
 
-def import_all_models(directory_path: str):
-    for filename in os.listdir(directory_path):
-        if filename.endswith(".py") and not filename.startswith("__"):
-            module_name = filename[:-3]  # Remove '.py' do final para obter o nome do módulo
-            module_path = os.path.join(directory_path, filename)
-            spec = importlib.util.spec_from_file_location(module_name, module_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+# Carregar todos os arquivos Python na pasta de modelos e importá-los como módulos
+for filename in os.listdir(models_path):
+    if filename.endswith('.py') and not filename.startswith('__'):
+        module_name = filename[:-3]
+        file_path = os.path.join(models_path, filename)
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if str(type(attr))=="<class 'flask_sqlalchemy.model.DefaultMeta'>":
+                models[attr_name] = attr            
+            # if isinstance(attr, db.Model):
+            #     models[attr_name] = attr
 
-# Caminho para o diretório 'model'. Ajuste conforme necessário.
-models_directory_path = os.path.join(os.path.dirname(__file__), 'model')
-import_all_models(models_directory_path)
+# Função para converter modelos SQLAlchemy em dicionários
+def model_to_dict(obj):
+    result = {}
+    for c in obj.__table__.columns:
+        value = getattr(obj, c.name)
+        if isinstance(value, Decimal):
+            result[c.name] = float(value)
+        elif isinstance(value, datetime.date) or isinstance(value, datetime.datetime):
+            result[c.name] = value.isoformat()
+        elif isinstance(value, str):
+            result[c.name] = value.encode('iso-8859-1').decode('iso-8859-1')
+        else:
+            result[c.name] = value
+    return result
 
+def create_model_request(model_cls):
+    # Cria um dicionário de campos baseado na estrutura do modelo SQLAlchemy
+    model_fields = {}
+    for column in model_cls.__table__.columns:
+        field_type = fields.String  # Tipo padrão
+        example = None  # Exemplo padrão, ajustável conforme o tipo de campo
 
-# thread do backup
-class threadapimaxsuport(threading.Thread):
-    def __init__(self):
-        super().__init__()
-        self.event = threading.Event()
-
-    def run(self):
-        self.apimaxsuport()
+        if column.primary_key:
+            continue  # Pular o campo id se exclude_id estiver ativado para requisições POST, PUT
         
-    def apimaxsuport(self):
+        if isinstance(column.type, INTEGER):
+            field_type = fields.Integer
+            example = 1
+        elif isinstance(column.type, FLOAT):
+            field_type = fields.Float
+            example = 1.0
+        elif isinstance(column.type, BOOLEAN):
+            field_type = fields.Boolean
+            example = True
+        elif isinstance(column.type, DATETIME):
+            field_type = fields.DateTime
+            example = '2023-01-01T00:00:00'
+        
+        # Adicionando o campo ao dicionário de modelo com exemplo
+        model_fields[column.name] = field_type(description=column.name, example=example, required=column.nullable == False)
+    
+    # Retornar o modelo criado
+    return api.model(model_cls.__name__ + 'Model', model_fields)    
 
-        #carrega config
-        if os.path.exists("C:/Users/Public/config.json"):
-            with open('C:/Users/Public/config.json', 'r') as config_file:
-                config = json.load(config_file)
-                
-            for cnpj in config['sistema']:
-                dados_cnpj = config['sistema'][cnpj]
-                ativo = dados_cnpj['sistema_ativo'] == '1'
-                sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-                caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-                porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
-                caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
-                data_hora = datetime.datetime.now()
-                data_hora_formatada = data_hora.strftime(
-                    '%Y_%m_%d_%H_%M_%S')
-                print_log('Dados iniciais carregados','apimaxsuport')
-                if ativo == 1 and sistema_em_uso == '1':
-                    # Configuração da Conexão com o Banco de Dados Firebird
-                    DATABASE_URL = f"firebird+fdb://{parametros.USERFB}:{parametros.PASSFB}@localhost:{porta_firebird_maxsuport}/{caminho_base_dados_maxsuport}?charset=None"
-                    fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
-                    engine = create_engine(DATABASE_URL)
-                    
-                    # Vincular a base declarativa ao engine
-                    Base.metadata.create_all(engine)
-                    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-                    app = FastAPI()
+def create_resource_for_model(model_cls):
 
-                    # Dependência para obter a sessão do SQLAlchemy
-                    def get_db():
-                        db = SessionLocal()
-                        try:
-                            yield db
-                        finally:
-                            db.close()
+    model_req = create_model_request(model_cls)
+    ns = Namespace(model_cls.__name__.lower(), description=f'Tabela {model_cls.__name__}')
+    
+    def numerador(db, model_cls, field_name, filter_active=False, where_field=None, where_value=None):
+        query = db.session.query(func.max(getattr(model_cls, field_name)).label('MAIOR'))
+        if filter_active:
+            query = query.filter(getattr(model_cls, where_field) == where_value)
+        
+        max_value = query.scalar()
+        resultado = (max_value + 1) if max_value is not None else 0
+        return resultado
 
-                    T = TypeVar('T', bound=Base)
 
-                    # Definição da classe CRUDBase atualizada
-                    class CRUDBase(Generic[T]):
-                        # Definições anteriores...
+    @ns.route('/')
+    class DynamicPostListResource(Resource):
+        @ns.doc('retorna_todos_registros')
+        def get(self):
+            items = model_cls.query.limit(25).all()
+            return [model_to_dict(item) for item in items], 200
 
-                        def create(self, db: Session, obj_in: Dict[str, Any]) -> T:
-                            db_obj = self.model(**obj_in)
-                            db.add(db_obj)
-                            db.commit()
-                            db.refresh(db_obj)
-                            return db_obj
+        @ns.doc('cria_registro')
+        @ns.expect(model_req)  # Usar o modelo dinâmico
+        def post(self):
+            data = request.get_json()
+            next_id = numerador(db, model_cls, 'codigo')  # Obter o próximo ID
+            data['codigo'] = next_id
+            item = model_cls(**data)
+            db.session.add(item)
+            db.session.commit()
+            return model_to_dict(item), 201    
 
-                        def update(self, db: Session, id: int, obj_in: Dict[str, Any]) -> T:
-                            db_obj = db.query(self.model).get(id)
-                            if db_obj:
-                                for field, value in obj_in.items():
-                                    setattr(db_obj, field, value)
-                                db.commit()
-                                db.refresh(db_obj)
-                            return db_obj
+    @ns.route('/<int:id>')
+    class DynamicResource(Resource):               
+        @ns.doc('get_item')
+        def get(self, id):
+            item = model_cls.query.get(id)
+            if item:
+                return model_to_dict(item), 200
+            return {'message': 'Item not found'}, 404
 
-                        def delete(self, db: Session, id: int) -> None:
-                            obj = db.query(self.model).get(id)
-                            db.delete(obj)
-                            db.commit()
+        @ns.doc('update_item')
+        @ns.expect(model_req)  # Reutilizar o mesmo modelo para PUT
+        def put(self, id):
+            item = model_cls.query.get(id)
+            if item:
+                data = request.get_json()
+                for key, value in data.items():
+                    setattr(item, key, value)
+                db.session.commit()
+                return model_to_dict(item), 200
+            return {'message': 'Item not found'}, 404
 
-                    def create_model_schema(model: Type[Base]) -> Type[BaseModel]:
-                        fields = {column.name: (column.type.python_type, ...) for column in model.__table__.columns}
-                        model_schema = type(f"{model.__name__}Schema", (BaseModel,), fields)
-                        return model_schema
+        @ns.doc('delete_item')
+        def delete(self, id):
+            item = model_cls.query.get(id)
+            if item:
+                db.session.delete(item)
+                db.session.commit()
+                return {'message': 'Item deleted'}, 204
+            return {'message': 'Item not found'}, 404
+        
+   
 
-                    def register_crud_routes(app: FastAPI, base: Base, db: SessionLocal):
-                        for cls in base._decl_class_registry.values():
-                            if hasattr(cls, '__tablename__'):
-                                crud = CRUDBase(cls)
-                                model_schema = create_model_schema(cls)
+    return ns
 
-                                @app.get(f"/{cls.__tablename__}/{{id}}")
-                                def read(id: int, db: Session = Depends(get_db)):
-                                    return crud.get(db, id)
+# Criar rotas da API para cada modelo carregado
+for model_name, model_cls in models.items():
+    ns = create_resource_for_model(model_cls)
+    api.add_namespace(ns, path=f'/{model_name.lower()}')
 
-                                @app.post(f"/{cls.__tablename__}/", response_model=model_schema)
-                                def create(obj_in: model_schema, db: Session = Depends(get_db)):
-                                    return crud.create(db, obj_in.dict())
-
-                                @app.put(f"/{cls.__tablename__}/{{id}}", response_model=model_schema)
-                                def update(id: int, obj_in: model_schema, db: Session = Depends(get_db)):
-                                    return crud.update(db, id, obj_in.dict())
-
-                                @app.delete(f"/{cls.__tablename__}/{{id}}")
-                                def delete(id: int, db: Session = Depends(get_db)):
-                                    crud.delete(db, id)
-                                    return {"message": "Item deleted successfully."}
-
-                    # Utilize esta função para registrar as rotas automaticamente
-                    register_crud_routes(app, Base, SessionLocal)                            
+if __name__ == '__main__':
+    app.run(debug=True,host='192.168.10.207', port=5000)

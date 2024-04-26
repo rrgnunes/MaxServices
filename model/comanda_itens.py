@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Comanda_itens(Base):
+class Comanda_itens(db.Model):
     __tablename__ = 'comanda_itens'
     codigo = Column(INTEGER, primary_key=True)
     fk_comanda_pessoa = Column(INTEGER)

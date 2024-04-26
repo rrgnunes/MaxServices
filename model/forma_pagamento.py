@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Forma_pagamento(Base):
+class Forma_pagamento(db.Model):
     __tablename__ = 'forma_pagamento'
     codigo = Column(INTEGER, primary_key=True)
     descricao = Column(VARCHAR)

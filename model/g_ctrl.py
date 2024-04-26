@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class G_ctrl(Base):
+class G_ctrl(db.Model):
     __tablename__ = 'g_ctrl'
     ctrl_id = Column(INTEGER, primary_key=True)
     ctrl_codigo = Column(VARCHAR)

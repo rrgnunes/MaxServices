@@ -1,10 +1,9 @@
 from sqlalchemy import Column, INTEGER, DOUBLE, CHAR,TIMESTAMP, VARCHAR, BLOB, NUMERIC, SMALLINT, DATE, DECIMAL, BIGINT, TIME  # Adicione mais tipos conforme necessário
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from funcoes import db
 
-Base = declarative_base()
-
-class Vendas_terminais(Base):
+class Vendas_terminais(db.Model):
     __tablename__ = 'vendas_terminais'
     ip = Column(VARCHAR)
     nome = Column(VARCHAR, primary_key=True)
