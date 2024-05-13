@@ -9,8 +9,8 @@
 # a = threadatualizabanco()
 # a.start()
 
-from thread_api_maxsuport import *
+from thread_backup_local import *
 
-a = threadapimaxsuport()
+a = threadbackuplocal()
 a.start()
 a.join()

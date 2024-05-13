@@ -5,7 +5,7 @@ try:
     from dropbox.files import WriteMode
     from dropbox.exceptions import AuthError
 except:
-    print('erro ao importar dropbox')
+    print_log('erro ao importar dropbox',caminho_log="backuplocal")
 
 
 # thread do backup
@@ -36,7 +36,7 @@ class threadbackuplocal(threading.Thread):
                     database=BASEMYSQL
                 )
                 
-                print_log(f"Pega dados local - backuplocal")
+                print_log(f"Pega dados local - backuplocal",caminho_log="backuplocal")
                 if os.path.exists("C:/Users/Public/config.json"):
                     with open('C:/Users/Public/config.json', 'r') as config_file:
                         config = json.load(config_file)
@@ -56,7 +56,7 @@ class threadbackuplocal(threading.Thread):
                         timer_minutos_backup = parametros['timer_minutos_backup']
 
                         if ativo:
-                            print_log(f"Inicia backup - backuplocal")
+                            print_log(f"Inicia backup - backuplocal",caminho_log="backuplocal")
                             if sistema_em_uso == '1':  # maxsuport
                                 if pasta_compartilhada_backup != '' and \
                                         caminho_base_dados_maxsuport != '' and \
@@ -100,7 +100,7 @@ class threadbackuplocal(threading.Thread):
                                     comando = comando.replace('/', '\\')
 
                             subprocess.call(comando, shell=True)
-                            print_log(f"Executou comando {comando} - backuplocal")
+                            print_log(f"Executou comando {comando} - backuplocal",caminho_log="backuplocal")
                             # compacta arquivo
                             with open(f'{caminho_arquivo_backup}/{nome_arquivo}', 'rb') as arquivo_in:
                                 nome_arquivo_compactado = f'{nome_arquivo_compactado}.xz'
@@ -108,13 +108,13 @@ class threadbackuplocal(threading.Thread):
                                     arquivo_out.writelines(arquivo_in)
                             os.remove(f'{caminho_arquivo_backup}/{nome_arquivo}')
                             print_log(
-                                f"criou arquivo compactado {nome_arquivo_compactado} - backuplocal")
+                                f"criou arquivo compactado {nome_arquivo_compactado} - backuplocal",caminho_log="backuplocal")
                             datahoraagora = datetime.datetime.now(
                                 datetime.timezone(datetime.timedelta(hours=-3)))
                             cursor = conn.cursor()
                             cursor.execute(
                                 f"UPDATE cliente_cliente set data_hora_ultimo_backup = '{datahoraagora}' where cnpj = '{cnpj}'")
-                            print_log(f"Executou update remoto - backuplocal")
+                            print_log(f"Executou update remoto - backuplocal",caminho_log="backuplocal")
                             conn.commit()
                             conn.close()
 
@@ -175,7 +175,7 @@ class threadbackuplocal(threading.Thread):
                                 with open(arquivo_local, 'rb') as arquivo:
                                     obj_dropbox.files_upload(arquivo.read(), arquivo_remoto, mode=WriteMode('overwrite'))
 
-                                print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto} - backuplocal")                                
+                                print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto} - backuplocal",caminho_log="backuplocal")                                
                                 # # Cria uma instância do cliente FTP
                                 # cliente_ftp = FTP()
 
@@ -204,7 +204,7 @@ class threadbackuplocal(threading.Thread):
                                 #         f'STOR {nome_arquivo_compactado}', arquivo)
 
                                 print_log(
-                                    'Arquivo enviado com sucesso - backuplocal')
+                                    'Arquivo enviado com sucesso - backuplocal',caminho_log="backuplocal")
 
                                 num_arquivos_a_manter = int(timer_minutos_backup)
                                 # Consultar a lista de arquivos na pasta remota
@@ -212,7 +212,7 @@ class threadbackuplocal(threading.Thread):
                                     result = obj_dropbox.files_list_folder(diretorio_remoto)
                                     arquivos_na_pasta = result.entries
                                 except dropbox.exceptions.ApiError as e:
-                                    print(f"Erro ao listar arquivos na pasta remota: {e}")
+                                    print(f"Erro ao listar arquivos na pasta remota: {e}",caminho_log="backuplocal")
                                     arquivos_na_pasta = []
 
                                 # Verificar se há mais de 30 arquivos e excluir o mais antigo se necessário
@@ -223,9 +223,9 @@ class threadbackuplocal(threading.Thread):
                                     # Excluir o arquivo mais antigo
                                     try:
                                         obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
-                                        print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.")
+                                        print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.",caminho_log="backuplocal")
                                     except dropbox.exceptions.ApiError as e:
-                                        print(f"Erro ao excluir o arquivo mais antigo: {e}")
+                                        print(f"Erro ao excluir o arquivo mais antigo: {e}",caminho_log="backuplocal")
 
                                 # # Extensão dos arquivos que deseja excluir
                                 extensao = '.xz'
@@ -275,16 +275,16 @@ class threadbackuplocal(threading.Thread):
                                         print_log(
                                             f"Arquivo excluído local: {arquivo}")
 
-                                print_log('termina backup - backuplocal')
+                                print_log('termina backup - backuplocal',caminho_log="backuplocal")
                             except Exception as e:
-                                print_log(e)
+                                print_log(e,caminho_log="backuplocal")
                             finally:
-                                print_log('Finalizado - backuplocal')
+                                print_log('Finalizado - backuplocal',caminho_log="backuplocal")
                                 # Fecha a conexão FTP
                                 obj_dropbox.close()
 
             except Exception as a:
                 # self.logger.error(f"{self._svc_name_} {a}.")
-                print_log(a)
+                print_log(a,caminho_log="backuplocal")
 
             #time.sleep(intervalo)
