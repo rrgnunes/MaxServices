@@ -1,0 +1,8 @@
+2024-05-22 09:52:39 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
+2024-05-22 10:04:00 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
+2024-05-22 10:10:19 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
+2024-05-22 10:11:04 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
+2024-05-22 10:11:46 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
+2024-05-22 10:15:07 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
+2024-05-22 10:55:11 - thread_atualiza_banco.py - atualiza_banco - Erro na atualização do banco: ('Error while connecting to database:\n- SQLCODE: -902\n- Unable to complete network request to host "177.153.69.3".\n- Failed to establish a connection.', -902, 335544721)
+2024-05-22 10:55:21 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar

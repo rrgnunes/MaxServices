@@ -1,8 +1,8 @@
 {
   "time_thread_xmlcontador":5,
   "time_thread_alertabloqueio":900,
-  "time_thread_backuplocal":5,
-  "time_thread_verificaremoto":23,
+  "time_thread_backuplocal":1,
+  "time_thread_verificaremoto":1,
   "producao":0,
   "xml_contador_dias_busca_nota": -15
 }

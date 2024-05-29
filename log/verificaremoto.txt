@@ -1,0 +1,23 @@
+2024-05-21 14:21:21 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread
+2024-05-21 14:21:35 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread
+2024-05-21 14:21:55 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread
+2024-05-21 14:24:17 - thread_verifica_remoto.py - salva_json - Efetua conexão remota
+2024-05-21 14:27:06 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread
+2024-05-21 14:36:59 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread
+2024-05-21 14:37:37 - thread_verifica_remoto.py - salva_json - Efetua conexão remota
+2024-05-21 14:41:24 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread
+2024-05-21 14:41:36 - thread_verifica_remoto.py - salva_json - Efetua conexão remota
+2024-05-21 14:41:39 - thread_verifica_remoto.py - salva_json - Carrega arquivo C:\Users\rrgnu\OneDrive\Documentos\MaxServicescnpj.txt
+2024-05-21 14:42:10 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread
+2024-05-21 14:42:13 - thread_verifica_remoto.py - salva_json - Efetua conexão remota
+2024-05-21 14:42:13 - thread_verifica_remoto.py - salva_json - Carrega arquivo C:\Users\rrgnu\OneDrive\Documentos\MaxServices\cnpj.txt
+2024-05-21 14:42:32 - thread_verifica_remoto.py - salva_json - Consultou remoto cnpj's "91703492234"
+2024-05-21 14:42:46 - thread_verifica_remoto.py - salva_json - Executou update remoto
+2024-05-21 14:44:22 - thread_verifica_remoto.py - salva_json - Efetua conexão remota
+2024-05-21 14:44:22 - thread_verifica_remoto.py - salva_json - Carrega arquivo C:\Users\rrgnu\OneDrive\Documentos\MaxServices\cnpj.txt
+2024-05-21 14:44:22 - thread_verifica_remoto.py - salva_json - Consultou remoto cnpj's "91703492234"
+2024-05-21 14:44:22 - thread_verifica_remoto.py - salva_json - Executou update remoto
+2024-05-21 14:44:24 - thread_verifica_remoto.py - salva_json - Efetua conexão remota
+2024-05-21 14:44:24 - thread_verifica_remoto.py - salva_json - Carrega arquivo C:\Users\rrgnu\OneDrive\Documentos\MaxServices\cnpj.txt
+2024-05-21 14:44:24 - thread_verifica_remoto.py - salva_json - Consultou remoto cnpj's "91703492234"
+2024-05-21 14:44:24 - thread_verifica_remoto.py - salva_json - Executou update remoto

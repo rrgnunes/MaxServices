@@ -1,5 +1,6 @@
 import fdb
-from funcoes import threading,os,json,datetime, parametros, envia_mensagem, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap
+from funcoes import threading,os,json,datetime, envia_mensagem, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap
+import parametros
 
 # thread do backup
 class threadzapautomato(threading.Thread):
@@ -12,7 +13,7 @@ class threadzapautomato(threading.Thread):
 
     def zapautomato(self):
         nome_servico = 'zap automato'
-        while not self.event.wait(10):
+        while not self.event.wait(1):
             #carrega config
             print_log(f'Iniciando',nome_servico)
             if os.path.exists("C:/Users/Public/config.json"):
@@ -41,8 +42,6 @@ class threadzapautomato(threading.Thread):
                             fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
                             conexao = fdb.connect(dsn=dsn, user=user, password=password)
                             cfg_zap = config_zap(conexao)
-
-                            print_log(f'Dados da configuração recebidos',nome_servico)
 
                             ENVIAR_MENSAGEM_ANIVERSARIO = cfg_zap['ENVIAR_MENSAGEM_ANIVERSARIO'] = 1
                             ENVIAR_MENSAGEM_PROMOCAO    = cfg_zap['ENVIAR_MENSAGEM_PROMOCAO'] = 1

@@ -1,0 +1,197 @@
+2024-05-21 13:41:37 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread - verificaremoto
+2024-05-21 13:44:32 - thread_verifica_remoto.py - salva_json - Efetua conexão remota - verificaremoto
+2024-05-21 14:19:31 - thread_verifica_remoto.py - salva_json - Carrega configurações da thread - backuplocal
+2024-05-21 14:23:38 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 14:27:42 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 14:37:17 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 14:41:26 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 14:42:11 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 14:44:18 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 14:44:24 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:18:21 - funcoes.py - envia_mensagem - Mensagem enviada para 66999710593
+2024-05-21 15:34:50 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:37:52 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:44:11 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:44:11 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 15:46:11 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:46:11 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 15:49:00 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:49:01 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 15:52:30 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:52:30 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 15:53:22 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:53:22 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 15:58:45 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 15:58:45 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:03:10 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 16:03:10 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:12:21 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-21 16:12:21 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:12:35 - funcoes.py - update - Atualização bem-sucedida!
+2024-05-21 16:24:54 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:31:04 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:31:50 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:32:25 - funcoes.py - inicializa_conexao_firebird - Erro ao conectar ao Firebird: Must supply one of:
+ 1. keyword argument dsn='host:/path/to/database'
+ 2. both keyword arguments host='host' and database='/path/to/database'
+ 3. only keyword argument database='/path/to/database'
+2024-05-21 16:33:15 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:47:07 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:49:48 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:52:02 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:52:23 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 16:53:09 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:53:09 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 16:54:43 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 16:54:43 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 17:41:14 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 17:41:14 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 17:48:20 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 17:48:20 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 17:51:39 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 17:51:39 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:10:05 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:10:05 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:18:19 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:18:19 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:18:31 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:18:31 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:19:28 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:19:29 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:20:03 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:20:03 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:20:50 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:20:50 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:21:36 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:21:36 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:23:07 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:23:07 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:24:07 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:24:07 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:28:19 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:28:19 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:29:15 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:29:15 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:32:06 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:32:06 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:32:25 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:32:25 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:38:18 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:38:18 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:39:24 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:39:24 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:42:12 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:42:12 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:44:07 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:44:07 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:44:44 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:44:44 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:48:25 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:48:25 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:49:55 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:49:55 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 18:58:55 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 18:58:55 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:00:27 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:00:27 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:01:32 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:01:32 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:02:54 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:02:54 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:03:35 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:03:35 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:07:30 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:07:30 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:08:31 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:08:32 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:12:22 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:12:22 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:16:51 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:16:51 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:24:23 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:24:23 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:25:33 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:25:33 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:26:10 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:26:10 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-21 19:28:07 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-21 19:28:07 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:30:19 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:30:45 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:30:58 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:31:50 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:31:56 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:31:56 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:32:24 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:33:11 - thread_xml_contador.py - xmlcontador - Inicia select das notas - xmlcontador
+2024-05-22 09:34:07 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:34:12 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:34:12 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:34:12 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:34:52 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:34:57 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:34:58 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:36:59 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:37:04 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:37:04 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:37:05 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:37:05 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:37:27 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:37:34 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:37:34 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:37:34 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:37:52 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:37:58 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:37:58 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:37:58 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:37:58 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:37:58 - thread_xml_contador.py - xmlcontador - Inicia select das notas - xmlcontador
+2024-05-22 09:40:28 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:40:28 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:40:28 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:40:29 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:40:34 - thread_xml_contador.py - xmlcontador - Inicia select das notas - xmlcontador
+2024-05-22 09:44:40 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:44:45 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:44:45 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:44:46 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:44:46 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:44:46 - thread_xml_contador.py - xmlcontador - Inicia select das notas - xmlcontador
+2024-05-22 09:45:27 - thread_xml_contador.py - xmlcontador - Inicia select contador - xmlcontador
+2024-05-22 09:46:40 - thread_xml_contador.py - xmlcontador - Inicia select MDFE - xmlcontador
+2024-05-22 09:48:18 - thread_xml_contador.py - xmlcontador - Carrega configurações da thread - xmlcontador
+2024-05-22 09:48:24 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:48:24 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:48:24 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 09:48:24 - thread_xml_contador.py - xmlcontador - Pega dados local - xmlcontador
+2024-05-22 09:48:24 - thread_xml_contador.py - xmlcontador - Inicia select das notas - xmlcontador
+2024-05-22 09:48:24 - thread_xml_contador.py - xmlcontador - Inicia select contador - xmlcontador
+2024-05-22 09:48:24 - thread_xml_contador.py - xmlcontador - Inicia select MDFE - xmlcontador
+2024-05-22 09:48:35 - thread_xml_contador.py - xmlcontador - Inicia select NFE - xmlcontador
+2024-05-22 09:48:46 - thread_xml_contador.py - xmlcontador - Inicia select NFCE - xmlcontador
+2024-05-22 09:48:49 - thread_xml_contador.py - xmlcontador - Inicia select COMPRAS - xmlcontador
+2024-05-22 09:52:02 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 09:52:02 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 09:52:03 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 10:04:00 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 10:04:00 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 10:04:00 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 10:07:16 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 10:10:07 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 10:10:18 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 10:10:19 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 10:11:04 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 10:11:04 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 10:11:04 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 10:11:45 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 10:11:45 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 10:11:46 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 10:12:12 - funcoes.py - consultar_sqlite - [{'ATUALIZAR_BANCO': 0}]
+2024-05-22 10:15:05 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 10:15:05 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 10:15:05 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 10:15:12 - funcoes.py - consultar_sqlite - [{'ATUALIZAR_BANCO': 1}]
+2024-05-22 10:55:21 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-05-22 10:55:21 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-05-22 10:55:21 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-05-22 10:55:21 - funcoes.py - consultar_sqlite - [{'ATUALIZAR_BANCO': 1}]

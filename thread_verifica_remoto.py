@@ -1,5 +1,5 @@
-from funcoes import *
-
+from funcoes import print_log, os,json,inicializa_conexao_mysql,threading,datetime
+import parametros
 
 class threadverificaremoto(threading.Thread):
     def __init__(self):
@@ -7,34 +7,29 @@ class threadverificaremoto(threading.Thread):
         self.event = threading.Event()
 
     def run(self):
-        self.do_something()
+        self.salva_json()
 
-    def do_something(self):
-        print_log(f"Carrega configurações da thread - backuplocal")
+    def salva_json(self):
+        print_log(f"Carrega configurações da thread" , 'verificaremoto')
         intervalo = -1
         while intervalo == -1:
-            path_config_thread = SCRIPT_PATH + "/config.json"
+            path_config_thread = parametros.SCRIPT_PATH + "\\config.json"
             if os.path.exists(path_config_thread):
                 with open(path_config_thread, 'r') as config_file:
                     config_thread = json.load(config_file)
             intervalo = config_thread['time_thread_verificaremoto']
 
-        # Conexão com o banco de dados
         while not self.event.wait(intervalo):
             try:
-                print_log("Efetua conexão remota - verificaremoto")
-                conn = mysql.connector.connect(
-                    host=HOSTMYSQL,
-                    user=USERMYSQL,
-                    password=PASSMYSQL,
-                    database=BASEMYSQL
-                )
+                parametros.MYSQL_CONNECTION = inicializa_conexao_mysql()
+
+                print_log("Efetua conexão remota" , 'verificaremoto')
+                conn = parametros.MYSQL_CONNECTION
 
                 # pego dados do arquivo
-                print_log(
-                    f"Carrega arquivo {SCRIPT_PATH}cnpj.txt - verificaremoto")
-                if os.path.exists(f"{SCRIPT_PATH}cnpj.txt"):
-                    with open(f"{SCRIPT_PATH}cnpj.txt", 'r') as config_file:
+                print_log(f"Carrega arquivo {parametros.SCRIPT_PATH}\\cnpj.txt" , 'verificaremoto')
+                if os.path.exists(f"{parametros.SCRIPT_PATH}\\cnpj.txt"):
+                    with open(f"{parametros.SCRIPT_PATH}\\cnpj.txt", 'r') as config_file:
                         cnpj_list = config_file.read().split('\n')
                 cnpj = ''
                 for s in cnpj_list:
@@ -51,16 +46,15 @@ class threadverificaremoto(threading.Thread):
                             ip
                     FROM cliente_cliente where cnpj in ({cnpj})""")
                 rows = cursor.fetchall()
-                print_log(f"Consultou remoto cnpj's {cnpj} - verificaremoto")
+                print_log(f"Consultou remoto cnpj's {cnpj}" , 'verificaremoto')
 
                 datahoraagora = datetime.datetime.now(
                     datetime.timezone(datetime.timedelta(hours=-4)))
                 cursor = conn.cursor()
                 cursor.execute(
                     f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
-                print_log(f"Executou update remoto - verificaremoto")
+                print_log(f"Executou update remoto" , 'verificaremoto')
                 conn.commit()
-                conn.close()
 
                 config = {}
                 config['sistema'] = {}
@@ -82,7 +76,4 @@ class threadverificaremoto(threading.Thread):
                 with open('C:/Users/Public/config.json', 'w') as configfile:
                     json.dump(config, configfile)
             except Exception as a:
-                # self.logger.error(f"{self._svc_name_} {a}.")
-                print_log(a)
-                
-            time.sleep(23)
+                print_log(a, 'verificaremoto')

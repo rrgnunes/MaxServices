@@ -42,7 +42,7 @@ def qrcode_session(session):
 
     headers = {
         "accept": "*/*",
-        "Authorization": "Bearer " + parametros.TOKEN_ZAP  # Substitua SEU_parametros.TOKEN_ZAP_AQUI pelo seu parametros.TOKEN_ZAP de autenticação real
+        "Authorization": "Bearer " + parametros.TOKEN_ZAP
     }
     response = requests.get(enpoint, headers=headers)
 
@@ -50,13 +50,11 @@ def qrcode_session(session):
 
 def start_session(session):
     enpoint = f'{url}/api/{session}/start-session'
-    tudo_ok =False
+    tudo_ok = False
     while not tudo_ok:
-
-
         headers = {
             "accept": "*/*",
-            "Authorization": "Bearer " + parametros.TOKEN_ZAP  # Substitua SEU_parametros.TOKEN_ZAP_AQUI pelo seu parametros.TOKEN_ZAP de autenticação real
+            "Authorization": "Bearer " + parametros.TOKEN_ZAP
         }
         response = requests.post(enpoint, headers=headers)
         response = retorna_json(response)    
@@ -73,7 +71,7 @@ def status_session(session):
     while not tudo_ok:
         headers = {
             "accept": "*/*",
-            "Authorization": "Bearer " + parametros.TOKEN_ZAP  # Substitua SEU_parametros.TOKEN_ZAP_AQUI pelo seu parametros.TOKEN_ZAP de autenticação real
+            "Authorization": "Bearer " + parametros.TOKEN_ZAP
         }
         response = requests.get(enpoint, headers=headers)
         response = retorna_json(response)    
@@ -92,7 +90,8 @@ def gera_qrcode(data_qrcode):
     qr_img_data = base64.b64decode(data_qrcode)
     if parametros.LAST_IMAGE != data_qrcode:
        parametros.LAST_IMAGE = data_qrcode
-       os.remove("c:\maxsuport\qr_code_with_border.png")
+       if os.path.exists(os.path.join(parametros.SCRIPT_PATH, "qr_code_with_border.png")):
+            os.remove(os.path.join(parametros.SCRIPT_PATH, "qr_code_with_border.png"))
 
     # Cria uma imagem a partir dos dados decodificados
     image = Image.open(BytesIO(qr_img_data))
@@ -101,7 +100,7 @@ def gera_qrcode(data_qrcode):
     bordered_image = add_border_to_image(image, border=10, color='white')
 
     # Salva a imagem com borda
-    bordered_image.save("c:\maxsuport\qr_code_with_border.png")
+    bordered_image.save(os.path.join(parametros.SCRIPT_PATH, "qr_code_with_border.png"))
 
 def close_zap(session):
     headers = {
@@ -113,7 +112,7 @@ def close_zap(session):
     enpoint = f'{url}/api/{session}/close-session'
     response = requests.post(enpoint, headers=headers)
 
-def envia_mensagem_zap(session, numero,mensagem):
+def envia_mensagem_zap(session, numero, mensagem):
     retorno = False
     enpoint = f'{url}/api/{session}/send-message'
     payload = json.dumps({
@@ -144,38 +143,4 @@ def receber_mensagem(session):
 
     response = requests.get(enpoint, headers=headers)
     response = retorna_json(response)       
-    response = response 
-
-# name_session = "Suport001"
-# token = generate_token(name_session)
-# parametros.TOKEN_ZAP = token['token']
-# retorno = start_session(name_session)
-# if retorno['status'] != 'CONNECTED':
-#     gera_qrcode(str(retorno['qrcode']).split(',')[1])
-# status_session(name_session)
-# #qrcode_session(name_session)
-# for i in range(0,50):
-#     envia_mensagem(name_session, f'''Os anos passam, mas muito mais que a idade você vai ganhando sabedoria, experiência, conhecimento ...
-# Que nesse novo ciclo represente a chegada de muitas alegrias e realizações para a sua vida, que essa data seja uma lembrança doce que a vida não para, que o tempo não desacelera, então não deixe para depois tudo aquilo que você pode viver intensamente hoje....   
-# Feliz Aniversario
-# Nessa data especial o Studio Ruby te presenteia com uma aplicação de argiloterapia + aromoterapia no seu próximo agendamento
-# Os anos passam, mas muito mais que a idade você vai ganhando sabedoria, experiência, conhecimento ...
-# Que nesse novo ciclo represente a chegada de muitas alegrias e realizações para a sua vida, que essa data seja uma lembrança doce que a vida não para, que o tempo não desacelera, então não deixe para depois tudo aquilo que você pode viver intensamente hoje....   
-# Feliz Aniversario
-# Nessa data especial o Studio Ruby te presenteia com uma aplicação de argiloterapia + aromoterapia no seu próximo agendamento
-# Os anos passam, mas muito mais que a idade você vai ganhando sabedoria, experiência, conhecimento ...
-# Que nesse novo ciclo represente a chegada de muitas alegrias e realizações para a sua vida, que essa data seja uma lembrança doce que a vida não para, que o tempo não desacelera, então não deixe para depois tudo aquilo que você pode viver intensamente hoje....   
-# Feliz Aniversario
-# Nessa data especial o Studio Ruby te presenteia com uma aplicação de argiloterapia + aromoterapia no seu próximo agendamento
-# Os anos passam, mas muito mais que a idade você vai ganhando sabedoria, experiência, conhecimento ...
-# Que nesse novo ciclo represente a chegada de muitas alegrias e realizações para a sua vida, que essa data seja uma lembrança doce que a vida não para, que o tempo não desacelera, então não deixe para depois tudo aquilo que você pode viver intensamente hoje....   
-# Feliz Aniversario
-# Nessa data especial o Studio Ruby te presenteia com uma aplicação de argiloterapia + aromoterapia no seu próximo agendamento
-# Os anos passam, mas muito mais que a idade você vai ganhando sabedoria, experiência, conhecimento ...
-# Que nesse novo ciclo represente a chegada de muitas alegrias e realizações para a sua vida, que essa data seja uma lembrança doce que a vida não para, que o tempo não desacelera, então não deixe para depois tudo aquilo que você pode viver intensamente hoje....   
-# Feliz Aniversario
-# Nessa data especial o Studio Ruby te presenteia com uma aplicação de argiloterapia + aromoterapia no seu próximo agendamento''')
-#     #receber_mensagem(name_session)
-#     time.sleep(10)
-
-# token = token
+    return response 
