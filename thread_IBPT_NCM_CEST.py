@@ -39,7 +39,7 @@ def IBPTNCMCEST():
                             resultados = cursorMYSQL.fetchall()
 
                             # Salva os dados em um arquivo CSV
-                            with open('resultados.csv', mode='w', encoding='utf-8', newline='') as f:
+                            with open('resultados.csv', encoding='utf-8', mode='w', newline='') as f:
                                 writer = csv.DictWriter(f, fieldnames=resultados[0].keys())
                                 writer.writeheader()
                                 writer.writerows(resultados)
@@ -61,14 +61,14 @@ def IBPTNCMCEST():
 
                                 contagem = 0
 
-                                for row in cursorMYSQL:
+                                for row in resultados:
                                     cursorFirebird.execute("""
                                         INSERT INTO IBPT (
                                             CODIGO, EX, TIPO, DESCRICAO, NACIONALFEDERAL, IMPORTADOSFEDERAL, 
                                             ESTADUAL, MUNICIPAL, VIGENCIAINICIO, VIGENCIAFIM, CHAVE, VERSAO, FONTE
-                                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                        ) VALUES (?, ?, ?, CAST(? AS VARCHAR(250) CHARACTER SET UTF8), ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                     """, (
-                                        row['codigo'], row['ex'], row['tipo'], row['descricao'][:250], row['nacional_federal'], 
+                                        row['codigo'], row['ex'], row['tipo'], row['descricao'][:250].encode('utf-8'), row['nacional_federal'], 
                                         row['importados_federal'], row['estadual'], row['municipal'], row['vigencia_inicio'], 
                                         row['vigencia_fim'], row['chave'], row['versao'], row['fonte']
                                     ))
