@@ -491,3 +491,88 @@
 2024-05-21 19:28:25 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.181', 42137)
 2024-05-21 19:28:25 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.181', 35545)
 2024-05-21 19:28:27 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.181', 37271)
+2024-05-29 18:04:31 - thread_servidor_socket.py - servidor_socket - Carrega configurações da thread
+2024-05-29 18:04:31 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-29 18:04:31 - thread_servidor_socket.py - servidor_socket - Iniciando conexão com banco
+2024-05-29 18:04:31 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-29 18:05:41 - thread_servidor_socket.py - servidor_socket - Carrega configurações da thread
+2024-05-29 18:05:41 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-29 18:05:41 - thread_servidor_socket.py - servidor_socket - Iniciando conexão com banco
+2024-05-29 18:05:41 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-29 18:06:47 - thread_servidor_socket.py - servidor_socket - Carrega configurações da thread
+2024-05-29 18:06:47 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-29 18:06:47 - thread_servidor_socket.py - servidor_socket - Iniciando conexão com banco
+2024-05-29 18:06:47 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-29 18:09:03 - thread_servidor_socket.py - servidor_socket - Carrega configurações da thread
+2024-05-29 18:09:03 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-29 18:09:03 - thread_servidor_socket.py - servidor_socket - Iniciando conexão com banco
+2024-05-29 18:09:03 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:03:07 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:03:31 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:03:36 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:03:47 - thread_servidor_socket.py - servidor_socket - Iniciando conexão com banco
+2024-05-31 17:05:07 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:05:07 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:05:08 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:08:59 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 37529)
+2024-05-31 17:09:50 - thread_servidor_socket.py - handle_client_connection - Erro ao tratar a conexão do cliente: consulta_completa() missing 1 required positional argument: 'comando_sql'
+2024-05-31 17:09:57 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:09:57 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:09:58 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:10:17 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 39493)
+2024-05-31 17:10:28 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:10:28 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:10:29 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:10:45 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 40895)
+2024-05-31 17:11:12 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:11:12 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:11:13 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:11:23 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 42179)
+2024-05-31 17:11:49 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:11:49 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:11:50 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:12:00 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 41849)
+2024-05-31 17:12:26 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:12:26 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:12:27 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:12:36 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 40841)
+2024-05-31 17:12:50 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 42141)
+2024-05-31 17:12:50 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 38831)
+2024-05-31 17:12:51 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 37275)
+2024-05-31 17:12:52 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 42721)
+2024-05-31 17:12:53 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 38247)
+2024-05-31 17:12:53 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 42945)
+2024-05-31 17:12:53 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 40303)
+2024-05-31 17:14:02 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.187', 41405)
+2024-05-31 17:14:17 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.187', 39277)
+2024-05-31 17:14:17 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.187', 45827)
+2024-05-31 17:24:53 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.187', 46705)
+2024-05-31 17:24:59 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 42617)
+2024-05-31 17:25:04 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 40891)
+2024-05-31 17:25:04 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.155', 37021)
+2024-05-31 17:25:07 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.187', 43675)
+2024-05-31 17:25:07 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.187', 46383)
+2024-05-31 17:26:36 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.181', 37547)
+2024-05-31 17:26:48 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.181', 44495)
+2024-05-31 17:26:48 - thread_servidor_socket.py - servidor_socket - Conectado por ('192.168.10.181', 46451)
+2024-05-31 17:28:17 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:28:17 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:28:18 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-05-31 17:30:26 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-05-31 17:30:26 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-05-31 17:30:27 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-07-12 12:05:20 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-07-12 12:05:20 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-07-12 12:05:21 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-07-12 12:08:11 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-07-12 12:08:11 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-07-12 12:08:11 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-07-12 12:08:56 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-07-12 12:08:56 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-07-12 12:08:57 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-07-12 12:09:32 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-07-12 12:09:32 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-07-12 12:09:32 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001
+2024-07-12 12:11:10 - thread_servidor_socket.py - servidor_socket - Carrega configurações
+2024-07-12 12:11:10 - thread_servidor_socket.py - servidor_socket - Pega dados local
+2024-07-12 12:11:11 - thread_servidor_socket.py - servidor_socket - Servidor escutando em 192.168.10.207:50001

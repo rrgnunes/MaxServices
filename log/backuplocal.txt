@@ -54,3 +54,29 @@
 2024-05-21 16:12:51 - thread_backup_local.py - backup - Arquivo C:\Users\Rodrigo Nunes\Documents\Compartilhada\maxsuport\91703492234\backup_2024_05_21_16_12_21_maxsuport.fdb.xz enviado para o Dropbox em /91703492234/backup/maxsuport/backup_2024_05_21_16_12_21_maxsuport.fdb.xz
 2024-05-21 16:13:11 - thread_backup_local.py - backup - Termina backup - backuplocal
 2024-05-21 16:13:33 - thread_backup_local.py - backup - Finalizado
+2024-05-29 18:04:31 - thread_backup_local.py - backup - Carrega configurações da thread
+2024-05-29 18:04:47 - thread_backup_local.py - backup - Efetua conexão remota
+2024-05-29 18:04:48 - thread_backup_local.py - backup - Pega dados local
+2024-05-29 18:04:48 - thread_backup_local.py - backup - Inicia backup
+2024-05-29 18:04:48 - thread_backup_local.py - backup - Executou comando copy "C:\MaxSuport\Dados\dados.FDB" "C:\Users\Rodrigo Nunes\Documents\Compartilhada\maxsuport\91703492234"
+2024-05-29 18:05:41 - thread_backup_local.py - backup - Carrega configurações da thread
+2024-05-29 18:06:06 - thread_backup_local.py - backup - Efetua conexão remota
+2024-05-29 18:06:06 - thread_backup_local.py - backup - Pega dados local
+2024-05-29 18:06:47 - thread_backup_local.py - backup - Carrega configurações da thread
+2024-05-29 18:09:03 - thread_backup_local.py - backup - Carrega configurações da thread
+2024-05-29 18:09:04 - thread_backup_local.py - backup - Efetua conexão remota
+2024-05-29 18:09:04 - thread_backup_local.py - backup - Pega dados local
+2024-05-29 18:09:04 - thread_backup_local.py - backup - Inicia backup
+2024-05-29 18:09:04 - thread_backup_local.py - backup - Executou comando copy "C:\MaxSuport\Dados\dados.FDB" "C:\Users\Rodrigo Nunes\Documents\Compartilhada\maxsuport\91703492234"
+2024-05-31 16:53:37 - thread_backup_local.py - backup - Carrega configurações da thread
+2024-05-31 16:54:17 - thread_backup_local.py - backup - Efetua conexão remota
+2024-05-31 16:54:49 - thread_backup_local.py - backup - Carrega configurações da thread
+2024-05-31 16:54:50 - thread_backup_local.py - backup - Efetua conexão remota
+2024-05-31 16:55:24 - thread_backup_local.py - backup - Pega dados local
+2024-05-31 16:55:36 - thread_backup_local.py - backup - Inicia backup
+2024-05-31 16:55:46 - thread_backup_local.py - backup - Executou comando copy "C:\MaxSuport\Dados\dados.FDB" "C:\Users\Rodrigo Nunes\Documents\Compartilhada\maxsuport\91703492234"
+2024-05-31 16:56:02 - thread_backup_local.py - backup - Criou arquivo compactado backup_2024_05_31_16_55_32_maxsuport.fdb.xz
+2024-05-31 16:56:07 - thread_backup_local.py - backup - Executou update remoto
+2024-05-31 16:56:59 - thread_backup_local.py - backup - Arquivo C:\Users\Rodrigo Nunes\Documents\Compartilhada\maxsuport\91703492234\backup_2024_05_31_16_55_32_maxsuport.fdb.xz enviado para o Dropbox em /91703492234/backup/maxsuport/backup_2024_05_31_16_55_32_maxsuport.fdb.xz
+2024-05-31 16:57:06 - thread_backup_local.py - backup - Termina backup
+2024-05-31 16:57:07 - thread_backup_local.py - backup - Finalizado {data_hora_formatada}

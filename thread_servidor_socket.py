@@ -9,153 +9,139 @@ from decimal import Decimal
 import parametros
 import base64
 
-class threadservidorsocket(threading.Thread):
-    def __init__(self, port=50001):
-        super().__init__()
-        self.event = threading.Event()
-        self.host = self.get_local_ip()  # Obtém o IP local da máquina
-        self.port = port
-        self.conFirebird = None
 
-    def run(self):
-        self.servidor_socket()
+def get_local_ip():
+    """
+    Obtém o endereço IP local da máquina.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Não precisa realmente enviar dados para obter o IP
+        s.connect(('10.254.254.254', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
 
-    def get_local_ip(self):
-        """
-        Obtém o endereço IP local da máquina.
-        """
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # Não precisa realmente enviar dados para obter o IP
-            s.connect(('10.254.254.254', 1))
-            ip = s.getsockname()[0]
-        except Exception:
-            ip = '127.0.0.1'
-        finally:
-            s.close()
-        return ip
+def handle_client_connection(client_socket):
+    """
+    Função para tratar a conexão com cada cliente em uma thread separada.
+    """
+ 
+    try:
+        with client_socket as conn:
+            while True:
+                dados = conn.recv(1024)
+                if not dados:
+                    break
+                request = dados.decode('utf-8')
+                sTipo = request[0]
 
-    def handle_client_connection(self, client_socket):
-        """
-        Função para tratar a conexão com cada cliente em uma thread separada.
-        """
-        try:
-            with client_socket as conn:
-                while True:
-                    dados = conn.recv(1024)
-                    if not dados:
-                        break
-                    request = dados.decode('utf-8')
-                    sTipo = request[0]
+                if sTipo == '1':
+                    mensagem = request[1:]
+                    mostrar_alerta(mensagem)
+                    send_response(conn, '200')
+                elif sTipo == '2':
+                    mensagem = request[1:]
+                    #mostrar_bandeja(mensagem)
+                    send_response(conn, '200')
+                elif sTipo == '3':
+                    comando_sql = request[1:]
+                    resultado = consultar_sqlite(comando_sql)
+                    resposta = json.dumps(resultado)
+                    send_response(conn, resposta)
+                elif sTipo == '4':
+                    valores = request[1:]
+                    sMesa, sEmpresa, sTipoImpressao = valores.split('&')
+                    sTipoImpressao = sTipoImpressao.split(';')[0]
+                    if sTipoImpressao == 'ResumoPedido':
+                        efetua_impressao_comanda(sMesa, sEmpresa)
+                    elif sTipoImpressao == 'ResumoMesa':
+                        efetua_impressao_resumo_mesa(sMesa, sEmpresa)
+                    send_response(conn, '200')
+                elif sTipo == '5':
+                    comando_sql = request[1:].split(';')[0]
+                    resultado = consulta_completa(comando_sql)
+                    send_response(conn, resultado)
+    except Exception as e:
+        print_log(f"Erro ao tratar a conexão do cliente: {e}", "servidor_socket")
 
-                    if sTipo == '1':
-                        mensagem = request[1:]
-                        mostrar_alerta(mensagem)
-                        self.send_response(conn, '200')
-                    elif sTipo == '2':
-                        mensagem = request[1:]
-                        mostrar_bandeja(mensagem)
-                        self.send_response(conn, '200')
-                    elif sTipo == '3':
-                        comando_sql = request[1:]
-                        resultado = consultar_sqlite(comando_sql)
-                        resposta = json.dumps(resultado)
-                        self.send_response(conn, resposta)
-                    elif sTipo == '4':
-                        valores = request[1:]
-                        sMesa, sEmpresa, sTipoImpressao = valores.split('&')
-                        sTipoImpressao = sTipoImpressao.split(';')[0]
-                        if sTipoImpressao == 'ResumoPedido':
-                            efetua_impressao_comanda(sMesa, sEmpresa)
-                        elif sTipoImpressao == 'ResumoMesa':
-                            efetua_impressao_resumo_mesa(sMesa, sEmpresa)
-                        self.send_response(conn, '200')
-                    elif sTipo == '5':
-                        comando_sql = request[1:]
-                        resultado = self.consulta_completa(comando_sql)
-                        self.send_response(conn, resultado)
-        except Exception as e:
-            print_log(f"Erro ao tratar a conexão do cliente: {e}", "servidor_socket")
+def servidor_socket():
+    print_log("Carrega configurações", "servidor_socket")
+    host = get_local_ip()  # Obtém o IP local da máquina
+    port = 50001           
+    try:
+        print_log("Pega dados local", "servidor_socket")
+        carregar_configuracoes()
 
-    def servidor_socket(self):
-        print_log("Carrega configurações da thread", "servidor_socket")
-        try:
-            print_log("Pega dados local", "servidor_socket")
-            carregar_configuracoes()
+        for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
+            ativo = dados_cnpj['sistema_ativo'] == '1'
+            sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
+            porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+            path_fbclient = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
 
-            for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
-                ativo = dados_cnpj['sistema_ativo'] == '1'
-                sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-                caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-                caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
-                porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
-                path_fbclient = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((host, port))
+            s.listen()
+            print_log(f"Servidor escutando em {host}:{port}", "servidor_socket")
+            
+            while True:
+                conn, addr = s.accept()
+                print_log(f"Conectado por {addr}", "servidor_socket")
+                client_thread = threading.Thread(target=handle_client_connection, args=(conn,))
+                client_thread.start()
+    except Exception as e:
+        print_log(f"Erro no servidor: {e}", "servidor_socket")
 
-                if ativo:
-                    print_log("Iniciando conexão com banco", "servidor_socket")
-                    if sistema_em_uso == '1':  # maxsuport
-                        if caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
-                            inicializa_conexao_firebird(path_fbclient)
-                            break  # Saia do loop assim que a conexão for estabelecida
+def consulta_completa(comando_sql):
 
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind((self.host, self.port))
-                s.listen()
-                print_log(f"Servidor escutando em {self.host}:{self.port}", "servidor_socket")
-                
-                while not self.event.is_set():
-                    conn, addr = s.accept()
-                    print_log(f"Conectado por {addr}", "servidor_socket")
-                    client_thread = threading.Thread(target=self.handle_client_connection, args=(conn,))
-                    client_thread.start()
-        except Exception as e:
-            print_log(f"Erro no servidor: {e}", "servidor_socket")
-
-    def consulta_completa(self, comando_sql):
-
-        def json_serial(obj):
-            """Função auxiliar para serializar objetos datetime, date e Decimal em strings."""
-            if isinstance(obj, (datetime, date)):
-                return obj.strftime("%d/%m/%Y %H:%M:%S") if isinstance(obj, datetime) else obj.strftime("%d/%m/%Y")
-            elif isinstance(obj, Decimal):
-                return str(obj).replace('.', ',')   
-            elif isinstance(obj, fdb.fbcore.BlobReader):
-                return base64.b64encode(obj.read()).decode('utf-8')
-            elif isinstance(obj, bytes):
-                return obj.decode('utf-8')                           
+    def json_serial(obj):
+        """Função auxiliar para serializar objetos datetime, date e Decimal em strings."""
+        if isinstance(obj, (datetime, date)):
+            return obj.strftime("%d/%m/%Y %H:%M:%S") if isinstance(obj, datetime) else obj.strftime("%d/%m/%Y")
+        elif isinstance(obj, Decimal):
+            return str(obj).replace('.', ',')   
+        elif isinstance(obj, fdb.fbcore.BlobReader):
+            return base64.b64encode(obj.read()).decode('utf-8')
+        elif isinstance(obj, bytes):
+            return obj.decode('utf-8')                           
+        else:
+            if obj is None:
+                return ''
             else:
-                if obj is None:
-                    return ''
-                else:
-                    return obj
+                return obj
 
-        try:
-            cursor = parametros.FIREBIRD_CONNECTION.cursor()
-            if comando_sql.strip().upper().startswith('SELECT'):
-                cursor.execute(comando_sql)
-                rows = cursor.fetchall()
-                resultado = [
-                    {cursor.description[i][0]: json_serial(value) for i, value in enumerate(row)}
-                    for row in rows
-                ]
-                return json.dumps(resultado)
-            else:
-                cursor.execute(comando_sql)
-                parametros.FIREBIRD_CONNECTION.commit()
-                return '200'
-        except fdb.fbcore.DatabaseError as e:
-            erro_msg = f"Erro no Banco de Dados: {e}"
-            print_log(erro_msg, "servidor_socket")
-            return json.dumps({'erro': erro_msg})
-        except Exception as e:
-            erro_msg = f"Erro ao executar comando SQL: {e}"
-            print_log(erro_msg, "servidor_socket")
-            return json.dumps({'erro': erro_msg})
+    try:
+        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        if comando_sql.strip().upper().startswith('SELECT'):
+            cursor.execute(comando_sql)
+            rows = cursor.fetchall()
+            resultado = [
+                {cursor.description[i][0]: json_serial(value) for i, value in enumerate(row)}
+                for row in rows
+            ]
+            return json.dumps(resultado)
+        else:
+            cursor.execute(comando_sql)
+            parametros.FIREBIRD_CONNECTION.commit()
+            return '200'
+    except fdb.fbcore.DatabaseError as e:
+        erro_msg = f"Erro no Banco de Dados: {e}"
+        print_log(erro_msg, "servidor_socket")
+        return json.dumps({'erro': erro_msg})
+    except Exception as e:
+        erro_msg = f"Erro ao executar comando SQL: {e}"
+        print_log(erro_msg, "servidor_socket")
+        return json.dumps({'erro': erro_msg})
 
-    def send_response(self, conn, response):
-        response += '\n'
-        response_bytes = response.encode('utf-8')
-        conn.sendall(response_bytes)
+def send_response(conn, response):
+    response += '\n'
+    response_bytes = response.encode('utf-8')
+    conn.sendall(response_bytes)
 
 def mostrar_alerta(mensagem):
     exibe_alerta(mensagem)
@@ -337,7 +323,4 @@ def imprime_documento(texto):
     win32print.EndDocPrinter(printer_handle)
     win32print.ClosePrinter(printer_handle)
 
-
-if __name__ == "__main__":
-    servidor = threadservidorsocket()
-    servidor.start()
+servidor_socket()

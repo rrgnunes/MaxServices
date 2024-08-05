@@ -14,7 +14,5 @@ def instalar_biblioteca(biblioteca):
         pip_main(['install', biblioteca])
         print(f"A biblioteca {biblioteca} foi instalada com sucesso.")
 
-# Exemplo de uso
-biblioteca_desejada = "dropbox"
-instalar_biblioteca(biblioteca_desejada)
+instalar_biblioteca("dropbox")
 instalar_biblioteca('Pillow')

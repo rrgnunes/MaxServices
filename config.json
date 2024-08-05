@@ -1,8 +1,40 @@
 {
-  "time_thread_xmlcontador":5,
-  "time_thread_alertabloqueio":900,
-  "time_thread_backuplocal":1,
-  "time_thread_verificaremoto":1,
-  "producao":0,
-  "xml_contador_dias_busca_nota": -15
+  "scripts": [
+      {
+          "name": "servico.py",
+          "interval": 10
+      },
+      {
+          "name": "maxupdate.py",
+          "interval": 3600
+      },
+      {
+          "name": "thread_verifica_remoto.py",
+          "interval": 300
+      },
+      {
+          "name": "thread_backup_local.py",
+          "interval": 600
+      },
+      {
+          "name": "thread_servidor_socket.py",
+          "interval": 3600
+      },
+      {
+          "name": "thread_xml_contador.py",
+          "interval": 1800
+      },
+      {
+          "name": "thread_atualiza_banco.py",
+          "interval": 7200
+      },
+      {
+          "name": "thread_zap_automato.py",
+          "interval": 3600
+      },
+      {
+          "name": "thread_IBPT_NCM_CEST.py",
+          "interval": 3600
+      }
+  ]
 }

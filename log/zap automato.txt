@@ -206,3 +206,17 @@
 2024-05-21 15:20:40 - thread_zap_automato.py - zapautomato - Vou validar para enviar mensagem
 2024-05-21 15:20:40 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos
 2024-05-21 15:20:40 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos
+2024-05-29 18:04:40 - thread_zap_automato.py - zapautomato - Iniciando
+2024-05-29 18:04:41 - thread_zap_automato.py - zapautomato - Vou validar para enviar mensagem
+2024-05-29 18:04:45 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos
+2024-05-29 18:05:50 - thread_zap_automato.py - zapautomato - Iniciando
+2024-05-29 18:05:58 - thread_zap_automato.py - zapautomato - Vou validar para enviar mensagem
+2024-05-29 18:05:59 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos
+2024-05-29 18:06:54 - thread_zap_automato.py - zapautomato - Iniciando
+2024-05-29 18:06:54 - thread_zap_automato.py - zapautomato - Vou validar para enviar mensagem
+2024-05-29 18:09:04 - thread_zap_automato.py - zapautomato - Iniciando
+2024-05-29 18:09:04 - thread_zap_automato.py - zapautomato - Vou validar para enviar mensagem
+2024-05-29 18:09:04 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos
+2024-05-31 17:36:38 - thread_zap_automato.py - zapautomato - Iniciando
+2024-05-31 17:36:40 - thread_zap_automato.py - zapautomato - Vou validar para enviar mensagem
+2024-05-31 17:36:40 - thread_zap_automato.py - zapautomato - Dados da configuração recebidos

@@ -1,67 +1,75 @@
 import fdb
-from funcoes import threading, os, json, datetime, marca_banco_atualizado, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, check_banco_atualizar,carregar_configuracoes
+from funcoes import os, json, datetime, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes
 import parametros
+import configparser
 
-class threadatualizabanco(threading.Thread):
-    def __init__(self):
-        super().__init__()
-        self.event = threading.Event()
+def atualiza_banco():
+    carregar_configuracoes()
+    try:
+        for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
+            ativo = dados_cnpj['sistema_ativo'] == '1'
+            sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+            porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
 
-    def run(self):
-        self.atualiza_banco()
+            SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
+            SCRIPT_PATH = SCRIPT_PATH.lower().replace('server','')
+            # Inicializa o parser
+            config = configparser.ConfigParser()
 
-    def atualiza_banco(self):
-        while not self.event.wait(10):
-            carregar_configuracoes()
-            try:
-                for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
-                    ativo = dados_cnpj['sistema_ativo'] == '1'
-                    sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-                    caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-                    porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
-                    caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
+            # Carrega o arquivo INI
+            config.read(SCRIPT_PATH + '/banco.ini')
 
-                    if ativo and sistema_em_uso == '1':
-                        print_log('Vou checar se é para atualizar', 'Atualiza_Banco')
-                        if check_banco_atualizar() == 1:
-                            server_origem = "177.153.69.3"
-                            port_origem = 3050
-                            path_origem = "/home/maxsuport/base/maxsuport/dados.fdb"
+            if ativo and sistema_em_uso == '1':
+                print_log('Vou checar se é para atualizar', 'Atualiza_Banco')
+                atualiza_banco = 0
 
-                            server_destino = "127.0.0.1"
-                            port_destino = porta_firebird_maxsuport
-                            path_destino = caminho_base_dados_maxsuport
-                            user_destino = parametros.USERFB
-                            password_destino = parametros.PASSFB
+                if 'manutencao' in config and 'atualizabanco' in config['manutencao']:
+                    atualiza_banco = config['manutencao']['atualizabanco']
 
-                            dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
-                            dsn_destino = f"{server_destino}/{port_destino}:{path_destino}"
+                if str(atualiza_banco) == '1':
+                    server_origem = "177.153.69.3"
+                    port_origem = 3050
+                    path_origem = "/home/maxsuport/base/maxsuport/dados.fdb"
 
-                            fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
+                    server_destino = "127.0.0.1"
+                    port_destino = porta_firebird_maxsuport
+                    path_destino = caminho_base_dados_maxsuport
+                    user_destino = parametros.USERFB
+                    password_destino = parametros.PASSFB
 
-                            conexao_origem = fdb.connect(dsn=dsn_origem, user=parametros.USERFB, password=parametros.PASSFB)
-                            conexao_destino = fdb.connect(dsn=dsn_destino, user=user_destino, password=password_destino)
+                    dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
+                    dsn_destino = f"{server_destino}/{port_destino}:{path_destino}"
 
-                            metadados_origem = extrair_metadados(conexao_origem)
-                            metadados_destino = extrair_metadados(conexao_destino)
-                            
-                            scripts_sql = gerar_scripts_diferencas(metadados_origem, metadados_destino)
+                    fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
 
-                            erros = executar_scripts_sql(conexao_destino, scripts_sql)
+                    conexao_origem = fdb.connect(dsn=dsn_origem, user='sysdba', password='masterkey')
+                    conexao_destino = fdb.connect(dsn=dsn_destino, user=user_destino, password=password_destino)
 
-                            if erros:
-                                print_log("Erros encontrados durante a execução dos scripts:", "Atualiza_Banco")
-                                for erro in erros:
-                                    print_log(f"    Script: {erro['script']}\nErro: {erro['erro']}\n", 'Atualiza_Banco')
-                            else:
-                                print_log('Todos os scripts foram executados com sucesso.', 'Atualiza_Banco')
+                    metadados_origem = extrair_metadados(conexao_origem)
+                    metadados_destino = extrair_metadados(conexao_destino)
+                    
+                    scripts_sql = gerar_scripts_diferencas(metadados_origem, metadados_destino)
 
-                            marca_banco_atualizado()
-                            print_log('Tabela atualizada', "Atualiza_Banco")
-            except Exception as e:
-                print_log(f"Erro na atualização do banco: {e}", "Atualiza_Banco")
+                    erros = executar_scripts_sql(conexao_destino, scripts_sql)
 
-# Inicializar a thread
-if __name__ == "__main__":
-    thread = threadatualizabanco()
-    thread.start()
+                    if erros:
+                        print_log("Erros encontrados durante a execução dos scripts:", "Atualiza_Banco")
+                        for erro in erros:
+                            print_log(f"    Script: {erro['script']}\nErro: {erro['erro']}\n", 'Atualiza_Banco')
+                    else:
+                        print_log('Todos os scripts foram executados com sucesso.', 'Atualiza_Banco')
+
+                    config['manutencao']['atualizabanco'] = '0'
+
+                    # Salva as mudanças de volta no arquivo INI
+                    with open(SCRIPT_PATH + '/banco.ini', 'w') as configfile:
+                        config.write(configfile)
+
+                    print_log('Tabela atualizada', "Atualiza_Banco")
+    except Exception as e:
+        print_log(f"Erro na atualização do banco: {e}", "Atualiza_Banco")
+
+
+atualiza_banco()

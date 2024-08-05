@@ -56,7 +56,13 @@ def start_session(session):
             "accept": "*/*",
             "Authorization": "Bearer " + parametros.TOKEN_ZAP
         }
-        response = requests.post(enpoint, headers=headers)
+
+        payload = {
+        "webhook": "",
+        "waitQrCode": True
+        }
+
+        response = requests.post(enpoint, headers=headers, data=payload)
         response = retorna_json(response)    
         time.sleep(5)
         print(response['status'])

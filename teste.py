@@ -1,64 +1,63 @@
 import sys
 
 def run_servico():
-    from servico import MaxServices
-    args = ['dummy_arg']
-    service = MaxServices(args)
-    service.SvcDoRun()
+    import servico
+    servico.MaxServices()
 
 def run_thread_verifica_remoto():
-    from thread_verifica_remoto import threadverificaremoto
-    thread = threadverificaremoto()
-    thread.run()
+    import thread_verifica_remoto 
+    thread_verifica_remoto.salva_json()
 
 def run_thread_backup_local():
-    from thread_backup_local import threadbackuplocal
-    thread = threadbackuplocal()
-    thread.run()
+    import thread_backup_local
+    thread_backup_local.backup()
 
 def run_thread_servidor_socket():
-    from thread_servidor_socket import threadservidorsocket
-    thread = threadservidorsocket()
-    thread.run()
+    import thread_servidor_socket
+    thread_servidor_socket.servidor_socket()
 
 def run_thread_xml_contador():
-    from thread_xml_contador import threadxmlcontador
-    thread = threadxmlcontador()
-    thread.run()
+    import thread_xml_contador
+    thread_xml_contador.xmlcontador()
 
 def run_thread_atualiza_banco():
-    from thread_atualiza_banco import threadatualizabanco
-    thread = threadatualizabanco()
-    thread.run()
+    import thread_atualiza_banco
+    thread_atualiza_banco.atualiza_banco()
 
 def run_thread_zap_automato():
-    from thread_zap_automato import threadzapautomato
-    thread = threadzapautomato()
-    thread.run()
+    import thread_zap_automato
+    thread_zap_automato.zapautomato()
 
 def run_thread_IBPT_NCM_CEST():
-    from thread_IBPT_NCM_CEST import threadIBPTNCMCEST
-    thread = threadIBPTNCMCEST()
-    thread.run()
+    import thread_IBPT_NCM_CEST
+    thread_IBPT_NCM_CEST.IBPTNCMCEST()
+
+def run_thread_MaxUpdate():
+    import MaxUpdate
+    MaxUpdate.MaxUpdate()   
 
 if __name__ == '__main__':
-    option = "atualiza_banco"
+    option = "scheduler"
     
     if option == 'servico':
         run_servico()
+    elif option == 'scheduler':
+        run_thread_MaxUpdate()          
+    elif option == 'MaxUpdate':
+        run_thread_MaxUpdate()        
     elif option == 'verifica_remoto':#OK
         run_thread_verifica_remoto()
-    elif option == 'backup_local': #ok
+    elif option == 'backup_local': #OK
         run_thread_backup_local()
-    elif option == 'servidor_socket':#ok
+    elif option == 'servidor_socket':#OK
         run_thread_servidor_socket()
-    elif option == 'xml_contador':#ok
+    elif option == 'xml_contador':#OK
         run_thread_xml_contador()
-    elif option == 'atualiza_banco':
+    elif option == 'atualiza_banco':#OK
         run_thread_atualiza_banco()
     elif option == 'zap_automato':#OK
         run_thread_zap_automato()
-    elif option == 'IBPT_NCM_CEST':
+    elif option == 'IBPT_NCM_CEST':#OK
         run_thread_IBPT_NCM_CEST()
     else:
         print("Opção inválida.")

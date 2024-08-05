@@ -11,6 +11,7 @@ import getpass
 import xml.etree.ElementTree as ET
 import ctypes
 import sys
+import sqlite3
 import fdb
 import lzma
 import glob
@@ -98,7 +99,119 @@ def atualizar_conexoes_firebird():
         path_dll = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
         parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
         parametros.PORTFB = dados['porta_firebird_maxsuport'] 
+        parametros.BANCO_SQLITE = os.path.join(os.path.dirname(parametros.DATABASEFB),'dados.db')
         inicializa_conexao_firebird(path_dll)
+
+def verifica_sqlite():
+    parametros.PASTA_MAXSUPORT = os.path.join(parametros.SCRIPT_PATH.split('\\')[0],'\\', parametros.SCRIPT_PATH.split('\\')[1])
+    if parametros.BANCO_SQLITE == '':
+        parametros.BANCO_SQLITE = os.path.join(parametros.PASTA_MAXSUPORT, 'dados', 'dados.db')
+
+    if not os.path.exists(parametros.BANCO_SQLITE):
+        comandos_sql = [
+            """
+            CREATE TABLE IF NOT EXISTS CLIENTE (
+                CODIGO INTEGER PRIMARY KEY AUTOINCREMENT,
+                CLIENTE TEXT (150),
+                CNPJCPF TEXT (14)
+            );
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS CONFIG (
+                CODIGO INTEGER PRIMARY KEY AUTOINCREMENT,
+                ATUALIZAR_BANCO INTEGER DEFAULT (0),
+                ATUALIZAR_SISTEMA INTEGER DEFAULT (0),
+                VERSAO_NOVA INTEGER DEFAULT (0)
+            );
+            """,
+            """
+            INSERT INTO CONFIG (
+                       VERSAO_NOVA,
+                       ATUALIZAR_SISTEMA,
+                       ATUALIZAR_BANCO,
+                       CODIGO
+                   )
+                   VALUES (
+                       0,
+                       0,
+                       0,
+                       1
+                   );
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS SISTEMA (
+                CODIGO INTEGER PRIMARY KEY AUTOINCREMENT,
+                CODIGOCLIENTE INTEGER REFERENCES CLIENTE (CODIGO) ON DELETE CASCADE,
+                SISTEMA_ATIVO INTEGER,
+                ALERTA_BLOQUEIO INTEGER,
+                SISTEMA_EM_USO_ID INTEGER,
+                PASTA_COMPARTILHADA_BACKUP TEXT (200),
+                CAMINHO_BASE_DADOS_MAXSUPORT TEXT (200),
+                CAMINHO_GBAK_FIREBIRD_MAXSUPORT TEXT (200),
+                PORTA_FIREBIRD_MAXSUPORT INTEGER,
+                CAMINHO_BASE_DADOS_GFIL TEXT (200),
+                CAMINHO_GBAK_FIREBIRD_GFIL TEXT (200),
+                PORTA_FIREBIRD_GFIL INTEGER,
+                TIMER_MINUTOS_BACKUP INTEGER,
+                IP TEXT (15)
+            );
+            """
+        ]
+        
+        for comando_sql in comandos_sql:
+            resultado = consultar_sqlite(comando_sql)
+            print_log(f"Tabela criada")
+
+            if not resultado.get('sucesso'):
+                print_log(f"Erro ao executar comando SQL: {resultado.get('erro')}")
+                break    
+
+def consultar_sqlite(comando_sql):
+    try:  
+        print(parametros.BANCO_SQLITE)
+        conn = sqlite3.connect(parametros.BANCO_SQLITE)
+        cursor = conn.cursor()        
+        cursor.execute(comando_sql)
+        if comando_sql.strip().lower().startswith('select'):
+            colunas = [descricao[0] for descricao in cursor.description]
+            resultados = [dict(zip(colunas, row)) for row in cursor.fetchall()]
+            retorno = resultados
+            print_log(retorno)
+            return retorno
+        else:
+            conn.commit()
+            retorno = {"sucesso": True, "mensagem": "Comando executado com sucesso."}
+            print_log(retorno)
+            return retorno
+    except Exception as e:
+        retorno = {"sucesso": False, "erro": str(e)}
+        print_log(retorno)
+        return retorno        
+    finally:
+        if conn is not None:
+            conn.close()
+
+def check_banco_atualizar():
+    retorno = consultar_sqlite('select ATUALIZAR_BANCO from config')
+    if retorno:
+        retorno = retorno[0]['ATUALIZAR_BANCO']
+    return retorno
+
+def marca_banco_atualizado():
+    consultar_sqlite('UPDATE config set ATUALIZAR_BANCO = 0')
+
+def marca_versao_nova_exe():
+    consultar_sqlite('UPDATE config set VERSAO_NOVA = 1')  
+    
+
+def atualizar_versao_nova_exe():
+    retorno = consultar_sqlite('select ATUALIZAR_SISTEMA from config')
+    if retorno:
+        retorno = retorno[0]['ATUALIZAR_SISTEMA']
+    return retorno   
+
+def marca_versao_atualizada():
+    consultar_sqlite('UPDATE config set ATUALIZAR_SISTEMA = 0')
 
 def lerconfig():
     path_config_thread = os.path.join(parametros.SCRIPT_PATH, "config.json")
@@ -234,70 +347,24 @@ def VerificaVersaoOnline(arquivo_versao):
 def extrair_metadados(conexao):
     cursor = conexao.cursor()
     cursor.execute("""
-                        SELECT
-                        RF.RDB$RELATION_NAME,RF.RDB$FIELD_NAME FIELD_NAME,f.RDB$FIELD_PRECISION,f.RDB$FIELD_SCALE,F.RDB$FIELD_LENGTH,
-                        CASE F.RDB$FIELD_TYPE
-                            WHEN 7 THEN
-                            CASE F.RDB$FIELD_SUB_TYPE
-                                WHEN 0 THEN 'SMALLINT'
-                                WHEN 1 THEN 'NUMERIC(' || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')'
-                                WHEN 2 THEN 'DECIMAL'
-                            END
-                            WHEN 8 THEN
-                            CASE F.RDB$FIELD_SUB_TYPE
-                                WHEN 0 THEN 'INTEGER'
-                                WHEN 1 THEN 'NUMERIC('  || F.RDB$FIELD_PRECISION || ', ' || (-F.RDB$FIELD_SCALE) || ')'
-                                WHEN 2 THEN 'DECIMAL'
-                            END
-                            WHEN 9 THEN 'QUAD'
-                            WHEN 10 THEN 'FLOAT'
-                            WHEN 12 THEN 'DATE'
-                            WHEN 13 THEN 'TIME'
-                            WHEN 14 THEN 'CHAR(' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ') '
-                            WHEN 16 THEN
-                            CASE F.RDB$FIELD_SUB_TYPE
-                                WHEN 0 THEN 'BIGINT'
-                                WHEN 1 THEN 'NUMERIC'
-                                WHEN 2 THEN 'DECIMAL'
-                            END
-                            WHEN 27 THEN 'DOUBLE'
-                            WHEN 35 THEN 'TIMESTAMP'
-                            WHEN 37 THEN 'VARCHAR'
-                            WHEN 40 THEN 'CSTRING' || (TRUNC(F.RDB$FIELD_LENGTH / CH.RDB$BYTES_PER_CHARACTER)) || ')'
-                            WHEN 45 THEN 'BLOB_ID'
-                            WHEN 261 THEN 'BLOB SUB_TYPE ' || F.RDB$FIELD_SUB_TYPE
-                            ELSE 'RDB$FIELD_TYPE: ' || F.RDB$FIELD_TYPE || '?'
-                        END FIELD_TYPE,
-                        IIF(COALESCE(RF.RDB$NULL_FLAG, 0) = 0, NULL, 'NOT NULL') FIELD_NULL,
-                        CH.RDB$CHARACTER_SET_NAME FIELD_CHARSET,
-                        DCO.RDB$COLLATION_NAME FIELD_COLLATION,
-                        COALESCE(RF.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) FIELD_DEFAULT,
-                        F.RDB$VALIDATION_SOURCE FIELD_CHECK,
-                        RF.RDB$DESCRIPTION FIELD_DESCRIPTION
-                        FROM RDB$RELATION_FIELDS RF
-                        JOIN RDB$FIELDS F ON (F.RDB$FIELD_NAME = RF.RDB$FIELD_SOURCE)
-                        LEFT OUTER JOIN RDB$CHARACTER_SETS CH ON (CH.RDB$CHARACTER_SET_ID = F.RDB$CHARACTER_SET_ID)
-                        LEFT OUTER JOIN RDB$COLLATIONS DCO ON ((DCO.RDB$COLLATION_ID = F.RDB$COLLATION_ID) AND (DCO.RDB$CHARACTER_SET_ID = F.RDB$CHARACTER_SET_ID))
-                        WHERE (COALESCE(RF.RDB$SYSTEM_FLAG, 0) = 0)
-                        ORDER BY RF.RDB$RELATION_NAME,RF.RDB$FIELD_NAME
+        SELECT r.rdb$relation_name, rf.rdb$field_name, f.rdb$field_type, f.rdb$field_length, rf.RDB$NULL_FLAG
+        FROM rdb$relations r
+        JOIN rdb$relation_fields rf ON r.rdb$relation_name = rf.rdb$relation_name
+        JOIN rdb$fields f ON rf.rdb$field_source = f.rdb$field_name
+        WHERE r.rdb$view_blr IS NULL 
+        AND (r.rdb$system_flag IS NULL OR r.rdb$system_flag = 0);
     """)
     
     metadados = {}
     for row in cursor.fetchall():
         tabela = row[0].strip()
-        coluna = row[1].strip() 
-        tipo = row[5]
-        tamanho = row[4]
-        null = row[6]
-        if null is None:
-            null = '' 
-
-        precisao = row[2]#RDB$FIELD_PRECISION
-        escala = row[3] #RDB$FIELD_SCALE       
-
+        coluna = row[1].strip()
+        tipo = row[2]
+        tamanho = row[3]
+        null = row[4]
         if tabela not in metadados:
             metadados[tabela] = {}
-        metadados[tabela][coluna] = {'tipo': tipo, 'tamanho': tamanho, 'null': null,'precisao':precisao,'escala':escala}
+        metadados[tabela][coluna] = {'tipo': tipo, 'tamanho': tamanho, 'null': null}
     return metadados
 
 def mapear_tipo_firebird_para_sql(codigo_tipo):
@@ -308,7 +375,7 @@ def mapear_tipo_firebird_para_sql(codigo_tipo):
         11: "D_FLOAT",
         27: "DOUBLE",
         10: "FLOAT",
-        16: "DECIMAL",
+        16: "BIGINT",
         8: "INTEGER",
         9: "QUAD",
         7: "SMALLINT",
@@ -321,63 +388,40 @@ def mapear_tipo_firebird_para_sql(codigo_tipo):
 
 def gerar_scripts_diferencas(metadados_origem, metadados_destino):
     scripts_sql = []
-
-    # Verificar tabelas que existem na origem, mas não no destino
     for tabela_origem, colunas_origem in metadados_origem.items():
         if tabela_origem not in metadados_destino:
             colunas_sql = []
             for coluna, propriedades in colunas_origem.items():
-                tipo = propriedades['tipo']
+                tipo = mapear_tipo_firebird_para_sql(int(propriedades['tipo']))
                 tamanho = propriedades.get('tamanho', '')
-                null = propriedades.get('null', '')
-
-                if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP'):
-                    if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP'):
-                        coluna_def = f"{coluna} {tipo} {null}"
-                    else:
-                        coluna_def = f"{coluna} {tipo}({propriedades['precisao']},{str(propriedades['escala']).replace('-','')}) {null}"
+                null = 'NULL'
+                if propriedades.get('null', '') != '':
+                   null = 'NOT NULL' 
+                if propriedades['tipo'] in (8, 16, 35, 13, 7, 10):
+                    coluna_def = f"{coluna} {tipo} " + null
                 else:
-                    coluna_def = f"{coluna} {tipo} " + (f"({tamanho})" if tamanho else "") + f" {null}"
-
+                    coluna_def = f"{coluna} {tipo} " + (f"({tamanho})" if tamanho else "") + " " +  null
                 colunas_sql.append(coluna_def)
             colunas_str = ", ".join(colunas_sql)
             scripts_sql.append(f"CREATE TABLE {tabela_origem} ({colunas_str});")
-
-    # Verificar colunas que existem na origem, mas não no destino ou que têm propriedades diferentes
-    for tabela_origem, colunas_origem in metadados_origem.items():
-        if tabela_origem in metadados_destino:
+        else:
             for coluna, propriedades in colunas_origem.items():
-                tipo = propriedades['tipo']
+                tipo = mapear_tipo_firebird_para_sql(int(propriedades['tipo']))
                 tamanho = propriedades.get('tamanho', '')
-                null = propriedades.get('null', '')
-
+                null = 'NULL'
                 if coluna not in metadados_destino[tabela_origem]:
-                    if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP'):
-                        if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP'):
-                            coluna_def = f"{coluna} {tipo} {null}"
-                        else:
-                            coluna_def = f"{coluna} {tipo}({propriedades['precisao']},{str(propriedades['escala']).replace('-','')}) {null}"
+                    if propriedades['tipo'] in (8, 16, 35, 13, 7, 10):
+                        coluna_def = f"{coluna} {tipo} "
                     else:
-                        coluna_def = f"{coluna} {tipo} " + (f"({tamanho})" if tamanho else "") + f" {null}"
-
+                        coluna_def = f"{coluna} {tipo} " + (f"({tamanho})" if tamanho else "") + " "
                     scripts_sql.append(f"ALTER TABLE {tabela_origem} ADD {coluna_def};")
                 else:
                     prop_destino = metadados_destino[tabela_origem][coluna]
-                    tipo_destino = prop_destino['tipo']
+                    tipo_destino = mapear_tipo_firebird_para_sql(int(prop_destino['tipo']))
                     tamanho_destino = prop_destino.get('tamanho', '')
-                    null_destino = prop_destino.get('null', '')
-
-                    if tipo != tipo_destino or tamanho != tamanho_destino or null != null_destino:
-                        if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP'):
-                            if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP'):
-                                coluna_def = f"{tipo} {null}"
-                            else:
-                                coluna_def = f"{tipo}({propriedades['precisao']},{str(propriedades['escala']).replace('-','')}) {null}"
-                        else:
-                            coluna_def = f"{tipo} " + (f"({tamanho})" if tamanho else "") + f" {null}"
-
+                    if tipo != tipo_destino or int(tamanho) > int(tamanho_destino):
+                        coluna_def = f"{tipo}" + (f"({tamanho})" if tamanho else "")
                         scripts_sql.append(f"ALTER TABLE {tabela_origem} ALTER COLUMN {coluna} TYPE {coluna_def};")
-    
     return scripts_sql
 
 def executar_scripts_sql(conexao, scripts_sql):
@@ -412,23 +456,6 @@ def retorna_pessoas(conexao):
             AND P.CELULAR1 <> ''''  
             AND EXTRACT(MONTH FROM P.DT_NASC) = EXTRACT(MONTH FROM CURRENT_DATE)
             AND EXTRACT(DAY FROM P.DT_NASC) = EXTRACT(DAY FROM CURRENT_DATE)
-    """)
-    colunas = [coluna[0] for coluna in cursor.description]
-    a = cursor.fetchall()
-    resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in a]
-    return resultados_em_dicionario
-
-def retorna_pessoas_preagendadas(conexao):
-    data_hoje = datetime.datetime.now().strftime('%d.%m.%Y')
-    cursor = conexao.cursor()
-    cursor.execute(f"""
-        SELECT a.*,p.FANTASIA, p.CELULAR1 , s.DESCRICAO ,s.DIAS_RETORNO 
-        FROM AGENDA a
-        LEFT OUTER JOIN PESSOA p 
-            ON a.CLIENTE  = p.CODIGO 
-        LEFT OUTER JOIN SERVICOS s 
-            ON a.SERVICO  = s.CODIGO 
-        WHERE ENVIADOPREAGENDAMENTO = 0 AND "DATA" > '{data_hoje} 00:00:01' AND DATA < '{data_hoje} 23:59:59'
     """)
     colunas = [coluna[0] for coluna in cursor.description]
     a = cursor.fetchall()
@@ -472,14 +499,6 @@ def atualiza_ano_cliente(conexao, codigo, ano):
     """, (ano, codigo))
     conexao.commit()
 
-def atualiza_agenda(conexao, codigo):
-    cursor = conexao.cursor()
-    cursor.execute("""
-        UPDATE AGENDA
-        SET ENVIADOPREAGENDAMENTO = 1 WHERE CODIGO = ?;
-    """, (codigo))
-    conexao.commit()
-
 def atualiza_mensagem(conexao, codigo, status):
     cursor = conexao.cursor()
     cursor.execute("""
@@ -492,7 +511,7 @@ def atualiza_mensagem(conexao, codigo, status):
 def envia_mensagem(conexao, session):
     cursor = conexao.cursor()
     cursor.execute("""
-        SELECT FIRST 5 CODIGO, MENSAGEM, FONE, STATUS FROM MENSAGEM_ZAP WHERE STATUS = 'PENDENTE'
+        SELECT CODIGO, MENSAGEM, FONE, STATUS FROM MENSAGEM_ZAP WHERE STATUS = 'PENDENTE'
     """)
     colunas = [coluna[0] for coluna in cursor.description]
     a = cursor.fetchall()
