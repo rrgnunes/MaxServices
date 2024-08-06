@@ -19,6 +19,12 @@ def backup():
 
         print_log("Pega dados local","backuplocal")
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
+
+            # Verifica se conexao esta ativa, se não estiver, conecta novamente
+            if not parametros.MYSQL_CONNECTION.is_connected():
+                parametros.MYSQL_CONNECTION.connect()
+                conn = parametros.MYSQL_CONNECTION
+            
             ativo = dados_cnpj['sistema_ativo'] == '1'
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
             pasta_compartilhada_backup = dados_cnpj['pasta_compartilhada_backup']
@@ -31,8 +37,10 @@ def backup():
             data_hora_formatada = data_hora.strftime('%Y_%m_%d_%H_%M_%S')
             timer_minutos_backup = dados_cnpj['timer_minutos_backup']
 
+            conn_fb = parametros.FIREBIRD_CONNECTION
+            cursor_fb = conn_fb.cursor()
+
             if ativo:
-                print_log("Inicia backup","backuplocal")
                 if sistema_em_uso == '1':  # maxsuport
                     if pasta_compartilhada_backup and caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
                         path = f'{pasta_compartilhada_backup}\\maxsuport\\{cnpj}'
@@ -41,6 +49,12 @@ def backup():
                         caminho_arquivo_backup = path
                         nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fdb'
                         comando = f'copy "{caminho_base_dados_maxsuport}" "{caminho_arquivo_backup}"'.replace('/', '\\')
+
+                        cursor_fb.execute(f'select codigo, cnpj from empresa where cnpj = {cnpj} and codigo = 1')
+                        result = cursor_fb.fetchall()
+                        if len(result) < 1:
+                            continue
+                        print_log("Inicia backup","backuplocal")
 
                 elif sistema_em_uso == '2':  # gfil
                     if pasta_compartilhada_backup and caminho_base_dados_gfil and caminho_gbak_firebird_gfil:
@@ -51,6 +65,13 @@ def backup():
                         nome_arquivo_compactado = f'backup_{data_hora_formatada}_gfil.fdb'
                         comando = f'copy "{caminho_base_dados_gfil}" "{caminho_arquivo_backup}"'.replace('/', '\\')
 
+                        cursor_fb.execute(f'select filial, cnpj  from diversos where cnpj = {cnpj} and filial = 1')
+                        result = cursor_fb.fetchall()
+                        if len(result) < 1:
+                            continue
+                        print_log("Inicia backup","backuplocal")
+                
+                cursor_fb.close()
                 subprocess.call(comando, shell=True)
                 print_log(f"Executou comando {comando}","backuplocal")
 
@@ -102,15 +123,21 @@ def backup():
                     try:
                         result = obj_dropbox.files_list_folder(diretorio_remoto)
                         arquivos_na_pasta = result.entries
+                        print(f' Quantidade de arquivos no DropBox: {len(arquivos_na_pasta)}')
                     except dropbox.exceptions.ApiError as e:
                         print(f"Erro ao listar arquivos na pasta remota: {e}","backuplocal")
                         arquivos_na_pasta = []
 
                     if len(arquivos_na_pasta) > num_arquivos_a_manter:
                         arquivos_na_pasta.sort(key=lambda entry: entry.server_modified)
+                        qtd_arquivos_excesso = len(arquivos_na_pasta) - num_arquivos_a_manter
+                        arquivos_em_excesso = arquivos_na_pasta[:qtd_arquivos_excesso]
                         try:
-                            obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
-                            print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.","backuplocal")
+                            for arquivo in arquivos_em_excesso:
+                                obj_dropbox.files_delete_v2(arquivo.path_display)
+                                print_log(f"Arquivo excluído remoto: {arquivo.path_display}.", "backuplocal")
+                            # obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
+                            # print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.","backuplocal")
                         except dropbox.exceptions.ApiError as e:
                             print_log(f"Erro ao excluir o arquivo mais antigo: {e}","backuplocal")
 
@@ -129,7 +156,7 @@ def backup():
                 except Exception as e:
                     print_log(e,"backuplocal")
                 finally:
-                    print_log('Finalizado {data_hora_formatada}',"backuplocal")
+                    print_log(f'Finalizado {data_hora_formatada}',"backuplocal")
                     obj_dropbox.close()
 
     except Exception as e:
