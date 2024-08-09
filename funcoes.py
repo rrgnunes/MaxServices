@@ -397,7 +397,7 @@ def config_zap(conexao):
         SELECT ENVIAR_MENSAGEM_ANIVERSARIO,ENVIAR_MENSAGEM_PROMOCAO, 
             ENVIAR_MENSAGEM_DIARIO,MENSAGEM_ANIVERSARIO,
             MENSAGEM_PROMOCAO,MENSAGEM_DIARIO,DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA,    
-            ULTIMO_ENVIO_ANIVERSARIO,ULTIMO_ENVIO_DIARIO,ULTIMO_ENVIO_PROMOCAO
+            ULTIMO_ENVIO_ANIVERSARIO,ULTIMO_ENVIO_DIARIO,ULTIMO_ENVIO_PROMOCAO, MENSAGEM_PREAGENDAMENTO
         FROM CONFIG P
     """)
     colunas = [coluna[0] for coluna in cursor.description]
@@ -428,7 +428,7 @@ def retorna_pessoas_preagendadas(conexao):
             ON a.CLIENTE  = p.CODIGO 
         LEFT OUTER JOIN SERVICOS s 
             ON a.SERVICO  = s.CODIGO 
-        WHERE ENVIADOPREAGENDAMENTO = 0 AND "DATA" > '{data_hoje} 00:00:01' AND DATA < '{data_hoje} 23:59:59'
+        WHERE ENVIADOPREAGENDAMENTO IS NULL AND "DATA" BETWEEN '{data_hoje} 00:00:00' AND '{data_hoje} 23:59:59'
     """)
     colunas = [coluna[0] for coluna in cursor.description]
     a = cursor.fetchall()
@@ -477,7 +477,7 @@ def atualiza_agenda(conexao, codigo):
     cursor.execute("""
         UPDATE AGENDA
         SET ENVIADOPREAGENDAMENTO = 1 WHERE CODIGO = ?;
-    """, (codigo))
+    """, (codigo,))
     conexao.commit()
 
 def atualiza_mensagem(conexao, codigo, status):

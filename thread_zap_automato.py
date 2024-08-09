@@ -63,8 +63,8 @@ def zapautomato():
                     pessoas = retorna_pessoas_preagendadas(conexao)
 
                     for pessoa in pessoas:                        
-                        MENSAGEM_PREAGENDAMENTO = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',pessoa['DIAS_RETORNO']).replace('@servico',pessoa['DESCRICAO'])
-                        insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO, pessoa['CELULAR1'])
+                        MENSAGEM_PREAGENDAMENTO = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
+                        insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO, pessoa['CELULAR1'])
                         atualiza_agenda(conexao,pessoa['CODIGO'])
                         print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}',nome_servico)                            
 
