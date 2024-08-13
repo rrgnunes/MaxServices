@@ -107,7 +107,7 @@ def lerconfig():
             config_thread = json.load(config_file)
     return config_thread
 
-def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id):
+def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):
     try:
         cursor_notafiscal = conn.cursor()
         cursor_notafiscal.execute(f'SELECT * FROM maxservices.notafiscal_notafiscal nn WHERE nn.chave = "{chave}"')
@@ -115,10 +115,10 @@ def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancela
         if not rows_nota_fiscal:
             sql = f"""INSERT INTO maxservices.notafiscal_notafiscal 
                 (numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento,
-                    cliente_id, contador_id)
+                    cliente_id, contador_id, ie)
                 VALUES('{numero}', '{chave}', '{tipo_nota}', '{serie}',
                         '{data_nota}', '{xml}', '{xml_cancelamento}',
-                        '{cliente_id}', '{contador_id}')"""
+                        '{cliente_id}', '{contador_id}', '{cliente_ie}')"""
         else:
             sql = f"""UPDATE maxservices.notafiscal_notafiscal SET 
                         numero = '{numero}',
@@ -129,7 +129,8 @@ def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancela
                         xml='{xml}',
                         xml_cancelamento='{xml_cancelamento}',
                         cliente_id='{cliente_id}',
-                        contador_id='{contador_id}'
+                        contador_id='{contador_id}',
+                        ie= '{cliente_ie}'
                        WHERE chave = '{chave}'""" 
             
         cursor_notafiscal.execute(sql)
