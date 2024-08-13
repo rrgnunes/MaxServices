@@ -1,4 +1,4 @@
-from funcoes import print_log,consultar_sqlite,carregar_configuracoes, inicializa_conexao_firebird,exibe_alerta
+from funcoes import print_log,carregar_configuracoes,exibe_alerta
 import socket
 import threading
 import json
@@ -8,7 +8,6 @@ from datetime import datetime, date
 from decimal import Decimal
 import parametros
 import base64
-
 
 def get_local_ip():
     """
@@ -29,7 +28,7 @@ def handle_client_connection(client_socket):
     """
     Função para tratar a conexão com cada cliente em uma thread separada.
     """
- 
+    
     try:
         with client_socket as conn:
             while True:
@@ -47,11 +46,11 @@ def handle_client_connection(client_socket):
                     mensagem = request[1:]
                     #mostrar_bandeja(mensagem)
                     send_response(conn, '200')
-                elif sTipo == '3':
-                    comando_sql = request[1:]
-                    resultado = consultar_sqlite(comando_sql)
-                    resposta = json.dumps(resultado)
-                    send_response(conn, resposta)
+                # elif sTipo == '3':
+                #     comando_sql = request[1:]
+                #     resultado = consultar_sqlite(comando_sql)
+                #     resposta = json.dumps(resultado)
+                #     send_response(conn, resposta)
                 elif sTipo == '4':
                     valores = request[1:]
                     sMesa, sEmpresa, sTipoImpressao = valores.split('&')
@@ -116,7 +115,17 @@ def consulta_completa(comando_sql):
                 return obj
 
     try:
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        # Configuração da transação serializable
+        tpb = fdb.TPB()
+        tpb.access_mode = fdb.isc_tpb_write
+        tpb.isolation_level = fdb.isc_tpb_concurrency
+        tpb.lock_resolution = fdb.isc_tpb_wait
+
+        # Inicia a transação com o TPB
+        transacao = parametros.FIREBIRD_CONNECTION.trans()
+        transacao.begin(tpb=tpb.render())
+        cursor = transacao.cursor()        
+
         if comando_sql.strip().upper().startswith('SELECT'):
             cursor.execute(comando_sql)
             rows = cursor.fetchall()
@@ -124,19 +133,23 @@ def consulta_completa(comando_sql):
                 {cursor.description[i][0]: json_serial(value) for i, value in enumerate(row)}
                 for row in rows
             ]
+            transacao.commit()
             return json.dumps(resultado)
         else:
             cursor.execute(comando_sql)
-            parametros.FIREBIRD_CONNECTION.commit()
+            transacao.commit()
             return '200'
     except fdb.fbcore.DatabaseError as e:
         erro_msg = f"Erro no Banco de Dados: {e}"
         print_log(erro_msg, "servidor_socket")
+        transacao.rollback()
         return json.dumps({'erro': erro_msg})
     except Exception as e:
         erro_msg = f"Erro ao executar comando SQL: {e}"
         print_log(erro_msg, "servidor_socket")
+        transacao.rollback()
         return json.dumps({'erro': erro_msg})
+
 
 def send_response(conn, response):
     response += '\n'
@@ -290,13 +303,29 @@ def efetua_impressao_resumo_mesa(mesa, empresa):
         print_log(erro_msg, "servidor_socket")
         return json.dumps({'erro': erro_msg})  
 
+def verifica_impressora():
+    ip_servidor = get_local_ip()
+    try:
+        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        cursor.execute(f"select vt.porta from vendas_terminais vt where vt.ip = '{ip_servidor}' and vt.tipoimpressora = 2")
+        result = cursor.fetchall()
+        impressora = result[0][0]
+        printer_name = f'\\\\{ip_servidor}\\{impressora[4:]}'
+        return printer_name
+    except Exception as e:
+        erro_msg = f'Erro ao adquirir impressora: {e}'
+        print_log(erro_msg, "servidor_socket")
+
+
+
 def imprime_documento(texto):
     import win32print
 
     impressoras = [printer[2] for printer in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
 
     # Configurações da impressora
-    printer_name = '\\\\192.168.10.93\\MP-4200 TH'
+    # printer_name = '\\\\192.168.10.93\\MP-4200 TH'
+    printer_name = verifica_impressora()
 
     # Adicionar linhas em branco antes do comando de corte
     linhas_em_branco = "\n\n\n\n\n\n"
