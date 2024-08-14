@@ -1,12 +1,20 @@
 import fdb
-from funcoes import os,json,datetime,atualiza_agenda,retorna_pessoas_preagendadas, envia_mensagem, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap
+from funcoes import os,json,datetime,atualiza_agenda,retorna_pessoas_preagendadas, salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap, carregar_configuracoes
 import parametros
+import os
+import datetime as dt
 
 
 def zapautomato():
-    nome_servico = 'zap automato'
+    nome_servico = 'zap_automato'
     #carrega config
     print_log(f'Iniciando',nome_servico)
+    if os.path.exists('zap.txt'):
+        return
+    else:
+        with open('zap.txt', 'w') as arq:
+            arq.write('em execucao')
+    carregar_configuracoes()
     if os.path.exists("C:/Users/Public/config.json"):
         with open('C:/Users/Public/config.json', 'r') as config_file:
             config = json.load(config_file)
@@ -22,6 +30,17 @@ def zapautomato():
                 data_hora_formatada = data_hora.strftime(
                     '%Y_%m_%d_%H_%M_%S')
                 print_log(f'Vou validar para enviar mensagem',nome_servico)
+
+                try:
+                    con_mysql = parametros.MYSQL_CONNECTION
+                    cur = parametros.FIREBIRD_CONNECTION.cursor()
+                    cur.execute("select cnpj from empresa where codigo = 1")
+                    empresas = cur.fetchall()
+                    empresa = [empresa[0] for empresa in empresas]
+                    if cnpj != empresa[0]:
+                        continue
+                except Exception as e:
+                    print_log(f'Não foi possivel verificar a empresa 1: {e}')
 
                 if ativo == 1 and sistema_em_uso == '1':
                     server = "localhost"
@@ -68,8 +87,39 @@ def zapautomato():
                         atualiza_agenda(conexao,pessoa['CODIGO'])
                         print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}',nome_servico)                            
 
-                    envia_mensagem(conexao,cnpj)
+                    # Salva mensagem em banco remoto e altera status em banco local
+                    try:
+                        con_fb = parametros.FIREBIRD_CONNECTION
+                        cursor = con_fb.cursor()
+                        cursor.execute("select mz.codigo, mz.data, mz.hora, mz.mensagem, mz.fone from mensagem_zap mz where mz.status = 'PENDENTE'")
+                        rowsMSGs = cursor.fetchall()
+                        rows_dict_msg = [dict(zip([column[0] for column in cursor.description], rowmsg)) for rowmsg in rowsMSGs]
+                        for row_msg in rows_dict_msg:
+                            cod_mensagem = row_msg['CODIGO']
+                            data = row_msg['DATA']
+                            hora = row_msg['HORA']
+                            data_hora = dt.datetime.combine(data, hora)
+                            mensagem = row_msg['MENSAGEM']
+                            fone = row_msg['FONE']
+                            status = 'PENDENTE'
+                            cliente_id = cnpj
+                            retorno = 'Mensagem Gravada'
+
+                            if salva_mensagem_remota(con_mysql, data_hora, mensagem, fone, status, cliente_id, nome_servico, retorno):
+                                altera_mensagem_local(con_fb, cod_mensagem, nome_servico)
+
+                        print_log('Mensagens salvas em servidor remoto', nome_servico)
+                        con_fb.close()
+                        con_mysql.close()
+                        os.remove('zap.txt')
+                    except Exception as e:
+                        print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
+                        raise e
             except Exception as a:
+                if con_fb:
+                    con_fb.rollback()
+                if con_mysql:
+                    con_mysql.rollback()
                 print_log(f'{a}',nome_servico)
 
 zapautomato()

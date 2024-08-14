@@ -392,6 +392,32 @@ def executar_scripts_sql(conexao, scripts_sql):
             erros.append({'script': script, 'erro': str(e)})
     return erros   
 
+def salva_mensagem_remota(conn, data, mensagem, fone, status, cliente_id, nome_servico, retorno):
+    salvo = False
+    try:
+        cur_zap = conn.cursor()
+        sql = f"INSERT INTO maxservices.zap_zap (datahora, mensagem, fone, status, cliente_id, retorno) values ('{data}', '{mensagem}', '{fone}', '{status}', '{cliente_id}', '{retorno}')"
+        cur_zap.execute(sql)
+        print_log(f'Salvando mensagem da empresa: {cliente_id}, numero:{fone}', nome_servico)
+        conn.commit()
+        cur_zap.close()
+        salvo = True
+    except Exception as e:
+        print_log(f'Erro ao salva mensagem: {e}', nome_servico)
+    return salvo
+
+def altera_mensagem_local(conn, cod_mensagem, nome_servico):
+    try:
+        cur_fb = conn.cursor()
+        sql = f"UPDATE mensagem_zap SET STATUS = 'ENVIADA' WHERE codigo = {cod_mensagem} "
+        cur_fb.execute(sql)
+        print_log(f'Status mensagem local alterado', nome_servico)
+        conn.commit()
+        cur_fb.close()
+    except Exception as e:
+        cur_fb.close()
+        print_log(f'Não foi possivel alterar status mensagem local: {e}', nome_servico)
+
 def config_zap(conexao):
     cursor = conexao.cursor()
     cursor.execute("""
