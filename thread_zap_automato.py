@@ -2,17 +2,19 @@ import fdb
 from funcoes import os,json,datetime,atualiza_agenda,retorna_pessoas_preagendadas, salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap, carregar_configuracoes
 import parametros
 import os
+import pathlib
 import datetime as dt
 
 
 def zapautomato():
+    arquivo_zap = os.path.join(pathlib.Path(__file__).parent, 'zap.txt')
     nome_servico = 'zap_automato'
     #carrega config
     print_log(f'Iniciando',nome_servico)
-    if os.path.exists('zap.txt'):
+    if os.path.exists(arquivo_zap):
         return
     else:
-        with open('zap.txt', 'w') as arq:
+        with open(arquivo_zap, 'w') as arq:
             arq.write('em execucao')
     carregar_configuracoes()
     if os.path.exists("C:/Users/Public/config.json"):
@@ -111,7 +113,7 @@ def zapautomato():
                         print_log('Mensagens salvas em servidor remoto', nome_servico)
                         con_fb.close()
                         con_mysql.close()
-                        os.remove('zap.txt')
+                        os.remove(arquivo_zap)
                     except Exception as e:
                         print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
                         raise e
