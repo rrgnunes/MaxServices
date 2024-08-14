@@ -64,15 +64,15 @@ def xmlcontador():
                                 cnpj_empresa = row['CNPJEMPRESA']
 
                                 # Salva contador
-                                print_log("Inicia select contador - xmlcontador")
-                                if not rowsPlat:
-                                    nome = row['NOME']
-                                    cpf_cnpj = condicao
-                                    curPlataform.execute(f'insert into notafiscal_contador(nome,cpf_cnpj,cnpj_empresa) values("{nome}","{cpf_cnpj}","{cnpj_empresa}")')
+                                # print_log("Inicia select contador - xmlcontador")
+                                # if not rowsPlat:
+                                #     nome = row['NOME']
+                                #     cpf_cnpj = condicao
+                                #     curPlataform.execute(f'insert into notafiscal_contador(nome,cpf_cnpj,cnpj_empresa) values("{nome}","{cpf_cnpj}","{cnpj_empresa}")')
 
-                                curPlataform.execute(f'select * from notafiscal_contador where cpf_cnpj = "{condicao}"')
-                                rowsPlat = curPlataform.fetchall()
-                                rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
+                                # curPlataform.execute(f'select * from notafiscal_contador where cpf_cnpj = "{condicao}"')
+                                # rowsPlat = curPlataform.fetchall()
+                                # rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
                                 
                                 contador = rows_dict_plat[0]['id']  # get id contador
 
