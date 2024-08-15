@@ -49,7 +49,7 @@ def IBPTNCMCEST():
                             resultados = cursorMYSQL.fetchall()
 
                             # Salva os dados em um arquivo CSV
-                            with open(lock_ibpt_cest, encoding='utf-8', mode='w', newline='') as f:
+                            with open(results, encoding='utf-8', mode='w', newline='') as f:
                                 writer = csv.DictWriter(f, fieldnames=resultados[0].keys())
                                 writer.writeheader()
                                 writer.writerows(resultados)
