@@ -12,6 +12,7 @@ def zapautomato():
     #carrega config
     print_log(f'Iniciando',nome_servico)
     if os.path.exists(arquivo_zap):
+        print_log('Em execucao', nome_servico)
         return
     else:
         with open(arquivo_zap, 'w') as arq:

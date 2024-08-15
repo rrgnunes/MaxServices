@@ -1,12 +1,20 @@
 from logging.handlers import RotatingFileHandler
 import fdb
 import psutil
-
+import os
+import pathlib
 import parametros
 from funcoes import print_log, exibe_alerta, inicializa_conexao_mysql, carregar_configuracoes
 
 def verifica_dados_local():
     try:
+        lock_bloqueio = os.path.join(pathlib.Path(__file__).parent, 'lock_bloqueio.txt')
+        if os.path.exists(lock_bloqueio):
+            print_log('Em execucao', "thread_bloqueio")
+            return
+        else:
+            with open(lock_bloqueio, 'w') as arq:
+                arq.write('em execucao')
         inicializa_conexao_mysql()
         carregar_configuracoes()        
         print_log("Pegando dados locais","thread_bloqueio")
@@ -41,7 +49,7 @@ def verifica_dados_local():
                     con.commit()
                 except fdb.fbcore.DatabaseError as e:
                     print_log(f"Erro ao executar consulta: {e}")
-    
+        os.remove(lock_bloqueio)
     except Exception as e:
         print_log(f"Erro: {e}","thread_bloqueio")
 

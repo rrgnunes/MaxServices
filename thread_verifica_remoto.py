@@ -1,11 +1,21 @@
 from funcoes import print_log, os,json,inicializa_conexao_mysql,datetime
 import parametros
+import os
+import pathlib
 
 
 def salva_json():
     try:
-        inicializa_conexao_mysql()
 
+        lock_verifica_remoto = os.path.join(pathlib.Path(__file__).parent, 'lock_verifica_remoto.txt')
+        if os.path.exists(lock_verifica_remoto):
+            print_log('Em execucao', 'verificaremoto')
+            return
+        else:
+            with open(lock_verifica_remoto, 'w') as arq:
+                arq.write('em execucao')
+        inicializa_conexao_mysql()
+        
         print_log("Efetua conexão remota" , 'verificaremoto')
         conn = parametros.MYSQL_CONNECTION
 
@@ -58,6 +68,8 @@ def salva_json():
 
         with open('C:/Users/Public/config.json', 'w') as configfile:
             json.dump(config, configfile)
+
+        os.remove(lock_verifica_remoto)
     except Exception as a:
         print_log(a, 'verificaremoto')
 

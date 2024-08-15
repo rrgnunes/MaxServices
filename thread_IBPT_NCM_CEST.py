@@ -7,10 +7,20 @@ import datetime
 import threading
 import csv
 import parametros
+import pathlib
+import os
 
 def IBPTNCMCEST():
     print_log("Carrega configurações da thread", "IBPTNCMCEST")
     try:
+        results = os.path.join(pathlib.Path(__file__).parent, 'resultados.csv')
+        lock_ibpt_cest = os.path.join(pathlib.Path(__file__).parent, 'lock_ibpt_cest.txt')
+        if os.path.exists(lock_ibpt_cest):
+            print_log('Em execucao', "IBPTNCMCEST")
+            return
+        else:
+            with open(lock_ibpt_cest, 'w') as arq:
+                arq.write('em execucao')
         carregar_configuracoes()
         print_log("Pega dados local", "IBPTNCMCEST")
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
@@ -39,7 +49,7 @@ def IBPTNCMCEST():
                             resultados = cursorMYSQL.fetchall()
 
                             # Salva os dados em um arquivo CSV
-                            with open('resultados.csv', encoding='utf-8', mode='w', newline='') as f:
+                            with open(lock_ibpt_cest, encoding='utf-8', mode='w', newline='') as f:
                                 writer = csv.DictWriter(f, fieldnames=resultados[0].keys())
                                 writer.writeheader()
                                 writer.writerows(resultados)
@@ -84,7 +94,7 @@ def IBPTNCMCEST():
                                 cursorFirebird.execute("UPDATE PRODUTO SET CEST = '' WHERE ncm <> '' AND ncm <> '00000000'")
                                 conFirebird.commit()
                                 print_log("Tabela IBPT (NCMs) atualizada", "IBPTNCMCEST")
-
+        os.remove(lock_ibpt_cest)
     except Exception as a:
         if conMYSQL.is_connected():
             conMYSQL.rollback()

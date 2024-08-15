@@ -1,11 +1,20 @@
 import fdb
-from funcoes import os, json, datetime, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes
+from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes
 import parametros
 import configparser
+import os
+import pathlib
 
 def atualiza_banco():
     carregar_configuracoes()
     try:
+        lock_atualiza_banco = os.path.join(pathlib.Path(__file__).parent, 'lock_atualiza_banco.txt')
+        if os.path.exists(lock_atualiza_banco):
+            print_log('Em execucao', 'Atualiza_Banco')
+            return
+        else:
+            with open(lock_atualiza_banco, 'w') as arq:
+                arq.write('em execucao')
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
@@ -68,6 +77,7 @@ def atualiza_banco():
                         config.write(configfile)
 
                     print_log('Tabela atualizada', "Atualiza_Banco")
+        os.remove(lock_atualiza_banco)
     except Exception as e:
         print_log(f"Erro na atualização do banco: {e}", "Atualiza_Banco")
 

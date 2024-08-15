@@ -2,11 +2,20 @@ from funcoes import *
 import fdb
 import zlib
 import parametros
+import pathlib
+import os
 
 def xmlcontador():
     print_log("Carrega configurações- xmlcontador")
     carregar_configuracoes()
     try:
+        lock_contador = os.path.join(pathlib.Path(__file__).parent, 'lock_contador.txt')
+        if os.path.exists(lock_contador):
+            print_log("Em execucao - xmlcontador")
+            return
+        else:
+            with open(lock_contador, 'w') as arq:
+                arq.write('em execucao')
         print_log("Pega dados local - xmlcontador")
         cnpjs_verificados = []
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
@@ -307,6 +316,8 @@ def xmlcontador():
                                     SalvaNota(conMYSQL, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie)
 
                         conMYSQL.commit()
+
+        os.remove(lock_contador)
 
     except Exception as e:
         if conMYSQL:
