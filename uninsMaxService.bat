@@ -36,17 +36,9 @@ if not exist "%LogDir%" (
 )
 
 :: Instalar e configurar o serviço
-"%NSSMPath%" install MaxServices "%PythonPath%" "%ScriptPath%"
-"%NSSMPath%" set MaxServices DisplayName "MaxServices"
-"%NSSMPath%" set MaxServices Description "Analise de dados MaxSuport"
-"%NSSMPath%" set MaxServices Start SERVICE_AUTO_START
-"%NSSMPath%" set MaxServices AppExit Default Restart
-"%NSSMPath%" set MaxServices AppRestartDelay 10
-"%NSSMPath%" set MaxServices AppStdout "%LogFile%"
-"%NSSMPath%" set MaxServices AppStderr "%LogFile%"
-"%NSSMPath%" set MaxServices AppRotateFiles 0
-"%NSSMPath%" start MaxServices
+"%NSSMPath%" stop MaxServices
+"%NSSMPath%" remove MaxServices confirm "%PythonPath%" "%ScriptPath%"
 
-echo Servico MaxServices configurado e iniciado com sucesso.
+echo Servico MaxServices desinstalado com sucesso.
 pause
 endlocal
