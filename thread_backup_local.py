@@ -12,7 +12,7 @@ except:
 def backup():
     print_log("Carrega configurações da thread","backuplocal")
     try:
-        lock_bakcup_local = os.path.join(pathlib.Path(__file__), 'lock_backup_local.txt')
+        lock_bakcup_local = os.path.join(pathlib.Path(__file__).parent, 'lock_backup_local.txt')
         if os.path.exists(lock_bakcup_local):
             print_log('Em execucao', "backuplocal")
             return
