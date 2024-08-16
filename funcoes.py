@@ -455,7 +455,7 @@ def retorna_pessoas_preagendadas(conexao):
             ON a.CLIENTE  = p.CODIGO 
         LEFT OUTER JOIN SERVICOS s 
             ON a.SERVICO  = s.CODIGO 
-        WHERE ENVIADOPREAGENDAMENTO IS NULL AND "DATA" BETWEEN '{data_hoje} 00:00:00' AND '{data_hoje} 23:59:59 AND status = 2'
+        WHERE ENVIADOPREAGENDAMENTO IS NULL AND "DATA" BETWEEN '{data_hoje} 00:00:00' AND '{data_hoje} 23:59:59' AND status = '2'
     """)
     colunas = [coluna[0] for coluna in cursor.description]
     a = cursor.fetchall()
