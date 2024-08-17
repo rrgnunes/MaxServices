@@ -52,5 +52,6 @@ def verifica_dados_local():
         os.remove(lock_bloqueio)
     except Exception as e:
         print_log(f"Erro: {e}","thread_bloqueio")
+        os.remove(lock_bloqueio)
 
 verifica_dados_local()

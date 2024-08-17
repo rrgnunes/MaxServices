@@ -72,5 +72,6 @@ def salva_json():
         os.remove(lock_verifica_remoto)
     except Exception as a:
         print_log(a, 'verificaremoto')
+        os.remove(lock_verifica_remoto)
 
 salva_json()

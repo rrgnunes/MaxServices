@@ -88,7 +88,7 @@ def IBPTNCMCEST():
                                 conFirebird.commit()
 
                                 print_log(f"Total de {contagem} registros inseridos na tabela IBPT local", "IBPTNCMCEST")
-                                atualiza_ncm_cest(conFirebird, conMYSQL)
+                                atualiza_ncm_cest(conFirebird, conMYSQL, lock_ibpt_cest)
 
                                 print_log("Atualizando tabela IBPT (NCMs), por favor aguarde...", "IBPTNCMCEST")
                                 cursorFirebird.execute("UPDATE PRODUTO SET CEST = '' WHERE ncm <> '' AND ncm <> '00000000'")
@@ -101,13 +101,14 @@ def IBPTNCMCEST():
         if conFirebird:
             conFirebird.rollback()
         print_log(f"Erro: {a}", "IBPTNCMCEST")
+        os.remove(lock_ibpt_cest)
     finally:
         if conMYSQL.is_connected():
             conMYSQL.close()
         if conFirebird:
             conFirebird.close()
 
-def atualiza_ncm_cest(conFirebird, conMYSQL):
+def atualiza_ncm_cest(conFirebird, conMYSQL, arq_lock):
     try:
         cursorMYSQL = conMYSQL.cursor(dictionary=True)
         cursorFirebird = conFirebird.cursor()
@@ -142,6 +143,7 @@ def atualiza_ncm_cest(conFirebird, conMYSQL):
         if conFirebird:
             conFirebird.rollback()
         print_log(f"Erro: {e}", "IBPTNCMCEST")
+        os.remove(arq_lock)
 
     finally:
         cursorMYSQL.close()

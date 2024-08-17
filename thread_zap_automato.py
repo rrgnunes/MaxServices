@@ -117,6 +117,7 @@ def zapautomato():
                         os.remove(arquivo_zap)
                     except Exception as e:
                         print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
+                        os.remove(arquivo_zap)
                         raise e
             except Exception as a:
                 if con_fb:
@@ -124,5 +125,6 @@ def zapautomato():
                 if con_mysql:
                     con_mysql.rollback()
                 print_log(f'{a}',nome_servico)
+                os.remove(arquivo_zap)
 
 zapautomato()

@@ -323,6 +323,7 @@ def xmlcontador():
         if conMYSQL:
             conMYSQL.rollback()
         print_log(f"Erro: {e}")
+        os.remove(lock_contador)
 
 
 xmlcontador()

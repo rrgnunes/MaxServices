@@ -80,6 +80,7 @@ def atualiza_banco():
         os.remove(lock_atualiza_banco)
     except Exception as e:
         print_log(f"Erro na atualização do banco: {e}", "Atualiza_Banco")
+        os.remove(lock_atualiza_banco)
 
 
 atualiza_banco()
