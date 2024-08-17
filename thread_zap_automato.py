@@ -120,10 +120,13 @@ def zapautomato():
                         os.remove(arquivo_zap)
                         raise e
             except Exception as a:
-                if con_fb:
-                    con_fb.rollback()
-                if con_mysql:
-                    con_mysql.rollback()
+                try:
+                    if con_fb:
+                        con_fb.rollback()
+                    if con_mysql:
+                        con_mysql.rollback()
+                except Exception as e:
+                    pass
                 print_log(f'{a}',nome_servico)
                 os.remove(arquivo_zap)
 
