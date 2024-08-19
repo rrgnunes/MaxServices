@@ -32,6 +32,7 @@ LAST_IMAGE = ''
 
 # Conexões globais (inicialmente None)
 MYSQL_CONNECTION = None
+MYSQL_CONNECTION_REPLICADOR = None
 FIREBIRD_CONNECTION = None
 
 # Variáveis globais
