@@ -43,9 +43,12 @@ def verifica_dados_local():
                 try:
                     con = parametros.FIREBIRD_CONNECTION
                     cur = con.cursor()
-                    comando = 'Liberar' if ativo == "1" else 'Bloquear'
-                    print_log(f"Comando para {comando} maxsuport","thread_bloqueio")
-                    cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
+                    cur.execute(f"select DATA_VALIDADE from empresa where cnpj = {cnpj} and DATA_VALIDADE = '80E854C4A6929988F879E1' ") # se houver retorno é porque esta ativo
+                    sistema_ativo = len(cur.fetchall()) > 0
+                    if sistema_ativo != (ativo == '1'):
+                        comando = 'Liberar' if ativo == "1" else 'Bloquear'
+                        print_log(f"Comando para {comando} maxsuport","thread_bloqueio")
+                        cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
                     con.commit()
                 except fdb.fbcore.DatabaseError as e:
                     print_log(f"Erro ao executar consulta: {e}")
