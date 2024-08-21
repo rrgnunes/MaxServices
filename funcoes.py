@@ -231,6 +231,124 @@ def VerificaVersaoOnline(arquivo_versao):
         print_log(a)    
     return versao_online
 
+def inicializa_conexao_mysql_replicador(database):
+    try:
+        if parametros.MYSQL_CONNECTION_REPLICADOR == None:
+            parametros.MYSQL_CONNECTION_REPLICADOR = mysql.connector.connect(
+                host=parametros.HOSTMYSQL,
+                user=parametros.USERMYSQL,
+                password=parametros.PASSMYSQL,
+                database=database
+            )
+        print(f"Conexão com MySQL estabelecida com sucesso.")
+    except mysql.connector.Error as err:
+        print(f"Erro ao conectar ao MySQL: {err}")
+
+def extrair_metadados_mysql(conexao):
+    cursor = conexao.cursor()
+    cursor.execute("""
+        SELECT
+            TABLE_NAME,
+            COLUMN_NAME,
+            COLUMN_TYPE,
+            IS_NULLABLE,
+            COLUMN_DEFAULT,
+            CHARACTER_MAXIMUM_LENGTH,
+            NUMERIC_PRECISION,
+            NUMERIC_SCALE
+        FROM
+            INFORMATION_SCHEMA.COLUMNS
+        WHERE
+            TABLE_SCHEMA = DATABASE()
+        ORDER BY
+            TABLE_NAME, COLUMN_NAME
+    """)
+
+    metadados = {}
+    for row in cursor.fetchall():
+        tabela = row[0]
+        coluna = row[1]
+        tipo = row[2]
+        is_nullable = 'NOT NULL' if row[3] == 'NO' else ''
+        tamanho = row[5] if row[5] else ''
+        precisao = row[6] if row[6] else None
+        escala = row[7] if row[7] else None
+
+        if tabela not in metadados:
+            metadados[tabela] = {}
+        metadados[tabela][coluna] = {'tipo': tipo, 'tamanho': tamanho, 'null': is_nullable, 'precisao': precisao, 'escala': escala}
+    
+    return metadados
+
+def mapear_tipo_firebird_mysql(tipo_firebird, precisao=None, escala=None, tamanho=None):
+    mapa_tipos = {
+    'SMALLINT': 'SMALLINT',
+    'INTEGER': 'INT',
+    'NUMERIC': f'DECIMAL({precisao},{str(escala).replace("-", "")})' if precisao and escala else 'DECIMAL',
+    'DECIMAL': f'DECIMAL({precisao},{str(escala).replace("-", "")})' if precisao and escala else 'DECIMAL',
+    'QUAD': 'BIGINT',
+    'FLOAT': 'FLOAT',
+    'DATE': 'DATE',
+    'TIME': 'TIME',
+    'CHAR': f'CHAR({tamanho})' if tamanho else 'CHAR',
+    'BIGINT': 'BIGINT',
+    'DOUBLE': 'DOUBLE',
+    'TIMESTAMP': 'DATETIME',
+    'VARCHAR': f'VARCHAR({tamanho})' if tamanho else 'VARCHAR',
+    'CSTRING': f'VARCHAR({tamanho})' if tamanho else 'VARCHAR',
+    'BLOB SUB_TYPE': 'BLOB',
+    }
+    return mapa_tipos.get(tipo_firebird, 'TEXT')
+
+def gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino):
+    scripts_sql = []
+
+    # Verificar tabelas que existem na origem, mas não no destino
+    for tabela_origem, colunas_origem in metadados_origem.items():
+        if tabela_origem not in metadados_destino:
+            colunas_sql = []
+            for coluna, propriedades in colunas_origem.items():
+                tipo = mapear_tipo_firebird_mysql(propriedades['tipo'], propriedades['precisao'], propriedades['escala'], propriedades['tamanho'])
+                null = propriedades.get('null', '')
+
+                coluna_def = f"`{coluna}` {tipo} {null}"
+                colunas_sql.append(coluna_def)
+            colunas_str = ", ".join(colunas_sql)
+            scripts_sql.append(f"CREATE TABLE `{tabela_origem}` ({colunas_str});")
+
+    # Verificar colunas que existem na origem, mas não no destino ou que têm propriedades diferentes
+    for tabela_origem, colunas_origem in metadados_origem.items():
+        if tabela_origem in metadados_destino:
+            for coluna, propriedades in colunas_origem.items():
+                tipo = mapear_tipo_firebird_mysql(propriedades['tipo'], propriedades['precisao'], propriedades['escala'], propriedades['tamanho'])
+                null = propriedades.get('null', '')
+
+                if coluna not in metadados_destino[tabela_origem]:
+                    coluna_def = f"`{coluna}` {tipo} {null}"
+                    scripts_sql.append(f"ALTER TABLE `{tabela_origem}` ADD {coluna_def};")
+                else:
+                    prop_destino = metadados_destino[tabela_origem][coluna]
+                    tipo_destino = mapear_tipo_firebird_mysql(prop_destino['tipo'], prop_destino['precisao'], prop_destino['escala'], prop_destino['tamanho'])
+                    null_destino = prop_destino.get('null', '')
+
+                    if tipo != tipo_destino or null != null_destino:
+                        coluna_def = f"`{coluna}` {tipo} {null}"
+                        scripts_sql.append(f"ALTER TABLE `{tabela_origem}` MODIFY COLUMN {coluna_def};")
+    
+    return scripts_sql
+
+def executar_scripts_mysql(conexao_mysql, scripts_sql, nome_servico):
+    erros = []
+    for script in scripts_sql:
+        try:
+            cursor = conexao_mysql.cursor()
+            cursor.execute(script)
+            conexao_mysql.commit()
+            print_log(f'Comando executado: {script}', nome_servico)
+        except Exception as e:
+            conexao_mysql.rollback()
+            erros.append({'script': script, 'erro': str(e)})
+    return erros
 
 def extrair_metadados(conexao):
     cursor = conexao.cursor()
@@ -299,6 +417,7 @@ def extrair_metadados(conexao):
         if tabela not in metadados:
             metadados[tabela] = {}
         metadados[tabela][coluna] = {'tipo': tipo, 'tamanho': tamanho, 'null': null,'precisao':precisao,'escala':escala}
+    conexao.close()
     return metadados
 
 def mapear_tipo_firebird_para_sql(codigo_tipo):
