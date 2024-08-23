@@ -43,7 +43,7 @@ def atualiza_banco_mysql():
                 for erro in erros:
                     print_log(f"Em banco {bd[0]} nao foi possivel executar: {erro}")
 
-
+        parametros.MYSQL_CONNECTION_REPLICADOR.close()
     except Exception as e:
         print_log(f'{e}', nome_servico)
 
