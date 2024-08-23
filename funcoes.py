@@ -268,7 +268,7 @@ def extrair_metadados_mysql(conexao):
     for row in cursor.fetchall():
         tabela = row[0]
         coluna = row[1]
-        tipo = row[2]
+        tipo = row[2].split('(')[0]
         is_nullable = 'NOT NULL' if row[3] == 'NO' else ''
         tamanho = row[5] if row[5] else ''
         precisao = row[6] if row[6] else None
@@ -280,10 +280,19 @@ def extrair_metadados_mysql(conexao):
     
     return metadados
 
-def mapear_tipo_firebird_mysql(tipo_firebird, precisao=None, escala=None, tamanho=None):
+def mapear_tipo_firebird_mysql(tipo, precisao=None, escala=None, tamanho=None):
+    tipo = tipo.upper()
+    if 'CHAR' in tipo:
+        tipo = tipo.split('(')[0]
+    if ('VARCHAR') == tipo and (tamanho >= 10000):
+        tipo = 'TEXT'
+    if 'BIGINT' in tipo:
+        tipo = 'BIGINT'
+
     mapa_tipos = {
     'SMALLINT': 'SMALLINT',
     'INTEGER': 'INT',
+    'INT': 'INT',
     'NUMERIC': f'DECIMAL({precisao},{str(escala).replace("-", "")})' if precisao and escala else 'DECIMAL',
     'DECIMAL': f'DECIMAL({precisao},{str(escala).replace("-", "")})' if precisao and escala else 'DECIMAL',
     'QUAD': 'BIGINT',
@@ -294,11 +303,15 @@ def mapear_tipo_firebird_mysql(tipo_firebird, precisao=None, escala=None, tamanh
     'BIGINT': 'BIGINT',
     'DOUBLE': 'DOUBLE',
     'TIMESTAMP': 'DATETIME',
+    'DATETIME': 'DATETIME',
     'VARCHAR': f'VARCHAR({tamanho})' if tamanho else 'VARCHAR',
     'CSTRING': f'VARCHAR({tamanho})' if tamanho else 'VARCHAR',
-    'BLOB SUB_TYPE': 'BLOB',
+    'BLOB SUB_TYPE 0': 'LONGBLOB',
+    'BLOB SUB_TYPE 1': 'BLOB',
+    'BLOB': 'BLOB',
+    'LONGBLOB': 'LONGBLOB'
     }
-    return mapa_tipos.get(tipo_firebird, 'TEXT')
+    return mapa_tipos.get(tipo, 'TEXT')
 
 def gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino):
     scripts_sql = []
