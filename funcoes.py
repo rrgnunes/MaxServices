@@ -307,7 +307,8 @@ def mapear_tipo_firebird_mysql(tipo, precisao=None, escala=None, tamanho=None):
     'VARCHAR': f'VARCHAR({tamanho})' if tamanho else 'VARCHAR',
     'CSTRING': f'VARCHAR({tamanho})' if tamanho else 'VARCHAR',
     'BLOB SUB_TYPE 0': 'LONGBLOB',
-    'BLOB SUB_TYPE 1': 'BLOB',
+    'BLOB SUB_TYPE 1': 'MEDIUMBLOB',
+    'MEDIUMBLOB': 'MEDIUMBLOB',
     'BLOB': 'BLOB',
     'LONGBLOB': 'LONGBLOB'
     }
@@ -430,7 +431,6 @@ def extrair_metadados(conexao):
         if tabela not in metadados:
             metadados[tabela] = {}
         metadados[tabela][coluna] = {'tipo': tipo, 'tamanho': tamanho, 'null': null,'precisao':precisao,'escala':escala}
-    conexao.close()
     return metadados
 
 def mapear_tipo_firebird_para_sql(codigo_tipo):
@@ -464,8 +464,8 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
                 tamanho = propriedades.get('tamanho', '')
                 null = propriedades.get('null', '')
 
-                if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP'):
-                    if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP'):
+                if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP', 'BLOB SUB_TYPE 1', 'BLOB SUB_TYPE 0'):
+                    if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP', 'BLOB SUB_TYPE 1', 'BLOB SUB_TYPE 0'):
                         coluna_def = f"{coluna} {tipo} {null}"
                     else:
                         coluna_def = f"{coluna} {tipo}({propriedades['precisao']},{str(propriedades['escala']).replace('-','')}) {null}"

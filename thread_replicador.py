@@ -51,7 +51,7 @@ def buscar_nome_chave_primaria_firebird(tabela):
         return None
         
     except Exception as e:
-        print(f"Erro ao buscar nome da chave primária no Firebird: {e}")
+        print_log(f"Erro ao buscar nome da chave primária no Firebird: {e}", nome_servico)
         return None
 
 
@@ -62,7 +62,7 @@ def buscar_elemento_firebird(tabela, codigo):
 
         chave_primaria = buscar_nome_chave_primaria_firebird(tabela)
         if not chave_primaria:
-            print(f"Chave primária não encontrada para a tabela {tabela}.")
+            print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
             return None
         
         sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = ?"
@@ -78,7 +78,7 @@ def buscar_elemento_firebird(tabela, codigo):
         return dados
 
     except fdb.fbcore.DatabaseError as e:
-        print(f"Erro ao buscar elemento no Firebird: {e}")
+        print_log(f"Erro ao buscar elemento no Firebird: {e}", nome_servico)
         return None
     finally:
         if cursor:
@@ -98,7 +98,7 @@ def buscar_alteracoes_firebird():
             return alteracoes
         
         except fdb.fbcore.DatabaseError as e:
-            print(f"verificar alteração:{e}")
+            print_log(f"verificar alteração:{e}", nome_servico)
             connection_firebird.rollback()
 
 
@@ -119,7 +119,7 @@ def update_firebird(tabela, codigo, dados):
     
             cursor.close()
         except fdb.fbcore.DatabaseError as e:
-            print(f"Erro ao atualizar dados no Firebird: {e}")
+            print_log(f"Erro ao atualizar dados no Firebird: {e}", nome_servico)
             connection_firebird.rollback()
 
 
@@ -140,7 +140,7 @@ def insert_firebird(tabela, dados):
             
             cursor.close()
         except fdb.fbcore.DatabaseError as e:
-            print(f"Erro ao inserir dados no Firebird: {e}")
+            print_log(f"Erro ao inserir dados no Firebird: {e}", nome_servico)
             connection_firebird.rollback()
 
 
@@ -157,7 +157,7 @@ def delete_registro_replicador(tabela, acao, chave):
 
 
     except fdb.fbcore.DatabaseError as e:
-        print(f"Erro ao deletar registros da tabela REPLICADOR: {e}")
+        print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
         connection_firebird.rollback()
         
 
@@ -178,7 +178,7 @@ def delete_firebird(tabela, codigo):
         connection_firebird.commit()
 
     except fdb.fbcore.DatabaseError as e:
-        print(f"Erro ao deletar registro da tabela {tabela}: {e}")
+        print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
         connection_firebird.rollback()
 
 
@@ -220,7 +220,7 @@ def buscar_nome_chave_primaria_mysql(tabela):
         return None
         
     except Exception as e:
-        print(f"Erro ao buscar nome da chave primária: {e}")
+        print_log(f"Erro ao buscar nome da chave primária: {e}", nome_servico)
         return None
     finally:
         if cursor:
@@ -237,7 +237,7 @@ def buscar_elemento_mysql(tabela, codigo):
         chave_primaria = buscar_nome_chave_primaria_mysql(tabela)
         
         if not chave_primaria:
-            print(f"Chave primária não encontrada para a tabela {tabela}.")
+            print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
             return None
         
         sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s"
@@ -250,7 +250,7 @@ def buscar_elemento_mysql(tabela, codigo):
         return dados
 
     except Exception as e:
-        print(f"Erro ao buscar elemento MySQL: {e}")
+        print_log(f"Erro ao buscar elemento MySQL: {e}", nome_servico)
         return None
  
 #FUNÇÃO AUXILIAR DO INSERT E UPDATE_MYSQL
@@ -262,39 +262,6 @@ def extrair_detalhes_chave_estrangeira(erro, dados):
         valor_chave_estrangeira = dados.get(coluna_chave_estrangeira)
         return tabela_referenciada, valor_chave_estrangeira
     return None, None
-
-
-def update_mysql(tabela, codigo, dados):
-        try:
-            cursor = connection_mysql.cursor()
-
-            set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
-            sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO = %s"
-            dados = verificar_tipo_coluna(tabela, dados)
-            valores = list(dados.values())
-            valores.append(codigo)
-            
-            cursor.execute(sql_update, valores)
-
-            connection_mysql.commit()
-            
-            cursor.close()
-        except Error as e:
-            print(f"Erro ao atualizar dados no MySQL: {e}")
-            connection_mysql.rollback()
-
-            if "foreign key constraint fails" in str(e).lower():
-                tabela_referenciada, valor_chave_estrangeira = extrair_detalhes_chave_estrangeira(e, dados)
-
-            if tabela_referenciada and valor_chave_estrangeira:
-            
-                elemento_firebird = buscar_elemento_firebird(tabela_referenciada, valor_chave_estrangeira)
-
-                #inserir dados para o relacionamento funcionar
-                insert_mysql(tabela_referenciada, elemento_firebird)
-
-                #tentar update dados do começo
-                update_mysql(tabela,dados)
 
 def verificar_tipo_coluna(tabela, dados):
     try:
@@ -310,6 +277,9 @@ def verificar_tipo_coluna(tabela, dados):
                 if not isinstance(dados[coluna], str):
                     if dados[coluna] != None:
                         content = dados[coluna].read()
+                        if 'xml' in content:
+                            dados[coluna] = content
+                            continue
                         image = Image.open(io.BytesIO(content))
                         with io.BytesIO() as output:
                             image.save(output, format="JPEG")
@@ -318,7 +288,40 @@ def verificar_tipo_coluna(tabela, dados):
         cur_fb.close()
         return dados
     except Exception as e:
-        print(e)
+        print_log(f"Erro ao verificar tipo do campo: {e}", nome_servico)
+
+def update_mysql(tabela, codigo, dados):
+        try:
+            cursor = connection_mysql.cursor()
+
+            set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
+            coluna_chave_primaria = buscar_nome_chave_primaria_firebird(tabela)
+            sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
+            dados = verificar_tipo_coluna(tabela, dados)
+            valores = list(dados.values())
+            valores.append(codigo)
+            
+            cursor.execute(sql_update, valores)
+
+            connection_mysql.commit()
+            
+            cursor.close()
+        except Error as e:
+            print_log(f"Erro ao atualizar dados no MySQL: {e}", nome_servico)
+            connection_mysql.rollback()
+
+            if "foreign key constraint fails" in str(e).lower():
+                tabela_referenciada, valor_chave_estrangeira = extrair_detalhes_chave_estrangeira(e, dados)
+
+            if tabela_referenciada and valor_chave_estrangeira:
+            
+                elemento_firebird = buscar_elemento_firebird(tabela_referenciada, valor_chave_estrangeira)
+
+                #inserir dados para o relacionamento funcionar
+                insert_mysql(tabela_referenciada, elemento_firebird)
+
+                #tentar update dados do começo
+                update_mysql(tabela,dados)
 
 
 def insert_mysql(tabela, dados):
@@ -338,7 +341,7 @@ def insert_mysql(tabela, dados):
         
         cursor_mysql.close()
     except mysql.connector.Error as e:
-        print(f"Erro ao inserir dados no MySQL: {e}")
+        print_log(f"Erro ao inserir dados no MySQL: {e}", nome_servico)
         connection_mysql.rollback()
 
         #caso não ter o elemento para o relacionamento
@@ -376,7 +379,7 @@ def buscar_relacionamentos(tabela):
         return relacionamentos
         
     except Error as e:
-        print(f"Erro ao buscar relacionamentos da tabela {tabela}: {e}")
+        print_log(f"Erro ao buscar relacionamentos da tabela {tabela}: {e}", nome_servico)
         return None
     finally:
         if cursor:
@@ -394,7 +397,7 @@ def delete_relacionamento_mysql(tabela, codigo, chave_estrageira):
             
             cursor.close()
         except Error as e:
-            print(f"Erro ao deletar registro da tabela {tabela}: {e}")
+            print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
             connection_mysql.rollback()
 
 
@@ -412,7 +415,7 @@ def delete_mysql(tabela, codigo):
             
             cursor.close()
         except Error as e:
-            print(f"Erro ao deletar registro da tabela {tabela}: {e}")
+            print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
             connection_mysql.rollback()
             if "foreign key constraint fails" in str(e).lower():
                 informacao_relacionamento = buscar_relacionamentos(tabela)
