@@ -6,12 +6,12 @@ import time
 import re
 import io
 from PIL import Image
-from funcoes import carregar_configuracoes,inicializa_conexao_firebird, inicializa_conexao_mysql_replicador
+from funcoes import carregar_configuracoes,inicializa_conexao_firebird, inicializa_conexao_mysql_replicador, print_log
 
 carregar_configuracoes()
 
 inicializa_conexao_mysql_replicador('19775656000104')
-
+nome_servico = 'Replicador'
 connection_firebird = parametros.FIREBIRD_CONNECTION
 connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
 
@@ -145,13 +145,13 @@ def insert_firebird(tabela, dados):
 
 
 
-def delete_registro_replicador(tabela, acao, valor):
+def delete_registro_replicador(tabela, acao, chave):
     try:
         cursor = connection_firebird.cursor()
 
-        sql_delete = "DELETE FROM REPLICADOR WHERE valor = ? AND tabela = ? AND acao = ? ROWS 1;"
+        sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
 
-        cursor.execute(sql_delete, (valor, tabela, acao))
+        cursor.execute(sql_delete, (chave, tabela, acao))
         connection_firebird.commit()
 
 
@@ -270,7 +270,7 @@ def update_mysql(tabela, codigo, dados):
 
             set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
             sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO = %s"
-
+            dados = verificar_tipo_coluna(tabela, dados)
             valores = list(dados.values())
             valores.append(codigo)
             
@@ -467,7 +467,9 @@ def processar_alteracoes():
 
 while True:
     
+    print_log('Executando.....', nome_servico)
     processar_alteracoes()
+    print_log('Alterações executadas.... esperando 10 segundos...', nome_servico)
     time.sleep(10)
 
 
