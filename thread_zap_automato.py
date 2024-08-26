@@ -1,5 +1,5 @@
 import fdb
-from funcoes import os,json,datetime,atualiza_agenda,retorna_pessoas_preagendadas, salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap, carregar_configuracoes
+from funcoes import os,json,datetime,atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas, salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap, carregar_configuracoes
 import parametros
 import os
 import pathlib
@@ -58,7 +58,7 @@ def zapautomato():
 
                     ENVIAR_MENSAGEM_ANIVERSARIO = cfg_zap['ENVIAR_MENSAGEM_ANIVERSARIO'] = 1
                     ENVIAR_MENSAGEM_PROMOCAO    = cfg_zap['ENVIAR_MENSAGEM_PROMOCAO'] = 1
-                    ENVIAR_MENSAGEM_DIARIO      = cfg_zap['ENVIAR_MENSAGEM_DIARIO'] = 1
+                    ENVIAR_MENSAGEM_DIARIO      = cfg_zap['ENVIAR_MENSAGEM_DIARIO']
                     MENSAGEM_ANIVERSARIO        = cfg_zap['MENSAGEM_ANIVERSARIO']
                     MENSAGEM_PROMOCAO           = cfg_zap['MENSAGEM_PROMOCAO']
                     MENSAGEM_DIARIO             = cfg_zap['MENSAGEM_DIARIO']
@@ -71,6 +71,14 @@ def zapautomato():
 
                     print_log(f'Dados da configuração recebidos',nome_servico)
 
+                    # MENSAGEM DIARIA
+                    pessoas = retorna_pessoas_mensagemdiaria(conexao, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
+                    for pessoa in pessoas:
+                        MENSAGEM_DIARIO = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
+                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO, pessoa['CELULAR1'])
+                        print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}',nome_servico)
+
+                    # MENSAGEM ANIVERSARIO
                     pessoas = retorna_pessoas(conexao)
 
                     for pessoa in pessoas:

@@ -4,22 +4,11 @@ import parametros
 import mysql.connector
 import time
 import re
-from funcoes import carregar_configuracoes,inicializa_conexao_firebird
+import io
+from PIL import Image
+from funcoes import carregar_configuracoes,inicializa_conexao_firebird, inicializa_conexao_mysql_replicador
 
 carregar_configuracoes()
-
-def inicializa_conexao_mysql_replicador(database):
-    try:
-        if parametros.MYSQL_CONNECTION_REPLICADOR == None:
-            parametros.MYSQL_CONNECTION_REPLICADOR = mysql.connector.connect(
-                host=parametros.HOSTMYSQL,
-                user=parametros.USERMYSQL,
-                password=parametros.PASSMYSQL,
-                database=database
-            )
-        print(f"Conexão com MySQL estabelecida com sucesso.")
-    except mysql.connector.Error as err:
-        print(f"Erro ao conectar ao MySQL: {err}")
 
 inicializa_conexao_mysql_replicador('19775656000104')
 
@@ -307,22 +296,47 @@ def update_mysql(tabela, codigo, dados):
                 #tentar update dados do começo
                 update_mysql(tabela,dados)
 
+def verificar_tipo_coluna(tabela, dados):
+    try:
+        cur_fb = connection_firebird.cursor()
+        for coluna in dados.keys():
+
+            cur_fb.execute(f"SELECT RDB$FIELD_NAME, RDB$FIELD_SOURCE from rdb$relation_fields where  RDB$FIELD_NAME = '{coluna}'  and RDB$RELATION_NAME = '{tabela}'")
+            field_source = cur_fb.fetchall()[0][1]
+
+            cur_fb.execute(f"SELECT RDB$FIELD_TYPE FROM RDB$FIELDS WHERE RDB$FIELD_NAME = '{field_source}'")
+            field_type = cur_fb.fetchall()[0][0]
+            if field_type == 261:
+                if not isinstance(dados[coluna], str):
+                    if dados[coluna] != None:
+                        content = dados[coluna].read()
+                        image = Image.open(io.BytesIO(content))
+                        with io.BytesIO() as output:
+                            image.save(output, format="JPEG")
+                            dados[coluna] = output.getvalue()
+                        image.close()
+        cur_fb.close()
+        return dados
+    except Exception as e:
+        print(e)
+
 
 def insert_mysql(tabela, dados):
     try:
-        cursor = connection_mysql.cursor()
+        cursor_mysql = connection_mysql.cursor()
 
         colunas = ', '.join(dados.keys())
-        placeholders = ', '.join(['%s'] * len(dados))
+        placeholders = ', '.join(["%s"] * len(dados))
+        dados = verificar_tipo_coluna(tabela, dados)
         valores = list(dados.values())
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-        cursor.execute(sql_insert, valores)
+        cursor_mysql.execute(sql_insert, valores)
 
         connection_mysql.commit()
         
-        cursor.close()
+        cursor_mysql.close()
     except mysql.connector.Error as e:
         print(f"Erro ao inserir dados no MySQL: {e}")
         connection_mysql.rollback()

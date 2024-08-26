@@ -563,6 +563,23 @@ def config_zap(conexao):
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
     return resultados_em_dicionario[0]
 
+
+def retorna_pessoas_mensagemdiaria(conexao, envia_mensagem_diaria, dia_mensagem, hora_mensagem, ultimo_envio):
+    if envia_mensagem_diaria == 1:
+        data_hoje = datetime.datetime.now().strftime('%d.%m.%Y')
+        dia_semana_hoje = datetime.datetime.now().isoweekday() - 1
+        hora = datetime.datetime.now().strftime('%H:%M:%S')
+        if ultimo_envio < data_hoje:
+            if dia_mensagem == dia_semana_hoje:
+                if hora_mensagem < hora:
+                    sql = "select codigo, fantasia, celular1 from pessoa p where p.celular1 <> '' and p.ativo = 'S'"
+                    cursor = conexao.cursor()
+                    cursor.execute(sql)
+                    colunas = [coluna[0] for coluna in cursor.description]
+                    pessoas = cursor.fetchall()
+                    pessoas_dicionario = [dict(zip(colunas, pessoa)) for pessoa in pessoas]
+    return pessoas_dicionario
+
 def retorna_pessoas(conexao):
     cursor = conexao.cursor()
     cursor.execute("""
