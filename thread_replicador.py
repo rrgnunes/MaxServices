@@ -277,9 +277,9 @@ def verificar_tipo_coluna(tabela, dados):
                 if not isinstance(dados[coluna], str):
                     if dados[coluna] != None:
                         content = dados[coluna].read()
-                        if 'xml' in content:
-                            dados[coluna] = content
-                            continue
+                        # if 'xml' in content:
+                        #     dados[coluna] = content
+                        #     continue
                         image = Image.open(io.BytesIO(content))
                         with io.BytesIO() as output:
                             image.save(output, format="JPEG")
@@ -346,6 +346,7 @@ def insert_mysql(tabela, dados):
 
         #caso não ter o elemento para o relacionamento
         if "foreign key constraint fails" in str(e).lower():
+            print_log("Sera adicionado elemento de chave estrangeira...", nome_servico)
             tabela_referenciada, valor_chave_estrangeira = extrair_detalhes_chave_estrangeira(e, dados)
             if tabela_referenciada and valor_chave_estrangeira:
             

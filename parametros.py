@@ -3,12 +3,12 @@ import os
 
 # Credenciais MySQL
 HOSTMYSQL = "177.153.69.3"
-USERMYSQL = "maxsuport"
+USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
 BASEMYSQL = "maxservices"
 
 # Credenciais Firebird
-USERFB = 'maxsuport'
+USERFB = 'maxservices'
 PASSFB = 'oC8qUsDp'
 HOSTFB = 'localhost'
 DATABASEFB = ''  # Atualizar conforme necessário
