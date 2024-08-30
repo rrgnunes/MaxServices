@@ -4,8 +4,6 @@ import parametros
 import mysql.connector
 import time
 import re
-import io
-from PIL import Image
 from funcoes import carregar_configuracoes,inicializa_conexao_firebird, inicializa_conexao_mysql_replicador, print_log
 
 carregar_configuracoes()
@@ -145,25 +143,39 @@ def insert_firebird(tabela, dados):
 
 
 
-def delete_registro_replicador(tabela, acao, chave):
-    try:
-        cursor = connection_firebird.cursor()
+def delete_registro_replicador(tabela, acao, chave, firebird=True):
 
-        sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
+    sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
 
-        cursor.execute(sql_delete, (chave, tabela, acao))
-        connection_firebird.commit()
+    if firebird:
+        try:
+            cursor = connection_firebird.cursor()
 
+            cursor.execute(sql_delete, (chave, tabela, acao))
 
+            connection_firebird.commit()
 
-    except fdb.fbcore.DatabaseError as e:
-        print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
-        connection_firebird.rollback()
-        
+        except fdb.fbcore.DatabaseError as e:
+            print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
+            connection_firebird.rollback()
+            
+        finally:
+            if cursor:
+                cursor.close()
+    else:
+        try:
+            cursor = connection_mysql.cursor()
 
-    finally:
-        if cursor:
-            cursor.close()
+            cursor.execute(sql_delete, (chave, tabela, acao))
+
+            connection_mysql.commit()
+
+        except Exception as e:
+            print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
+
+        finally:
+            if cursor:
+                cursor.close()
 
 
 def delete_firebird(tabela, codigo):
@@ -188,6 +200,20 @@ def delete_firebird(tabela, codigo):
 
 
 #===============MYSQL=======================
+
+def buscar_alteracoes_mysql():
+    try:
+        cursor_mysql = connection_mysql.cursor()
+
+        cursor_mysql.execute('SELECT * FROM REPLICADOR')
+
+        alteracoes = cursor_mysql.fetchall()
+
+        cursor_mysql.close()
+
+        return alteracoes
+    except Exception as e:
+        print_log(f"Verificar alteracao: {e}")
 
 
 def buscar_nome_chave_primaria_mysql(tabela):
@@ -263,33 +289,6 @@ def extrair_detalhes_chave_estrangeira(erro, dados):
         return tabela_referenciada, valor_chave_estrangeira
     return None, None
 
-def verificar_tipo_coluna(tabela, dados):
-    try:
-        cur_fb = connection_firebird.cursor()
-        for coluna in dados.keys():
-
-            cur_fb.execute(f"SELECT RDB$FIELD_NAME, RDB$FIELD_SOURCE from rdb$relation_fields where  RDB$FIELD_NAME = '{coluna}'  and RDB$RELATION_NAME = '{tabela}'")
-            field_source = cur_fb.fetchall()[0][1]
-
-            cur_fb.execute(f"SELECT RDB$FIELD_TYPE FROM RDB$FIELDS WHERE RDB$FIELD_NAME = '{field_source}'")
-            field_type = cur_fb.fetchall()[0][0]
-            if field_type == 261:
-                if not isinstance(dados[coluna], str):
-                    if dados[coluna] != None:
-                        content = dados[coluna].read()
-                        if 'xml' in content:
-                            dados[coluna] = content
-                            continue
-                        image = Image.open(io.BytesIO(content))
-                        with io.BytesIO() as output:
-                            image.save(output, format="JPEG")
-                            dados[coluna] = output.getvalue()
-                        image.close()
-        cur_fb.close()
-        return dados
-    except Exception as e:
-        print_log(f"Erro ao verificar tipo do campo: {e}", nome_servico)
-
 def update_mysql(tabela, codigo, dados):
         try:
             cursor = connection_mysql.cursor()
@@ -297,7 +296,6 @@ def update_mysql(tabela, codigo, dados):
             set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
             coluna_chave_primaria = buscar_nome_chave_primaria_firebird(tabela)
             sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
-            dados = verificar_tipo_coluna(tabela, dados)
             valores = list(dados.values())
             valores.append(codigo)
             
@@ -323,6 +321,17 @@ def update_mysql(tabela, codigo, dados):
                 #tentar update dados do começo
                 update_mysql(tabela,dados)
 
+def isblob(dados):
+    valores = []
+    for key, valor in dados.items():
+        if isinstance(valor, fdb.fbcore.BlobReader):  # Verifica se o valor é BLOB
+            blob = valor.read()
+            # str_blob = blob.decode('ISO_8859_1')
+            valores.append(blob)  # Adiciona o BLOB diretamente
+            valor.close()
+        else:
+            valores.append(valor)  # Adiciona os outros valores
+    return valores
 
 def insert_mysql(tabela, dados):
     try:
@@ -330,8 +339,7 @@ def insert_mysql(tabela, dados):
 
         colunas = ', '.join(dados.keys())
         placeholders = ', '.join(["%s"] * len(dados))
-        dados = verificar_tipo_coluna(tabela, dados)
-        valores = list(dados.values())
+        valores = isblob(dados)
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
@@ -346,6 +354,7 @@ def insert_mysql(tabela, dados):
 
         #caso não ter o elemento para o relacionamento
         if "foreign key constraint fails" in str(e).lower():
+            print_log("Sera adicionado elemento de chave estrangeira...", nome_servico)
             tabela_referenciada, valor_chave_estrangeira = extrair_detalhes_chave_estrangeira(e, dados)
             if tabela_referenciada and valor_chave_estrangeira:
             
@@ -462,8 +471,36 @@ def processar_alteracoes():
             elif acao == "U":
                 insert_mysql(tabela, elemento_firebird)
                  
-
         delete_registro_replicador(tabela, acao, valor)
+
+    alteracoes = buscar_alteracoes_mysql()
+
+    for alteracao in alteracoes:
+        
+        tabela = alteracao[0].upper()
+        acao = alteracao[1].upper()
+        valor = alteracao[2]
+        
+        elemento_mysql = buscar_elemento_mysql(tabela,valor)
+        existe_elemento_firebird = buscar_elemento_firebird(tabela, valor)
+
+        # SE JA EXISTE ELEMENTO FIREBIRD
+        if existe_elemento_firebird:
+            if acao == "I":
+                update_firebird(tabela, valor, elemento_mysql)
+            elif acao == "U":
+                update_firebird(tabela, valor, elemento_mysql)
+            elif acao == "D":
+                delete_firebird(tabela, valor)
+
+        # SE NÃO EXISTE ELEMENTO FIREBIRD
+        elif not existe_elemento_firebird and elemento_mysql:
+            if acao == "I":
+                insert_firebird(tabela, elemento_mysql)
+            if acao == "U":
+                insert_firebird(tabela, elemento_mysql)
+
+        delete_registro_replicador(tabela, acao, valor, firebird=False)
      
 
 #=======LOOP=========
