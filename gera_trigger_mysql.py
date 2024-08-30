@@ -31,7 +31,7 @@ def generate_trigger_sql(cursor):
             insert_trigger = f"""
             CREATE TRIGGER TR_{upper_table_name}_INSERT AFTER INSERT ON {table_name} FOR EACH ROW
             BEGIN
-                IF (SUBSTRING_INDEX(CURRENT_USER(), '@', 1) = 'maxsuport') THEN
+                IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
                     INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE) VALUES ('{upper_table_name}', 'I', NEW.{pk_column});
                 END IF;
             END;
@@ -42,7 +42,7 @@ def generate_trigger_sql(cursor):
             update_trigger = f"""
             CREATE TRIGGER TR_{upper_table_name}_UPDATE AFTER UPDATE ON {table_name} FOR EACH ROW
             BEGIN
-                IF (SUBSTRING_INDEX(CURRENT_USER(), '@', 1) = 'maxsuport') THEN
+                IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
                     INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE) VALUES ('{upper_table_name}', 'U', NEW.{pk_column});
                 END IF;
             END;
@@ -53,7 +53,7 @@ def generate_trigger_sql(cursor):
             delete_trigger = f"""
             CREATE TRIGGER TR_{upper_table_name}_DELETE AFTER DELETE ON {table_name} FOR EACH ROW
             BEGIN
-                IF (SUBSTRING_INDEX(CURRENT_USER(), '@', 1) = 'maxsuport') THEN
+                IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
                     INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE) VALUES ('{upper_table_name}', 'D', OLD.{pk_column});
                 END IF;
             END;
@@ -66,7 +66,7 @@ def generate_trigger_sql(cursor):
 # Conectar ao banco de dados MySQL
 conn = mysql.connector.connect(
     host='177.153.69.3',
-    user='maxsuport',
+    user='maxservices',#maxsuport
     password='oC8qUsDp',
     database='19775656000104'
 )
