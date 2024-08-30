@@ -2,20 +2,36 @@ from mysql.connector import Error
 import fdb
 import parametros
 import mysql.connector
-import time
 import re
-from funcoes import carregar_configuracoes,inicializa_conexao_firebird, inicializa_conexao_mysql_replicador, print_log
+from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log
 
 carregar_configuracoes()
-
-inicializa_conexao_mysql_replicador('19775656000104')
 nome_servico = 'Replicador'
 connection_firebird = parametros.FIREBIRD_CONNECTION
+
+def primeira_empresa(con_fb):
+    try:
+
+        cursor = con_fb.cursor()
+
+        cursor.execute('Select cnpj from empresa where codigo = 1')
+
+        cnpj = cursor.fetchall()
+
+        cursor.close()
+        return cnpj[0][0]
+    except Exception as e:
+        if cursor:
+            cursor.close()
+        print_log(f'Nao foi possivel verificar CNPJ empresa 1: {e}')
+
+cnpj = primeira_empresa(connection_firebird)
+inicializa_conexao_mysql_replicador(cnpj)
 connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
 
 #===============FIREBIRD===================
 
-def buscar_nome_chave_primaria_firebird(tabela):
+def buscar_nome_chave_primaria(tabela):
     try:
         cursor = connection_firebird.cursor()
 
@@ -58,7 +74,7 @@ def buscar_elemento_firebird(tabela, codigo):
     try:
         cursor = connection_firebird.cursor()
 
-        chave_primaria = buscar_nome_chave_primaria_firebird(tabela)
+        chave_primaria = buscar_nome_chave_primaria(tabela)
         if not chave_primaria:
             print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
             return None
@@ -108,7 +124,7 @@ def update_firebird(tabela, codigo, dados):
             set_clause = ', '.join([f"{coluna} = ?" for coluna in dados.keys()])
             sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO = ?"
 
-            valores = list(dados.values())
+            valores = isblob(dados)
             valores.append(codigo)
 
             cursor.execute(sql_update, valores)
@@ -128,7 +144,7 @@ def insert_firebird(tabela, dados):
 
             colunas = ', '.join(dados.keys())
             placeholders = ', '.join(['?'] * len(dados))
-            valores = list(dados.values())
+            valores = isblob(dados)
 
             sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
@@ -145,13 +161,13 @@ def insert_firebird(tabela, dados):
 
 def delete_registro_replicador(tabela, acao, chave, firebird=True):
 
-    sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
-
     if firebird:
         try:
+
+            sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
             cursor = connection_firebird.cursor()
 
-            cursor.execute(sql_delete, (chave, tabela, acao))
+            cursor.execute(sql_delete, (chave, tabela, acao,))
 
             connection_firebird.commit()
 
@@ -164,9 +180,11 @@ def delete_registro_replicador(tabela, acao, chave, firebird=True):
                 cursor.close()
     else:
         try:
+
+            sql_delete = "DELETE FROM REPLICADOR WHERE CHAVE = %s AND TABELA = %s AND ACAO = %s LIMIT 1;"
             cursor = connection_mysql.cursor()
 
-            cursor.execute(sql_delete, (chave, tabela, acao))
+            cursor.execute(sql_delete, (chave, tabela, acao,))
 
             connection_mysql.commit()
 
@@ -182,7 +200,7 @@ def delete_firebird(tabela, codigo):
     try:
         cursor = connection_firebird.cursor()
 
-        chave_primaria = buscar_nome_chave_primaria_firebird(tabela)
+        chave_primaria = buscar_nome_chave_primaria(tabela)
 
         sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = ?"
 
@@ -216,41 +234,41 @@ def buscar_alteracoes_mysql():
         print_log(f"Verificar alteracao: {e}")
 
 
-def buscar_nome_chave_primaria_mysql(tabela):
-    try:
-        cursor = connection_mysql.cursor()
+# def buscar_nome_chave_primaria_mysql(tabela):
+#     try:
+#         cursor = connection_mysql.cursor()
         
-        query_codigo = f"""
-        SELECT COLUMN_NAME
-        FROM information_schema.COLUMNS
-        WHERE TABLE_NAME = '{tabela}'
-          AND COLUMN_NAME = 'codigo'
-        """
-        cursor.execute(query_codigo)
-        row_codigo = cursor.fetchone()
-        if row_codigo:
-            return 'codigo' 
+#         query_codigo = f"""
+#         SELECT COLUMN_NAME
+#         FROM information_schema.COLUMNS
+#         WHERE TABLE_NAME = '{tabela}'
+#           AND COLUMN_NAME = 'codigo'
+#         """
+#         cursor.execute(query_codigo)
+#         row_codigo = cursor.fetchone()
+#         if row_codigo:
+#             return 'codigo' 
         
         
-        query = f"""
-        SELECT COLUMN_NAME
-        FROM information_schema.KEY_COLUMN_USAGE
-        WHERE TABLE_NAME = '{tabela}'
-          AND CONSTRAINT_NAME = 'PRIMARY'
-        """
-        cursor.execute(query)
-        row = cursor.fetchone()
-        if row:
-            return row[0]  
+#         query = f"""
+#         SELECT COLUMN_NAME
+#         FROM information_schema.KEY_COLUMN_USAGE
+#         WHERE TABLE_NAME = '{tabela}'
+#           AND CONSTRAINT_NAME = 'PRIMARY'
+#         """
+#         cursor.execute(query)
+#         row = cursor.fetchone()
+#         if row:
+#             return row[0]  
         
-        return None
+#         return None
         
-    except Exception as e:
-        print_log(f"Erro ao buscar nome da chave primária: {e}", nome_servico)
-        return None
-    finally:
-        if cursor:
-            cursor.close()
+#     except Exception as e:
+#         print_log(f"Erro ao buscar nome da chave primária: {e}", nome_servico)
+#         return None
+#     finally:
+#         if cursor:
+#             cursor.close()
 
 
 
@@ -260,7 +278,7 @@ def buscar_elemento_mysql(tabela, codigo):
         
         cursor = connection_mysql.cursor(dictionary=True)
         
-        chave_primaria = buscar_nome_chave_primaria_mysql(tabela)
+        chave_primaria = buscar_nome_chave_primaria(tabela)
         
         if not chave_primaria:
             print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
@@ -294,9 +312,9 @@ def update_mysql(tabela, codigo, dados):
             cursor = connection_mysql.cursor()
 
             set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
-            coluna_chave_primaria = buscar_nome_chave_primaria_firebird(tabela)
+            coluna_chave_primaria = buscar_nome_chave_primaria(tabela)
             sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
-            valores = list(dados.values())
+            valores = isblob(dados)
             valores.append(codigo)
             
             cursor.execute(sql_update, valores)
@@ -415,7 +433,7 @@ def delete_mysql(tabela, codigo):
         try:
             cursor = connection_mysql.cursor()
 
-            chave_primaria = buscar_nome_chave_primaria_mysql(tabela)
+            chave_primaria = buscar_nome_chave_primaria(tabela)
 
             sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = {codigo}"
             cursor.execute(sql_delete)
@@ -438,10 +456,12 @@ def delete_mysql(tabela, codigo):
 
 def processar_alteracoes():
 
-    alteracoes = buscar_alteracoes_firebird()
+    print_log('Iniciando processamento de alteracoes...', nome_servico)
+
+    alteracoes_firebird = buscar_alteracoes_firebird()
 
 
-    for alteracao in alteracoes:
+    for alteracao in alteracoes_firebird:
         
         tabela = alteracao[0].upper()
         acao = alteracao[1].upper()
@@ -473,9 +493,9 @@ def processar_alteracoes():
                  
         delete_registro_replicador(tabela, acao, valor)
 
-    alteracoes = buscar_alteracoes_mysql()
+    alteracoes_mysql = buscar_alteracoes_mysql()
 
-    for alteracao in alteracoes:
+    for alteracao in alteracoes_mysql:
         
         tabela = alteracao[0].upper()
         acao = alteracao[1].upper()
@@ -503,14 +523,5 @@ def processar_alteracoes():
         delete_registro_replicador(tabela, acao, valor, firebird=False)
      
 
-#=======LOOP=========
 
-while True:
-    
-    print_log('Executando.....', nome_servico)
-    processar_alteracoes()
-    print_log('Alterações executadas.... esperando 10 segundos...', nome_servico)
-    time.sleep(10)
-
-
-        
+processar_alteracoes()

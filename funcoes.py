@@ -240,9 +240,9 @@ def inicializa_conexao_mysql_replicador(database):
                 password=parametros.PASSMYSQL,
                 database=database
             )
-        print(f"Conexão com MySQL estabelecida com sucesso.")
+        print_log(f"Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:
-        print(f"Erro ao conectar ao MySQL: {err}")
+        print_log(f"Erro ao conectar ao MySQL: {err}")
 
 def extrair_metadados_mysql(conexao):
     cursor = conexao.cursor()
