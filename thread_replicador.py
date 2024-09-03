@@ -14,22 +14,23 @@ inicializa_conexao_mysql_replicador('19775656000104')
 connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
 
 #===============FIREBIRD===================
+def verifica_empresa(conn, dados: dict) -> str:
+    cursor = conn.cursor()
+    codigo_empresa = 0
+    for coluna, valor in dados.items():
+        if 'EMPRESA' in coluna.upper():
+            if isinstance(valor, int):
+                codigo_empresa = valor
+                break
+    cnpj = ''
+    if codigo_empresa > 0:
+        try:
+            cursor.execute(f'SELECT CNPJ FROM EMPRESA WHERE CODIGO = {codigo_empresa}')
+            cnpj = cursor.fetchall()[0][0]
+        except Exception as e:
+            print_log(f'Nao foi possivel consultar empresa: {e}', nome_servico)
 
-def primeira_empresa(con_fb):
-    try:
-
-        cursor = con_fb.cursor()
-
-        cursor.execute('Select cnpj from empresa where codigo = 1')
-
-        cnpj = cursor.fetchall()
-
-        cursor.close()
-        return cnpj[0][0]
-    except Exception as e:
-        if cursor:
-            cursor.close()
-        print_log(f'Nao foi possivel verificar CNPJ empresa 1: {e}')
+    return cnpj
 
 def buscar_nome_chave_primaria(tabela):
     try:
@@ -307,18 +308,25 @@ def extrair_detalhes_chave_estrangeira(erro, dados):
         return tabela_referenciada, valor_chave_estrangeira
     return None, None
 
-def update_mysql(tabela, codigo, dados, cnpj):
+def update_mysql(tabela, codigo, dados):
         try:
             cursor = connection_mysql.cursor()
-
-            set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
-            set_clause += ', CNPJ_EMPRESA = %s'
             coluna_chave_primaria = buscar_nome_chave_primaria(tabela)
-            sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
             valores = isblob(dados)
-            valores.append(cnpj)
-            valores.append(codigo)
+
+            cnpj = verifica_empresa(connection_firebird, dados)
+            if cnpj:
+                set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
+                set_clause += ', CNPJ_EMPRESA = %s'
+                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
+                valores.append(cnpj)
+                valores.append(codigo)
+            else:
+                set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
+                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
+                valores.append(codigo)
             
+            print(f'Update na tabela {tabela}')
             cursor.execute(sql_update, valores)
 
             connection_mysql.commit()
@@ -353,18 +361,24 @@ def isblob(dados):
             valores.append(valor)  # Adiciona os outros valores
     return valores
 
-def insert_mysql(tabela, dados, cnpj):
+def insert_mysql(tabela, dados):
     try:
         cursor_mysql = connection_mysql.cursor()
-
-        colunas = ', '.join(dados.keys())
-        colunas += ', CNPJ_EMPRESA'
-        placeholders = ', '.join(["%s"] * (len(dados) + 1) )
         valores = isblob(dados)
-        valores.append(cnpj)
+
+        cnpj = verifica_empresa(connection_firebird, dados)
+        if cnpj:
+            colunas = ', '.join(dados.keys())
+            colunas += ', CNPJ_EMPRESA'
+            placeholders = ', '.join(["%s"] * (len(dados) + 1))
+            valores.append(cnpj)
+        else:
+            colunas = ', '.join(dados.keys())
+            placeholders = ', '.join(["%s"] * len(dados))
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
+        print(f'Insert na tabela {tabela}')
         cursor_mysql.execute(sql_insert, valores)
 
         connection_mysql.commit()
@@ -383,10 +397,10 @@ def insert_mysql(tabela, dados, cnpj):
                 elemento_firebird = buscar_elemento_firebird(tabela_referenciada, valor_chave_estrangeira)
 
                 #inserir dados para o relacionamento funcionar
-                insert_mysql(tabela_referenciada, elemento_firebird, cnpj)
+                insert_mysql(tabela_referenciada, elemento_firebird)
 
                 #tentar inserir dados do começo
-                insert_mysql(tabela,dados, cnpj)
+                insert_mysql(tabela,dados)
 
 def buscar_relacionamentos(tabela):
     try:
@@ -462,8 +476,6 @@ def processar_alteracoes():
 
     print_log('Iniciando processamento de alteracoes...', nome_servico)
 
-    cnpj = primeira_empresa(connection_firebird)
-
     alteracoes_firebird = buscar_alteracoes_firebird()
 
 
@@ -480,10 +492,10 @@ def processar_alteracoes():
 #       SE JÁ EXISTE ESSE ELEMENTO NO MYSQL
         if existe_elemento_mysql:
             if acao == "I":
-                update_mysql(tabela, valor, elemento_firebird, cnpj)
+                update_mysql(tabela, valor, elemento_firebird)
 
             elif acao == "U":
-                update_mysql(tabela, valor, elemento_firebird, cnpj)
+                update_mysql(tabela, valor, elemento_firebird)
 
             elif acao == "D":
                 delete_mysql(tabela, valor)
@@ -492,10 +504,10 @@ def processar_alteracoes():
 #       SE NÃO EXISTE ESSE ELEMENTO NO MYSQL
         elif not existe_elemento_mysql and elemento_firebird:
             if acao == "I":
-                insert_mysql(tabela, elemento_firebird, cnpj)
+                insert_mysql(tabela, elemento_firebird)
 
             elif acao == "U":
-                insert_mysql(tabela, elemento_firebird, cnpj)
+                insert_mysql(tabela, elemento_firebird)
                  
         delete_registro_replicador(tabela, acao, valor)
 

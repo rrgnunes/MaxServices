@@ -68,7 +68,6 @@ def get_tables_without_column(conn, banco:str,column:str) -> list:
         SELECT TABLE_NAME 
         FROM information_schema.tables 
         WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME != 'REPLICADOR'
     """
 
     cursor = conn.cursor()
@@ -85,7 +84,7 @@ def get_tables_without_column(conn, banco:str,column:str) -> list:
                             AND  UPPER(COLUMN_NAME) = UPPER('{column}')"""
             
             cursor.execute(sql_table)
-
+            print(f'Lendo tabela {table}')
             column_exists = cursor.fetchall()[0][0]
             if column_exists == 0:
                 tables_without_colmun.append(table)
