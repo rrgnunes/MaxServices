@@ -96,7 +96,7 @@ def get_tables_without_column(conn, banco:str,column:str) -> list:
     cursor.close()
     return tables_without_colmun
 
-def add_column_to_tables(conn, column:str, column_type:str, tables:list[str], params:str=''):
+def add_column_to_tables(conn, column:str, column_type:str, tables:list[str], params:str='') -> list:
     erros = []
     cursor = conn.cursor()
     for table in tables:
@@ -162,6 +162,6 @@ def column(conn):
 
 
 
-# trigger()
+# trigger(conn)
 
-# column()
+# column(conn)

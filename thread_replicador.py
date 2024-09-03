@@ -3,11 +3,17 @@ import fdb
 import parametros
 import mysql.connector
 import re
+import time
 from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log
 
 carregar_configuracoes()
 nome_servico = 'Replicador'
 connection_firebird = parametros.FIREBIRD_CONNECTION
+
+inicializa_conexao_mysql_replicador('19775656000104')
+connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
+
+#===============FIREBIRD===================
 
 def primeira_empresa(con_fb):
     try:
@@ -24,12 +30,6 @@ def primeira_empresa(con_fb):
         if cursor:
             cursor.close()
         print_log(f'Nao foi possivel verificar CNPJ empresa 1: {e}')
-
-cnpj = primeira_empresa(connection_firebird)
-inicializa_conexao_mysql_replicador(cnpj)
-connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
-
-#===============FIREBIRD===================
 
 def buscar_nome_chave_primaria(tabela):
     try:
@@ -307,14 +307,16 @@ def extrair_detalhes_chave_estrangeira(erro, dados):
         return tabela_referenciada, valor_chave_estrangeira
     return None, None
 
-def update_mysql(tabela, codigo, dados):
+def update_mysql(tabela, codigo, dados, cnpj):
         try:
             cursor = connection_mysql.cursor()
 
             set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
+            set_clause += ', CNPJ_EMPRESA = %s'
             coluna_chave_primaria = buscar_nome_chave_primaria(tabela)
             sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
             valores = isblob(dados)
+            valores.append(cnpj)
             valores.append(codigo)
             
             cursor.execute(sql_update, valores)
@@ -351,13 +353,15 @@ def isblob(dados):
             valores.append(valor)  # Adiciona os outros valores
     return valores
 
-def insert_mysql(tabela, dados):
+def insert_mysql(tabela, dados, cnpj):
     try:
         cursor_mysql = connection_mysql.cursor()
 
         colunas = ', '.join(dados.keys())
-        placeholders = ', '.join(["%s"] * len(dados))
+        colunas += ', CNPJ_EMPRESA'
+        placeholders = ', '.join(["%s"] * (len(dados) + 1) )
         valores = isblob(dados)
+        valores.append(cnpj)
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
@@ -379,10 +383,10 @@ def insert_mysql(tabela, dados):
                 elemento_firebird = buscar_elemento_firebird(tabela_referenciada, valor_chave_estrangeira)
 
                 #inserir dados para o relacionamento funcionar
-                insert_mysql(tabela_referenciada, elemento_firebird)
+                insert_mysql(tabela_referenciada, elemento_firebird, cnpj)
 
                 #tentar inserir dados do começo
-                insert_mysql(tabela,dados)
+                insert_mysql(tabela,dados, cnpj)
 
 def buscar_relacionamentos(tabela):
     try:
@@ -458,6 +462,8 @@ def processar_alteracoes():
 
     print_log('Iniciando processamento de alteracoes...', nome_servico)
 
+    cnpj = primeira_empresa(connection_firebird)
+
     alteracoes_firebird = buscar_alteracoes_firebird()
 
 
@@ -474,10 +480,10 @@ def processar_alteracoes():
 #       SE JÁ EXISTE ESSE ELEMENTO NO MYSQL
         if existe_elemento_mysql:
             if acao == "I":
-                update_mysql(tabela, valor, elemento_firebird)
+                update_mysql(tabela, valor, elemento_firebird, cnpj)
 
             elif acao == "U":
-                update_mysql(tabela, valor, elemento_firebird)
+                update_mysql(tabela, valor, elemento_firebird, cnpj)
 
             elif acao == "D":
                 delete_mysql(tabela, valor)
@@ -486,10 +492,10 @@ def processar_alteracoes():
 #       SE NÃO EXISTE ESSE ELEMENTO NO MYSQL
         elif not existe_elemento_mysql and elemento_firebird:
             if acao == "I":
-                insert_mysql(tabela, elemento_firebird)
+                insert_mysql(tabela, elemento_firebird, cnpj)
 
             elif acao == "U":
-                insert_mysql(tabela, elemento_firebird)
+                insert_mysql(tabela, elemento_firebird, cnpj)
                  
         delete_registro_replicador(tabela, acao, valor)
 
@@ -524,4 +530,8 @@ def processar_alteracoes():
      
 
 
-processar_alteracoes()
+while True:
+
+    processar_alteracoes()
+    print('Esperando 10 segundos....')
+    time.sleep(10)
