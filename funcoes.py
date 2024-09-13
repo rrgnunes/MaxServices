@@ -607,13 +607,13 @@ def retorna_pessoas_preagendadas(conexao):
     data_hoje = datetime.datetime.now().strftime('%d.%m.%Y')
     cursor = conexao.cursor()
     cursor.execute(f"""
-        SELECT a.*,p.FANTASIA, p.CELULAR1 , s.DESCRICAO ,s.DIAS_RETORNO 
+        SELECT a.*,p.FANTASIA, a.TELEFONE1 , s.DESCRICAO ,s.DIAS_RETORNO 
         FROM AGENDA a
         LEFT OUTER JOIN PESSOA p 
             ON a.CLIENTE  = p.CODIGO 
         LEFT OUTER JOIN SERVICOS s 
             ON a.SERVICO  = s.CODIGO 
-        WHERE ENVIADOPREAGENDAMENTO IS NULL AND "DATA" BETWEEN '{data_hoje} 00:00:00' AND '{data_hoje} 23:59:59' AND status = '4'
+        WHERE ENVIADOPREAGENDAMENTO IS NULL AND a.TELEFONE1 <> '' AND "DATA" BETWEEN '{data_hoje} 00:00:00' AND '{data_hoje} 23:59:59' AND status = '4'
     """)
     colunas = [coluna[0] for coluna in cursor.description]
     a = cursor.fetchall()
