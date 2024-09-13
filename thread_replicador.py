@@ -488,6 +488,9 @@ def processar_alteracoes():
         existe_elemento_mysql = buscar_elemento_mysql(tabela,valor)
         elemento_firebird = buscar_elemento_firebird(tabela, valor)
 
+        if elemento_firebird is None:
+            delete_registro_replicador(tabela, acao, valor)
+            continue
 
 #       SE JÁ EXISTE ESSE ELEMENTO NO MYSQL
         if existe_elemento_mysql:
