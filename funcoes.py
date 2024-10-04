@@ -697,3 +697,22 @@ def envia_mensagem(conexao, session):
         if envia_mensagem_zap(session, resultado['FONE'], resultado['MENSAGEM']):
             atualiza_mensagem(conexao, resultado['CODIGO'], 'ENVIADA')
             print_log(f"Mensagem enviada para {resultado['FONE']}")
+
+
+def cria_lock(nome_servico: str) -> bool:
+    root = parametros.SCRIPT_PATH
+    caminho_arquivo = os.path.join(root, f'{nome_servico}.lock')
+
+    if os.path.exists(caminho_arquivo):
+        return True
+
+    with open(caminho_arquivo, 'w') as arq:
+        arq.write('Em execucao')
+
+    return False
+
+
+def apaga_lock(nome_servico: str) -> None:
+    root = parametros.SCRIPT_PATH
+    caminho_arquivo = os.path.join(root, f'{nome_servico}.lock')
+    os.remove(caminho_arquivo)

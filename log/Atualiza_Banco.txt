@@ -32,3 +32,4 @@
 2024-07-12 16:49:40 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
 2024-07-12 16:52:46 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
 2024-07-12 16:53:25 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar
+2024-09-13 13:16:44 - thread_atualiza_banco.py - atualiza_banco - Vou checar se é para atualizar

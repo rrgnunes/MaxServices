@@ -4,17 +4,16 @@ import psutil
 import os
 import pathlib
 import parametros
-from funcoes import print_log, exibe_alerta, inicializa_conexao_mysql, carregar_configuracoes
+from funcoes import print_log, exibe_alerta, inicializa_conexao_mysql, carregar_configuracoes, cria_lock, apaga_lock
 
 def verifica_dados_local():
+    nome_servico = 'Bloqueio'
     try:
-        lock_bloqueio = os.path.join(pathlib.Path(__file__).parent, 'lock_bloqueio.txt')
-        if os.path.exists(lock_bloqueio):
+
+        if cria_lock(nome_servico):
             print_log('Em execucao', "thread_bloqueio")
             return
-        else:
-            with open(lock_bloqueio, 'w') as arq:
-                arq.write('em execucao')
+        
         inicializa_conexao_mysql()
         carregar_configuracoes()        
         print_log("Pegando dados locais","thread_bloqueio")
@@ -51,10 +50,11 @@ def verifica_dados_local():
                         cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
                     con.commit()
                 except fdb.fbcore.DatabaseError as e:
+                    apaga_lock(nome_servico)
                     print_log(f"Erro ao executar consulta: {e}")
-        os.remove(lock_bloqueio)
+        apaga_lock(nome_servico)
     except Exception as e:
         print_log(f"Erro: {e}","thread_bloqueio")
-        os.remove(lock_bloqueio)
+        apaga_lock(nome_servico)
 
 verifica_dados_local()

@@ -1,4 +1,4 @@
-from funcoes import print_log,carregar_configuracoes
+from funcoes import print_log,carregar_configuracoes, cria_lock, apaga_lock
 import fdb
 import mysql.connector
 import os
@@ -11,16 +11,15 @@ import pathlib
 import os
 
 def IBPTNCMCEST():
+    nome_servico = "IBPTNCMCEST"
     print_log("Carrega configurações da thread", "IBPTNCMCEST")
     try:
         results = os.path.join(pathlib.Path(__file__).parent, 'resultados.csv')
-        lock_ibpt_cest = os.path.join(pathlib.Path(__file__).parent, 'lock_ibpt_cest.txt')
-        if os.path.exists(lock_ibpt_cest):
+        
+        if cria_lock(nome_servico):
             print_log('Em execucao', "IBPTNCMCEST")
             return
-        else:
-            with open(lock_ibpt_cest, 'w') as arq:
-                arq.write('em execucao')
+        
         carregar_configuracoes()
         print_log("Pega dados local", "IBPTNCMCEST")
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
@@ -88,27 +87,27 @@ def IBPTNCMCEST():
                                 conFirebird.commit()
 
                                 print_log(f"Total de {contagem} registros inseridos na tabela IBPT local", "IBPTNCMCEST")
-                                atualiza_ncm_cest(conFirebird, conMYSQL, lock_ibpt_cest)
+                                atualiza_ncm_cest(conFirebird, conMYSQL, nome_servico)
 
                                 print_log("Atualizando tabela IBPT (NCMs), por favor aguarde...", "IBPTNCMCEST")
                                 cursorFirebird.execute("UPDATE PRODUTO SET CEST = '' WHERE ncm <> '' AND ncm <> '00000000'")
                                 conFirebird.commit()
                                 print_log("Tabela IBPT (NCMs) atualizada", "IBPTNCMCEST")
-        os.remove(lock_ibpt_cest)
+        apaga_lock(nome_servico)
     except Exception as a:
         if conMYSQL.is_connected():
             conMYSQL.rollback()
         if conFirebird:
             conFirebird.rollback()
         print_log(f"Erro: {a}", "IBPTNCMCEST")
-        os.remove(lock_ibpt_cest)
+        apaga_lock(nome_servico)
     finally:
         if conMYSQL.is_connected():
             conMYSQL.close()
         if conFirebird:
             conFirebird.close()
 
-def atualiza_ncm_cest(conFirebird, conMYSQL, arq_lock):
+def atualiza_ncm_cest(conFirebird, conMYSQL, nome_servico):
     try:
         cursorMYSQL = conMYSQL.cursor(dictionary=True)
         cursorFirebird = conFirebird.cursor()
@@ -143,7 +142,7 @@ def atualiza_ncm_cest(conFirebird, conMYSQL, arq_lock):
         if conFirebird:
             conFirebird.rollback()
         print_log(f"Erro: {e}", "IBPTNCMCEST")
-        os.remove(arq_lock)
+        apaga_lock(nome_servico)
 
     finally:
         cursorMYSQL.close()

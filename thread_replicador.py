@@ -5,7 +5,7 @@ import mysql.connector
 import re
 import time
 from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log
-
+#TODO: Corrigir o retorno dos dados do mysql para firebird
 carregar_configuracoes()
 nome_servico = 'Replicador'
 connection_firebird = parametros.FIREBIRD_CONNECTION
@@ -119,6 +119,7 @@ def buscar_alteracoes_firebird():
 
 
 def update_firebird(tabela, codigo, dados):
+        #TODO: Corrigir update local
         try:
             cursor = connection_firebird.cursor()
 
@@ -140,6 +141,7 @@ def update_firebird(tabela, codigo, dados):
 
 
 def insert_firebird(tabela, dados):
+        #TODO: Corrigir insert local
         try:
             cursor = connection_firebird.cursor()
 
@@ -198,6 +200,7 @@ def delete_registro_replicador(tabela, acao, chave, firebird=True):
 
 
 def delete_firebird(tabela, codigo):
+    #TODO: Corrigir delete local
     try:
         cursor = connection_firebird.cursor()
 

@@ -1,10 +1,14 @@
 import fdb
 import mysql.connector
 import parametros
-from funcoes import extrair_metadados, extrair_metadados_mysql, gerar_scripts_diferentes_mysql, executar_scripts_mysql,  print_log, inicializa_conexao_mysql_replicador
+from funcoes import (
+    extrair_metadados, extrair_metadados_mysql, gerar_scripts_diferentes_mysql, executar_scripts_mysql,
+    print_log, inicializa_conexao_mysql_replicador, cria_lock, apaga_lock
+)
 
 def atualiza_banco_mysql():
     nome_servico = 'Atualiza_banco_mysql'
+    cria_lock(nome_servico)
     try:
         print_log('Verificando se precisa atualizar banco remoto', nome_servico)
         try:

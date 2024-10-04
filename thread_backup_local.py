@@ -10,15 +10,14 @@ except:
     print_log('erro ao importar dropbox',"backuplocal")
 
 def backup():
-    print_log("Carrega configurações da thread","backuplocal")
+    nome_servico = 'backuplocal'
+    print_log("Carrega configurações da thread",nome_servico)
     try:
-        lock_backup_local = os.path.join(pathlib.Path(__file__).parent, 'lock_backup_local.txt')
-        if os.path.exists(lock_backup_local):
-            print_log('Em execucao', "backuplocal")
+        
+        if cria_lock(nome_servico):
+            print_log('Em execuxao', nome_servico)
             return
-        else:
-            with open(lock_backup_local, 'w') as arq:
-                arq.write('em execucao')
+
         inicializa_conexao_mysql()
         carregar_configuracoes()
 
@@ -162,13 +161,14 @@ def backup():
 
                     print_log('Termina backup',"backuplocal")
                 except Exception as e:
+                    apaga_lock(nome_servico)
                     print_log(e,"backuplocal")
                 finally:
                     print_log(f'Finalizado {data_hora_formatada}',"backuplocal")
                     obj_dropbox.close()
-        os.remove(lock_backup_local)
+        apaga_lock(nome_servico)
     except Exception as e:
         print_log(e,"backuplocal")
-        os.remove(lock_backup_local)
+        apaga_lock(nome_servico)
 
 backup()        

@@ -725,3 +725,183 @@
 2024-08-19 14:10:36 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
 2024-08-19 14:10:36 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
 2024-08-19 14:10:37 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 08:48:09 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 08:49:33 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 08:51:31 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 08:51:31 - funcoes.py - inicializa_conexao_firebird - Erro ao conectar ao Firebird: ('Error while connecting to database:\n- SQLCODE: -902\n- Your user name and password are not defined. Ask your database administrator to set up a Firebird login.', -902, 335544472)
+2024-09-13 08:51:31 - funcoes.py - inicializa_conexao_firebird - Erro ao conectar ao Firebird: ('Error while connecting to database:\n- SQLCODE: -902\n- Your user name and password are not defined. Ask your database administrator to set up a Firebird login.', -902, 335544472)
+2024-09-13 08:51:31 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 08:51:31 - thread_zap_automato.py - zapautomato - Não foi possivel verificar a empresa 1: 'NoneType' object has no attribute 'cursor'
+2024-09-13 08:51:31 - thread_zap_automato.py - zapautomato - Não foi possivel verificar a empresa 1: 'NoneType' object has no attribute 'cursor'
+2024-09-13 08:55:22 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 08:55:22 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 08:55:22 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 08:55:22 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 08:57:46 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 08:57:46 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 08:57:46 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 08:57:46 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 08:58:55 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 08:58:55 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 08:58:55 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 08:58:55 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 09:10:03 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 09:10:03 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 09:10:03 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 09:10:03 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 09:10:03 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 10:15:28 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 10:15:28 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 10:15:28 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 10:15:29 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 10:15:29 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:03:26 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 13:03:26 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:03:26 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:03:27 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:03:27 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:07:21 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:07:22 - thread_atualiza_banco_mysql.py - atualiza_banco_mysql - Em banco 19775656000104 nao foi possivel executar: {'script': 'ALTER TABLE `AGENDA` MODIFY COLUMN `CODIGO` INT NOT NULL;', 'erro': '1138 (22004): Invalid use of NULL value'}
+2024-09-13 13:16:43 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 13:16:43 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:16:43 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:16:44 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:24:48 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 13:24:48 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:24:48 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:24:48 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:24:48 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:25:04 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 13:25:04 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:25:04 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 13:25:04 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 13:25:04 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:14:03 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:14:03 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:14:03 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:14:04 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:14:04 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:30:39 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:30:39 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:30:39 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:30:40 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:30:40 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:31:10 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:31:10 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:31:10 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:31:10 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:31:10 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:31:14 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:31:14 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:31:14 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:31:14 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:31:14 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:43:51 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:43:51 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:43:51 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:43:52 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:43:52 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:45:33 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:45:33 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:45:33 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:45:33 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:45:34 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:45:46 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:45:46 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:45:46 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:45:46 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:45:47 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:47:04 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 15:47:04 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:47:04 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 15:47:05 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 15:47:05 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 16:41:39 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 16:41:39 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 16:41:39 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 16:41:39 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 16:41:40 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 18:05:23 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 18:05:23 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 18:05:23 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 18:05:24 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 18:05:24 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 18:17:49 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-13 18:17:50 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 18:17:50 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-13 18:17:50 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-13 18:17:50 - funcoes.py - inicializa_conexao_mysql_replicador - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 09:33:01 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 09:33:01 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 09:33:01 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 09:33:01 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 11:08:41 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 11:08:41 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:08:41 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:08:41 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 11:11:01 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 11:11:01 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:11:01 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:11:01 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 11:13:43 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 11:13:43 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:13:43 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:13:44 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 11:17:51 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 11:17:51 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:17:51 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 11:17:52 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 13:11:38 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 13:11:38 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:11:38 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:11:38 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 13:14:48 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 13:14:48 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:14:48 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:14:48 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 13:16:42 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 13:16:42 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:16:42 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:16:42 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 13:20:10 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 13:20:10 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:20:10 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:20:10 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 13:23:29 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 13:23:29 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:23:29 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:23:30 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 13:49:46 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 13:49:46 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:49:46 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:49:46 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-16 13:52:48 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-16 13:52:48 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:52:48 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-16 13:52:48 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-25 13:27:57 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-25 13:27:57 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:27:57 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:27:58 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-25 13:28:22 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-25 13:28:22 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:28:22 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:28:22 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-25 13:32:15 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-25 13:32:15 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:32:15 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:32:16 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-25 13:34:31 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-25 13:34:31 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:34:31 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:34:32 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-09-25 13:36:15 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-09-25 13:36:15 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:36:15 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-09-25 13:36:16 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-10-04 17:35:32 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-10-04 17:35:32 - funcoes.py - carregar_configuracoes - Configurações carregadas com sucesso.
+2024-10-04 17:35:32 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-10-04 17:35:32 - funcoes.py - inicializa_conexao_firebird - Conexão com Firebird estabelecida com sucesso.
+2024-10-04 17:35:32 - funcoes.py - inicializa_conexao_mysql - Conexão com MySQL estabelecida com sucesso.
+2024-10-04 17:36:44 - funcoes.py - update - Atualização bem-sucedida!

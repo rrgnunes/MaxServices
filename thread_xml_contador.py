@@ -6,17 +6,16 @@ import pathlib
 import os
 
 def xmlcontador():
+    nome_servico = 'Xml_Contador'
     print_log("Carrega configurações- xmlcontador")
     carregar_configuracoes()
     try:
-        lock_contador = os.path.join(pathlib.Path(__file__).parent, 'lock_contador.txt')
-        if os.path.exists(lock_contador):
-            print_log("Em execucao - xmlcontador")
+        
+        if cria_lock(nome_servico):
+            print_log("Em execucao", nome_servico)
             return
-        else:
-            with open(lock_contador, 'w') as arq:
-                arq.write('em execucao')
-        print_log("Pega dados local - xmlcontador")
+        
+        print_log("Pega dados local", nome_servico)
         cnpjs_verificados = []
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
@@ -37,7 +36,7 @@ def xmlcontador():
                 con = parametros.FIREBIRD_CONNECTION
                 dias_busca_nota = -15
                 
-                print_log("Inicia select das notas - xmlcontador")
+                print_log("Inicia select das notas", nome_servico)
                 if sistema_em_uso == '1':  # maxsuport
                     if pasta_compartilhada_backup and caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
 
@@ -86,7 +85,7 @@ def xmlcontador():
                                 contador = rows_dict_plat[0]['id']  # get id contador
 
                                 # Vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É MDFE
-                                print_log("Inicia select MDFE - xmlcontador")
+                                print_log("Inicia select MDFE", nome_servico)
                                 cur.execute(f"select n.numero_mdfe,n.chave,n.data_emissao,n.serie,n.fk_empresa, n.xml, n.situacao from mdfe_master n where situacao in ('T','C') and data_emissao > dateadd(day, {dias_busca_nota}, current_date) and n.fk_empresa = ?", (codigo_empresa,))
                                 rowsNotas = cur.fetchall()
                                 rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
@@ -317,13 +316,13 @@ def xmlcontador():
 
                         conMYSQL.commit()
 
-        os.remove(lock_contador)
+        apaga_lock(nome_servico)
 
     except Exception as e:
         if conMYSQL:
             conMYSQL.rollback()
-        print_log(f"Erro: {e}")
-        os.remove(lock_contador)
+        print_log(f"Erro: {e}", nome_servico)
+        apaga_lock(nome_servico)
 
 
 xmlcontador()

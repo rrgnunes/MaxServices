@@ -1,22 +1,25 @@
 import fdb
-from funcoes import os,json,datetime,atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas, salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap, carregar_configuracoes
 import parametros
 import os
 import pathlib
 import datetime as dt
+from funcoes import (
+    os,json,datetime,atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
+    salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
+    insere_mensagem_zap, carregar_configuracoes, cria_lock, apaga_lock
+    )
 
 
 def zapautomato():
-    arquivo_zap = os.path.join(pathlib.Path(__file__).parent, 'zap.txt')
+    
     nome_servico = 'zap_automato'
     #carrega config
     print_log(f'Iniciando',nome_servico)
-    if os.path.exists(arquivo_zap):
+
+    if cria_lock(nome_servico):
         print_log('Em execucao', nome_servico)
         return
-    else:
-        with open(arquivo_zap, 'w') as arq:
-            arq.write('em execucao')
+    
     carregar_configuracoes()
     if os.path.exists("C:/Users/Public/config.json"):
         with open('C:/Users/Public/config.json', 'r') as config_file:
@@ -43,6 +46,7 @@ def zapautomato():
                     if cnpj != empresa[0]:
                         continue
                 except Exception as e:
+                    apaga_lock(nome_servico)
                     print_log(f'Não foi possivel verificar a empresa 1: {e}')
 
                 if ativo == 1 and sistema_em_uso == '1':
@@ -122,12 +126,13 @@ def zapautomato():
                         print_log('Mensagens salvas em servidor remoto', nome_servico)
                         con_fb.close()
                         con_mysql.close()
-                        os.remove(arquivo_zap)
+                        apaga_lock(nome_servico)
                     except Exception as e:
                         print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
-                        os.remove(arquivo_zap)
+                        apaga_lock(nome_servico)
                         raise e
             except Exception as a:
+                apaga_lock(nome_servico)
                 try:
                     if con_fb:
                         con_fb.rollback()
@@ -136,6 +141,5 @@ def zapautomato():
                 except Exception as e:
                     pass
                 print_log(f'{a}',nome_servico)
-                os.remove(arquivo_zap)
 
 zapautomato()
