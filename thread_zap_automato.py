@@ -78,8 +78,8 @@ def zapautomato():
                     # MENSAGEM DIARIA
                     pessoas = retorna_pessoas_mensagemdiaria(conexao, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
                     for pessoa in pessoas:
-                        MENSAGEM_DIARIO = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
-                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO, pessoa['CELULAR1'])
+                        MENSAGEM_DIARIO_FINAL = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
+                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'])
                         print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}',nome_servico)
 
                     # MENSAGEM ANIVERSARIO
@@ -88,8 +88,8 @@ def zapautomato():
                     for pessoa in pessoas:
                         ano_atual = datetime.datetime.now().year
                         if pessoa['ANO_ENVIO_MENSAGEM_ANIVERSARIO'] != ano_atual:
-                            MENSAGEM_ANIVERSARIO = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
-                            insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO, pessoa['CELULAR1'])
+                            MENSAGEM_ANIVERSARIO_FINAL = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
+                            insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO_FINAL, pessoa['CELULAR1'])
                             atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
                             print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}',nome_servico)
                     
