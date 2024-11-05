@@ -2,10 +2,10 @@
 import os
 
 # Credenciais MySQL
-HOSTMYSQL = "177.153.69.3"
+HOSTMYSQL = "localhost"
 USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
-BASEMYSQL = "maxservices"
+BASEMYSQL = "dados"
 
 # Credenciais Firebird
 USERFB = 'maxservices'

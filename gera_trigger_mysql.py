@@ -79,7 +79,7 @@ def get_tables_without_column(conn, banco:str,column:str) -> list:
     for (table,) in tables:
         try:
             sql_table = f"""SELECT COUNT(*) as "CAMPO" FROM INFORMATION_SCHEMA.COLUMNS
-                            WHERE TABLE_SCHEMA = {banco}
+                            WHERE TABLE_SCHEMA = '{banco}'
                             AND UPPER(TABLE_NAME) = UPPER('{table}') 
                             AND  UPPER(COLUMN_NAME) = UPPER('{column}')"""
             
@@ -116,7 +116,7 @@ def add_column_to_tables(conn, column:str, column_type:str, tables:list[str], pa
     return erros
 
 # Conectar ao banco de dados MySQL
-banco_mysql = '19775656000104'
+banco_mysql = 'dados'
 conn = mysql.connector.connect(
     host=parametros.HOSTMYSQL,
     user=parametros.USERMYSQL,
@@ -163,4 +163,4 @@ def column(conn):
 
 # trigger(conn)
 
-# column(conn)
+column(conn)
