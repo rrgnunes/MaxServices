@@ -2,7 +2,7 @@
 import os
 
 # Credenciais MySQL
-HOSTMYSQL = "localhost"
+HOSTMYSQL = "maxsuportsistemas.com"
 USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
 BASEMYSQL = "dados"

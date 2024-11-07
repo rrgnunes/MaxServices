@@ -37,9 +37,9 @@ def atualiza_banco():
                     atualiza_banco = config['manutencao']['atualizabanco']
 
                 if str(atualiza_banco) == '1':
-                    server_origem = "177.153.69.3"
+                    server_origem = "maxsuportsistemas.com"
                     port_origem = 3050
-                    path_origem = "/home/maxsuport/base/maxsuport/dados.fdb"
+                    path_origem = "/home/base/dados.fdb"
 
                     server_destino = "127.0.0.1"
                     port_destino = porta_firebird_maxsuport

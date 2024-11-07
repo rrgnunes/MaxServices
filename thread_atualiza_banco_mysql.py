@@ -26,9 +26,9 @@ def atualiza_banco_mysql():
 
         try:
             fdb.load_api('C:\\Program Files\\Firebird\\Firebird_2_5\\bin\\fbclient.dll')
-            server_origem = "177.153.69.3"
+            server_origem = "maxsuportsistemas.com"
             port_origem = 3050
-            path_origem = "/home/maxsuport/base/maxsuport/dados.fdb"
+            path_origem = "/home/base/dados.fdb"
             dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
             conexao_origem_fb = fdb.connect(dsn=dsn_origem, user='SYSDBA', password='masterkey')
             print_log('Conexao firebird estabelecida com sucesso', nome_servico)
@@ -38,7 +38,7 @@ def atualiza_banco_mysql():
         metadados_origem = extrair_metadados(conexao_origem_fb)
 
         for bd in bds:
-            if bd[0].isdigit():
+            if bd[0] == 'dados':
                 inicializa_conexao_mysql_replicador(bd[0])
                 conexao_destino_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
                 metadados_destino = extrair_metadados_mysql(conexao_destino_mysql)
