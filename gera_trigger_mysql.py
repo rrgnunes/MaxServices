@@ -1,15 +1,11 @@
 import mysql.connector
+import mysql.connector.cursor
 import parametros
 
 def generate_trigger_sql(cursor):
-    cursor.execute("""
-        SELECT TABLE_NAME 
-        FROM information_schema.tables 
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME != 'REPLICADOR'
-    """)
     
-    tables = cursor.fetchall()
+
+    tables = get_tables(cursor)
 
     trigger_statements = []
 
@@ -33,7 +29,7 @@ def generate_trigger_sql(cursor):
             CREATE TRIGGER TR_{upper_table_name}_INSERT AFTER INSERT ON {table_name} FOR EACH ROW
             BEGIN
                 IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
-                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE) VALUES ('{upper_table_name}', 'I', NEW.{pk_column});
+                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA) VALUES ('{upper_table_name}', 'I', NEW.{pk_column}, NEW.CNPJ_EMPRESA);
                 END IF;
             END;
             """
@@ -44,7 +40,7 @@ def generate_trigger_sql(cursor):
             CREATE TRIGGER TR_{upper_table_name}_UPDATE AFTER UPDATE ON {table_name} FOR EACH ROW
             BEGIN
                 IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
-                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE) VALUES ('{upper_table_name}', 'U', NEW.{pk_column});
+                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA) VALUES ('{upper_table_name}', 'U', NEW.{pk_column}, NEW.CNPJ_EMPRESA);
                 END IF;
             END;
             """
@@ -55,7 +51,7 @@ def generate_trigger_sql(cursor):
             CREATE TRIGGER TR_{upper_table_name}_DELETE AFTER DELETE ON {table_name} FOR EACH ROW
             BEGIN
                 IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
-                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE) VALUES ('{upper_table_name}', 'D', OLD.{pk_column});
+                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA) VALUES ('{upper_table_name}', 'D', OLD.{pk_column}, OLD.CNPJ_EMPRESA);
                 END IF;
             END;
             """
@@ -63,17 +59,98 @@ def generate_trigger_sql(cursor):
 
     return trigger_statements
 
-def get_tables_without_column(conn, banco:str,column:str) -> list:
+def get_tables(cur) -> list[tuple]:
     sql = """
         SELECT TABLE_NAME 
         FROM information_schema.tables 
         WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME NOT IN ('REPLICADOR', 'auth_group', 'auth_group_permissions', 'auth_permission', 'auth_user', 'auth_user_groups', 
+        'auth_user_user_permissions', 'django_admin_log', 'django_content_type', 'django_migrations', 'django_session')
     """
+    try:
+        cur.execute(sql)
+        tables = cur.fetchall()
+        return tables
+    except Exception as e:
+        print(f'Não foi possível pegar as tabelas do sistema: {e}')
+        return
 
+def drop_triggers(conn: mysql.connector.MySQLConnection):
+
+    try:
+        cur = conn.cursor()
+        tables = get_tables(cur)
+        triggers_names = []
+        for (table,) in tables:
+            triggers_names.append(f'TR_{table.upper()}_INSERT')
+            triggers_names.append(f'TR_{table.upper()}_UPDATE')
+            triggers_names.append(f'TR_{table.upper()}_DELETE')
+
+        for trigger_name in triggers_names:
+            try:
+                sql_drop = f'DROP TRIGGER {trigger_name}'
+                cur.execute(sql_drop)
+                print(sql_drop)
+            except Exception as err:
+                if 'trigger does not exist' in str(err).lower():
+                    print('Trigger não existe!!!')
+                    continue
+                else:
+                    raise err
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(e)
+
+
+def remove_foreign_key(conn: mysql.connector.MySQLConnection):
+
+    sql = """SELECT
+                rc.TABLE_NAME,
+                rc.CONSTRAINT_NAME
+             FROM information_schema.`REFERENTIAL_CONSTRAINTS` rc
+             where rc.TABLE_NAME not in ('auth_group', 'auth_group_permissions', 'auth_permission', 'auth_user', 'auth_user_groups', 
+                    'auth_user_user_permissions', 'django_admin_log', 'django_content_type', 'django_migrations', 'django_session')"""
+    
+    try:
+
+        cur = conn.cursor()
+        cur.execute(sql)
+        tables_and_fks = cur.fetchall()
+
+        for table, fk in tables_and_fks:
+            sql_drop = f'ALTER TABLE {table} DROP FOREIGN KEY `{fk}`'
+            print(sql_drop)
+            cur.execute(sql_drop)
+        conn.commit()
+        print('Chaves Estrangeiras removidas com sucesso!')
+    except Exception as e:
+        print(e)
+
+def remove_primary_key(conn: mysql.connector.MySQLConnection):
+    cur = conn.cursor()
+    try:
+        tables = get_tables(cur)
+        for (table, ) in tables:
+            try:
+                sql_drop = f'ALTER TABLE {table.upper()} DROP PRIMARY KEY;'
+                print(sql_drop)
+                cur.execute(sql_drop)
+            except Exception as e:
+                if 'incorrect table definition; there can be only one auto column and it must be defined as a key' in str(e).lower():
+                    print('Tabela não possui chave primaria!')
+                    continue
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f'Não foi possivel apagar as chaves primarias: {e}')
+
+
+def get_tables_without_column(conn, banco:str,column:str) -> list:
     cursor = conn.cursor()
-    cursor.execute(sql)
 
-    tables = cursor.fetchall()
+    tables = get_tables(cursor)
 
     tables_without_colmun = []
     for (table,) in tables:
@@ -95,7 +172,65 @@ def get_tables_without_column(conn, banco:str,column:str) -> list:
     cursor.close()
     return tables_without_colmun
 
-def add_column_to_tables(conn, column:str, column_type:str, tables:list[str], params:str='') -> list:
+def create_indice(conn: mysql.connector.MySQLConnection):
+    cur = conn.cursor()
+    tables = get_tables(cur)
+    try:
+        tables_with_column = []
+        for (table, ) in tables:
+            sql_table = f"""SELECT COUNT(*) as "CAMPO" FROM INFORMATION_SCHEMA.COLUMNS
+                                WHERE TABLE_SCHEMA = 'dados'
+                                AND UPPER(TABLE_NAME) = UPPER('{table}') 
+                                AND UPPER(COLUMN_NAME) = UPPER('CNPJ_EMPRESA')"""
+            cur.execute(sql_table)
+            print(f'Lendo tabela {table}')
+            column_exists = cur.fetchall()[0][0]
+            if column_exists > 0:
+                tables_with_column.append(table)
+
+        for table_with_column in tables_with_column:
+            sql_alter = f'ALTER TABLE {table_with_column} ADD INDEX IDX_CNPJ_EMPRESA_{table_with_column} (CNPJ_EMPRESA);'
+            print(sql_alter)
+            cur.execute(sql_alter)
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(e)
+    finally:
+        if cur:
+            cur.close()
+
+def remove_not_null(conn: mysql.connector.MySQLConnection):
+    cur = conn.cursor()
+    tables = get_tables(cur)
+    try:
+        tables_with_column = []
+        for (table, ) in tables:
+            sql_table = f"""SELECT COUNT(*) as "CAMPO" FROM INFORMATION_SCHEMA.COLUMNS
+                                WHERE TABLE_SCHEMA = 'dados'
+                                AND UPPER(TABLE_NAME) = UPPER('{table}') 
+                                AND UPPER(COLUMN_NAME) = UPPER('CODIGO')"""
+            cur.execute(sql_table)
+            print(f'Lendo tabela {table}')
+            column_exists = cur.fetchall()[0][0]
+            if column_exists > 0:
+                tables_with_column.append(table)
+
+        for table_with_column in tables_with_column:
+            sql_alter = f'ALTER TABLE {table_with_column} MODIFY CODIGO INTEGER NULL;'
+            print(sql_alter)
+            cur.execute(sql_alter)
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f'Erro ao remover null: {e}')
+    finally:
+        if cur:
+            cur.close()
+
+def add_column_to_tables(conn: mysql.connector.MySQLConnection, column:str, column_type:str, tables:list[str], params:str='') -> list:
     erros = []
     cursor = conn.cursor()
     for table in tables:
@@ -106,6 +241,7 @@ def add_column_to_tables(conn, column:str, column_type:str, tables:list[str], pa
             sql_alter += f" {params.upper()}"
 
         try:
+            print(sql_alter)
             cursor.execute(sql_alter)
         except Exception as e:
             if cursor:
@@ -146,11 +282,12 @@ def trigger(conn):
 
 def column(conn):
     try:
-        column = 'CNPJ_EMPRESA'
-        column_type = 'varchar(20)'
+        column = 'CODIGO_GLOBAL'
+        column_type = 'integer'
+        params = 'AUTO_INCREMENT,  ADD PRIMARY KEY (`CODIGO_GLOBAL`);'
         tables = get_tables_without_column(conn, banco_mysql, column)
 
-        erros = add_column_to_tables(conn, column, column_type, tables)
+        erros = add_column_to_tables(conn, column, column_type, tables, params)
 
         print(*erros)
     except Exception as e:
@@ -160,7 +297,16 @@ def column(conn):
         conn.close()
 
 
+if __name__ == '__main__':
+    print('Iniciando')
+    # trigger(conn)
 
-# trigger(conn)
+    # column(conn)
 
-column(conn)
+    # drop_triggers(conn)
+
+    # remove_primary_key(conn)
+
+    # create_indice(conn)
+
+    # remove_not_null(conn)

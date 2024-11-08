@@ -1,7 +1,6 @@
 from funcoes import print_log, os,json, datetime,inicializa_conexao_mysql, cria_lock, apaga_lock
 import parametros
 import os
-import pathlib
 
 
 def salva_json():
