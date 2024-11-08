@@ -10,15 +10,19 @@ carregar_configuracoes()
 nome_servico = 'Replicador'
 connection_firebird = parametros.FIREBIRD_CONNECTION
 
-inicializa_conexao_mysql_replicador('19775656000104')
+inicializa_conexao_mysql_replicador('dados')
 connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
 
 #===============FIREBIRD===================
-def verifica_empresa(conn, dados: dict) -> str:
+def verifica_empresa_firebird(conn, dados: dict) -> str:
     cursor = conn.cursor()
     codigo_empresa = 0
     for coluna, valor in dados.items():
         if 'EMPRESA' in coluna.upper():
+            if isinstance(valor, int):
+                codigo_empresa = valor
+                break
+        elif 'EMITENTE' in coluna.upper():
             if isinstance(valor, int):
                 codigo_empresa = valor
                 break
@@ -30,7 +34,7 @@ def verifica_empresa(conn, dados: dict) -> str:
         except Exception as e:
             print_log(f'Nao foi possivel consultar empresa: {e}', nome_servico)
 
-    return cnpj
+    return codigo_empresa, cnpj
 
 def buscar_nome_chave_primaria(tabela):
     try:
@@ -293,6 +297,10 @@ def buscar_elemento_mysql(tabela, codigo):
         cursor.execute(sql_select, (codigo,))
         dados = cursor.fetchone()
 
+        dados = dict(dados)
+        dados.pop('CNPJ_EMPRESA')
+        # dados.pop('CODIGO_GLOBAL')
+
         cursor.close()
 
         return dados
@@ -317,7 +325,7 @@ def update_mysql(tabela, codigo, dados):
             coluna_chave_primaria = buscar_nome_chave_primaria(tabela)
             valores = isblob(dados)
 
-            cnpj = verifica_empresa(connection_firebird, dados)
+            codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, dados)
             if cnpj:
                 set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
                 set_clause += ', CNPJ_EMPRESA = %s'
@@ -369,7 +377,7 @@ def insert_mysql(tabela, dados):
         cursor_mysql = connection_mysql.cursor()
         valores = isblob(dados)
 
-        cnpj = verifica_empresa(connection_firebird, dados)
+        codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, dados)
         if cnpj:
             colunas = ', '.join(dados.keys())
             colunas += ', CNPJ_EMPRESA'
@@ -478,6 +486,13 @@ def delete_mysql(tabela, codigo):
 def processar_alteracoes():
 
     print_log('Iniciando processamento de alteracoes...', nome_servico)
+    # firebird_mysql()
+
+    mysql_firebird()
+
+    
+     
+def firebird_mysql():
 
     alteracoes_firebird = buscar_alteracoes_firebird()
 
@@ -517,6 +532,7 @@ def processar_alteracoes():
                  
         delete_registro_replicador(tabela, acao, valor)
 
+def mysql_firebird():
     alteracoes_mysql = buscar_alteracoes_mysql()
 
     for alteracao in alteracoes_mysql:
@@ -545,8 +561,6 @@ def processar_alteracoes():
                 insert_firebird(tabela, elemento_mysql)
 
         delete_registro_replicador(tabela, acao, valor, firebird=False)
-     
-
 
 while True:
 

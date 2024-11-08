@@ -1,5 +1,7 @@
 # parametros.py
 import os
+import mysql
+import mysql.connector
 
 # Credenciais MySQL
 HOSTMYSQL = "maxsuportsistemas.com"
@@ -31,8 +33,8 @@ TOKEN_ZAP = ''
 LAST_IMAGE = ''
 
 # Conexões globais (inicialmente None)
-MYSQL_CONNECTION = None
-MYSQL_CONNECTION_REPLICADOR = None
+MYSQL_CONNECTION: mysql.connector.MySQLConnection = None
+MYSQL_CONNECTION_REPLICADOR: mysql.connector.MySQLConnection = None
 FIREBIRD_CONNECTION = None
 
 # Variáveis globais

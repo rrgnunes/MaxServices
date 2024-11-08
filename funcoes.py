@@ -7,14 +7,9 @@ import inspect
 import requests
 import inspect
 from pathlib import Path
-import getpass
 import xml.etree.ElementTree as ET
-import ctypes
 import sys
 import fdb
-import lzma
-import glob
-import importlib
 from decimal import Decimal
 from funcoes_zap import *
 import parametros
@@ -697,6 +692,46 @@ def envia_mensagem(conexao, session):
         if envia_mensagem_zap(session, resultado['FONE'], resultado['MENSAGEM']):
             atualiza_mensagem(conexao, resultado['CODIGO'], 'ENVIADA')
             print_log(f"Mensagem enviada para {resultado['FONE']}")
+
+# Obtém o nome do arquivo do script principal (quem está chamando este código)
+script_principal = os.path.basename(sys.argv[0]).replace('.py', '')
+
+# Nome do arquivo de bloqueio com o nome do script principal
+LOCK_FILE = f'/tmp/{script_principal}.lock'
+# Função que verifica se o script pode ser executado
+def pode_executar():
+    # Verificar se o arquivo de bloqueio existe
+    if os.path.exists(LOCK_FILE):
+        with open(LOCK_FILE, 'r') as f:
+            last_run_time_str = f.read().strip()
+
+        try:
+            # Converter a string de data e hora para um objeto datetime
+            last_run_time = datetime.datetime.strptime(last_run_time_str, '%Y-%m-%d %H:%M:%S')
+
+            # Verificar se já se passaram mais de 2 minutos desde a última execução
+            if datetime.datetime.now() - last_run_time < datetime.timedelta(minutes=2):
+                print_log("O script está em execução ou foi executado há menos de 2 minutos.")
+                return False
+            else:
+                print_log("Mais de 2 minutos se passaram, permitido executar novamente.")
+                return True
+        except ValueError:
+            print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...")
+            return True
+    else:
+        print_log("Nenhum arquivo de bloqueio encontrado, permitido executar.")
+        return True
+
+# Função que cria o arquivo de bloqueio
+def criar_bloqueio():
+    with open(LOCK_FILE, 'w') as f:
+        f.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+# Função que remove o arquivo de bloqueio
+def remover_bloqueio():
+    if os.path.exists(LOCK_FILE):
+        os.remove(LOCK_FILE)
 
 
 def cria_lock(nome_servico: str) -> bool:
