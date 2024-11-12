@@ -1,24 +1,49 @@
+import fdb.fbcore
 import mysql.connector
 import mysql.connector.cursor
 import parametros
+import fdb
+
+def connection_aux() -> fdb.Connection:
+    fdb.load_api('C:/Program Files/Firebird/firebird_2_5/bin/fbclient.dll')
+    conn = fdb.connect(host='localhost',
+                       database='C:/MaxSuport_Rian/Dados/Dados.fdb',
+                       user='SYSDBA',
+                       password='masterkey',
+                       port=3050)
+    return conn
+
 
 def generate_trigger_sql(cursor):
-    
-
+    conn = connection_aux()
+    cursor_aux:fdb.fbcore.Cursor = conn.cursor()
     tables = get_tables(cursor)
 
     trigger_statements = []
 
     for (table_name,) in tables:
-        cursor.execute(f"""
-            SELECT COLUMN_NAME 
-            FROM information_schema.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE() 
-              AND TABLE_NAME = '{table_name}'
-              AND COLUMN_KEY = 'PRI'
-            LIMIT 1
-        """)
-        result = cursor.fetchone()
+        # cursor.execute(f"""
+        #     SELECT COLUMN_NAME 
+        #     FROM information_schema.COLUMNS
+        #     WHERE TABLE_SCHEMA = DATABASE() 
+        #       AND TABLE_NAME = '{table_name}'
+        #       AND COLUMN_KEY = 'PRI'
+        #     LIMIT 1
+        # """)
+        cursor_aux.execute(f"""SELECT
+                        first 1 
+                        trim(i.RDB$FIELD_NAME) AS COLUNA
+                    FROM 
+                        RDB$RELATION_CONSTRAINTS rc
+                    JOIN 
+                        RDB$INDEX_SEGMENTS i ON rc.RDB$INDEX_NAME = i.RDB$INDEX_NAME
+                    WHERE 
+                        rc.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
+                    AND
+                        rc.rdb$relation_name = upper('{table_name}')
+                    ORDER BY 
+                        rc.RDB$RELATION_NAME, i.RDB$FIELD_POSITION;""")
+        result = cursor_aux.fetchone()
         
         if result:
             pk_column = result[0]
@@ -93,7 +118,7 @@ def drop_triggers(conn: mysql.connector.MySQLConnection):
                 print(sql_drop)
             except Exception as err:
                 if 'trigger does not exist' in str(err).lower():
-                    print('Trigger não existe!!!')
+                    print(f'Trigger não existe!!!: {trigger_name}')
                     continue
                 else:
                     raise err
@@ -282,9 +307,9 @@ def trigger(conn):
 
 def column(conn):
     try:
-        column = 'CODIGO_GLOBAL'
-        column_type = 'integer'
-        params = 'AUTO_INCREMENT,  ADD PRIMARY KEY (`CODIGO_GLOBAL`);'
+        column = 'CNPJ_EMPRESA'
+        column_type = 'varchar(20)'
+        params = ''
         tables = get_tables_without_column(conn, banco_mysql, column)
 
         erros = add_column_to_tables(conn, column, column_type, tables, params)
@@ -299,7 +324,7 @@ def column(conn):
 
 if __name__ == '__main__':
     print('Iniciando')
-    # trigger(conn)
+    # trigger(conns)
 
     # column(conn)
 
