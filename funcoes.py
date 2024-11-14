@@ -549,9 +549,10 @@ def config_zap(conexao):
     cursor = conexao.cursor()
     cursor.execute("""
         SELECT ENVIAR_MENSAGEM_ANIVERSARIO,ENVIAR_MENSAGEM_PROMOCAO, 
-            ENVIAR_MENSAGEM_DIARIO,MENSAGEM_ANIVERSARIO,
+            ENVIAR_MENSAGEM_DIARIO, ENVIAR_MENSAGEM_LEMBRETE,MENSAGEM_ANIVERSARIO,
             MENSAGEM_PROMOCAO,MENSAGEM_DIARIO,DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA,    
-            ULTIMO_ENVIO_ANIVERSARIO,ULTIMO_ENVIO_DIARIO,ULTIMO_ENVIO_PROMOCAO, MENSAGEM_PREAGENDAMENTO
+            ULTIMO_ENVIO_ANIVERSARIO,ULTIMO_ENVIO_DIARIO,ULTIMO_ENVIO_PROMOCAO, MENSAGEM_PREAGENDAMENTO,
+            MENSAGEM_LEMBRETE
         FROM CONFIG P
     """)
     colunas = [coluna[0] for coluna in cursor.description]
@@ -615,6 +616,32 @@ def retorna_pessoas_preagendadas(conexao):
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in a]
     return resultados_em_dicionario
 
+def retorna_pessoas_lembrete(conexao: fdb.Connection):
+    data_hoje = datetime.datetime.now().strftime('%d.%m.%y')
+    sql = f"""SELECT a.*,p.FANTASIA, a.TELEFONE1 , s.DESCRICAO
+              FROM AGENDA a
+              LEFT OUTER JOIN PESSOA p 
+                ON a.CLIENTE  = p.CODIGO 
+              LEFT OUTER JOIN SERVICOS s 
+                ON a.SERVICO  = s.CODIGO 
+              WHERE a.enviado_lembrete IS NULL
+                AND a.TELEFONE1 <> ''
+                AND status = 1
+                AND a.data_criado < '{data_hoje} 00:00:00'
+                AND A.data BETWEEN '{data_hoje} 00:00:00' AND '{data_hoje} 23:59:59'"""
+    try:
+        cursor = conexao.cursor()
+        cursor.execute(sql)
+        resultados = cursor.fetchall()
+        colunas = [coluna[0] for coluna in cursor.description]
+        resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in resultados]
+        return resultados_em_dicionario
+    except Exception as e:
+        print(f'Erro ao consultar agendamentos para lembretes -> motivo: {e}')
+    finally:
+        if cursor:
+            cursor.close()
+
 def insere_mensagem_zap(conexao, mensagem, numero):
     codigo = numerador(conexao, 'MENSAGEM_ZAP', 'CODIGO', 'N', '', '')
     data_hora_atual = datetime.datetime.now()
@@ -652,13 +679,22 @@ def atualiza_ano_cliente(conexao, codigo, ano):
     """, (ano, codigo))
     conexao.commit()
 
-def atualiza_agenda(conexao, codigo):
-    cursor = conexao.cursor()
-    cursor.execute("""
-        UPDATE AGENDA
-        SET ENVIADOPREAGENDAMENTO = 1 WHERE CODIGO = ?;
-    """, (codigo,))
-    conexao.commit()
+def atualiza_agenda(conexao: fdb.Connection, codigo: int, tipo: str='') -> None:
+    try:
+        cursor = conexao.cursor()
+        if tipo.lower() == 'lembrete':
+            cursor.execute("UPDATE AGENDA SET ENVIADO_LEMBRETE = 1 WHERE CODIGO = ?", (codigo,))
+        elif tipo.lower() == 'pre_agendamento':
+            cursor.execute("UPDATE AGENDA SET ENVIADOPREAGENDAMENTO = 1 WHERE CODIGO = ?;", (codigo,))
+        else:
+            print_log('Tipo de atualizacao de registro na agenda não identificado')
+        conexao.commit()
+    except Exception as e:
+        conexao.rollback()
+        print_log(f'Erro ao atualizar registro da agenda: {e}')
+    finally:
+        if cursor:
+            cursor.close()
 
 def atualiza_mensagem(conexao, codigo, status):
     cursor = conexao.cursor()
