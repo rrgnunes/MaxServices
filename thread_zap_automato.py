@@ -1,12 +1,11 @@
 import fdb
 import parametros
 import os
-import pathlib
 import datetime as dt
 from funcoes import (
     os,json,datetime,atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
     salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
-    insere_mensagem_zap, carregar_configuracoes, cria_lock, apaga_lock
+    insere_mensagem_zap, carregar_configuracoes, retorna_pessoas_lembrete,cria_lock, apaga_lock
     )
 
 
@@ -47,11 +46,11 @@ def zapautomato():
                         continue
                 except Exception as e:
                     apaga_lock(nome_servico)
-                    print_log(f'Não foi possivel verificar a empresa 1: {e}')
+                    print_log(f'Não foi possivel verificar a empresa 1: {e}', nome_servico)
 
                 if ativo == 1 and sistema_em_uso == '1':
                     server = "localhost"
-                    port = porta_firebird_maxsuport  # Substitua pelo número da porta real, se diferente
+                    port = porta_firebird_maxsuport
                     path = caminho_base_dados_maxsuport
                     user = parametros.USERFB
                     password = parametros.PASSFB
@@ -62,16 +61,18 @@ def zapautomato():
 
                     ENVIAR_MENSAGEM_ANIVERSARIO = cfg_zap['ENVIAR_MENSAGEM_ANIVERSARIO'] = 1
                     ENVIAR_MENSAGEM_PROMOCAO    = cfg_zap['ENVIAR_MENSAGEM_PROMOCAO'] = 1
+                    ENVIAR_MENSAGEM_LEMBRETE    = cfg_zap['ENVIAR_MENSAGEM_LEMBRETE']
                     ENVIAR_MENSAGEM_DIARIO      = cfg_zap['ENVIAR_MENSAGEM_DIARIO']
-                    MENSAGEM_ANIVERSARIO        = cfg_zap['MENSAGEM_ANIVERSARIO']
-                    MENSAGEM_PROMOCAO           = cfg_zap['MENSAGEM_PROMOCAO']
-                    MENSAGEM_DIARIO             = cfg_zap['MENSAGEM_DIARIO']
                     DIA_MENSAGEM_DIARIA         = cfg_zap['DIA_MENSAGEM_DIARIA']
                     TIME_MENSAGEM_DIARIA        = cfg_zap['TIME_MENSAGEM_DIARIA']
                     ULTIMO_ENVIO_ANIVERSARIO    = cfg_zap['ULTIMO_ENVIO_ANIVERSARIO']
                     ULTIMO_ENVIO_DIARIO         = cfg_zap['ULTIMO_ENVIO_DIARIO']
                     ULTIMO_ENVIO_PROMOCAO       = cfg_zap['ULTIMO_ENVIO_PROMOCAO']                         
-                    MENSAGEM_PREAGENDAMENTO     = cfg_zap['MENSAGEM_PREAGENDAMENTO']                         
+                    MENSAGEM_ANIVERSARIO        = cfg_zap['MENSAGEM_ANIVERSARIO']
+                    MENSAGEM_PROMOCAO           = cfg_zap['MENSAGEM_PROMOCAO']
+                    MENSAGEM_DIARIO             = cfg_zap['MENSAGEM_DIARIO']
+                    MENSAGEM_PREAGENDAMENTO     = cfg_zap['MENSAGEM_PREAGENDAMENTO']
+                    MENSAGEM_LEMBRETE           = cfg_zap['MENSAGEM_LEMBRETE']                         
 
                     print_log(f'Dados da configuração recebidos',nome_servico)
 
@@ -84,7 +85,6 @@ def zapautomato():
 
                     # MENSAGEM ANIVERSARIO
                     pessoas = retorna_pessoas(conexao)
-
                     for pessoa in pessoas:
                         ano_atual = datetime.datetime.now().year
                         if pessoa['ANO_ENVIO_MENSAGEM_ANIVERSARIO'] != ano_atual:
@@ -93,15 +93,23 @@ def zapautomato():
                             atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
                             print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}',nome_servico)
                     
-                    # MENSAGEM DE PRE AGENDMANETO
+                    # MENSAGEM DE PRE AGENDAMENTO
                     pessoas = retorna_pessoas_preagendadas(conexao)
-
                     for pessoa in pessoas:                        
                         MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
                         insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'])
-                        atualiza_agenda(conexao,pessoa['CODIGO'])
-                        print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}',nome_servico)                            
+                        atualiza_agenda(conexao,pessoa['CODIGO'], 'pre_agendamento')
+                        print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}',nome_servico)     
 
+                    # MENSAGEM DE LEMBRETE 
+                    if ENVIAR_MENSAGEM_LEMBRETE == 1:
+                        pessoas = retorna_pessoas_lembrete(conexao)
+                        for pessoa in pessoas:
+                            mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO'])
+                            insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'])
+                            atualiza_agenda(conexao, pessoa['CODIGO'], 'lembrete')
+                            print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
+                    
                     # Salva mensagem em banco remoto e altera status em banco local
                     try:
                         con_fb = parametros.FIREBIRD_CONNECTION
