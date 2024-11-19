@@ -65,6 +65,7 @@ def zapautomato():
                     ENVIAR_MENSAGEM_DIARIO      = cfg_zap['ENVIAR_MENSAGEM_DIARIO']
                     DIA_MENSAGEM_DIARIA         = cfg_zap['DIA_MENSAGEM_DIARIA']
                     TIME_MENSAGEM_DIARIA        = cfg_zap['TIME_MENSAGEM_DIARIA']
+                    TIME_MENSAGEM_LEMBRETE      = cfg_zap['TIME_MENSAGEM_LEMBRETE']
                     ULTIMO_ENVIO_ANIVERSARIO    = cfg_zap['ULTIMO_ENVIO_ANIVERSARIO']
                     ULTIMO_ENVIO_DIARIO         = cfg_zap['ULTIMO_ENVIO_DIARIO']
                     ULTIMO_ENVIO_PROMOCAO       = cfg_zap['ULTIMO_ENVIO_PROMOCAO']                         
@@ -72,7 +73,7 @@ def zapautomato():
                     MENSAGEM_PROMOCAO           = cfg_zap['MENSAGEM_PROMOCAO']
                     MENSAGEM_DIARIO             = cfg_zap['MENSAGEM_DIARIO']
                     MENSAGEM_PREAGENDAMENTO     = cfg_zap['MENSAGEM_PREAGENDAMENTO']
-                    MENSAGEM_LEMBRETE           = cfg_zap['MENSAGEM_LEMBRETE']                         
+                    MENSAGEM_LEMBRETE           = cfg_zap['MENSAGEM_LEMBRETE']               
 
                     print_log(f'Dados da configuração recebidos',nome_servico)
 
@@ -103,7 +104,7 @@ def zapautomato():
 
                     # MENSAGEM DE LEMBRETE 
                     if ENVIAR_MENSAGEM_LEMBRETE == 1:
-                        pessoas = retorna_pessoas_lembrete(conexao)
+                        pessoas = retorna_pessoas_lembrete(conexao, TIME_MENSAGEM_LEMBRETE)
                         for pessoa in pessoas:
                             mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO'])
                             insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'])

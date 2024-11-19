@@ -6,13 +6,13 @@ import subprocess
 import inspect
 import requests
 import inspect
-from pathlib import Path
 import xml.etree.ElementTree as ET
 import sys
 import fdb
+import parametros
+from pathlib import Path
 from decimal import Decimal
 from funcoes_zap import *
-import parametros
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
     # Verifica se a pasta 'log' existe, caso contrário, cria a pasta
@@ -548,12 +548,12 @@ def altera_mensagem_local(conn, cod_mensagem, nome_servico):
 def config_zap(conexao):
     cursor = conexao.cursor()
     cursor.execute("""
-        SELECT ENVIAR_MENSAGEM_ANIVERSARIO,ENVIAR_MENSAGEM_PROMOCAO, 
-            ENVIAR_MENSAGEM_DIARIO, ENVIAR_MENSAGEM_LEMBRETE,MENSAGEM_ANIVERSARIO,
-            MENSAGEM_PROMOCAO,MENSAGEM_DIARIO,DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA,    
-            ULTIMO_ENVIO_ANIVERSARIO,ULTIMO_ENVIO_DIARIO,ULTIMO_ENVIO_PROMOCAO, MENSAGEM_PREAGENDAMENTO,
-            MENSAGEM_LEMBRETE
-        FROM CONFIG P
+                SELECT ENVIAR_MENSAGEM_ANIVERSARIO,ENVIAR_MENSAGEM_PROMOCAO, 
+                    ENVIAR_MENSAGEM_DIARIO, ENVIAR_MENSAGEM_LEMBRETE,MENSAGEM_ANIVERSARIO,
+                    MENSAGEM_PROMOCAO,MENSAGEM_DIARIO,DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA,    
+                    ULTIMO_ENVIO_ANIVERSARIO,ULTIMO_ENVIO_DIARIO,ULTIMO_ENVIO_PROMOCAO, MENSAGEM_PREAGENDAMENTO,
+                    MENSAGEM_LEMBRETE, TIME_MENSAGEM_LEMBRETE
+                FROM CONFIG
     """)
     colunas = [coluna[0] for coluna in cursor.description]
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
@@ -616,31 +616,36 @@ def retorna_pessoas_preagendadas(conexao):
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in a]
     return resultados_em_dicionario
 
-def retorna_pessoas_lembrete(conexao: fdb.Connection):
-    data_hoje = datetime.datetime.now().strftime('%d.%m.%y')
-    sql = f"""SELECT a.*,p.FANTASIA, a.TELEFONE1 , s.DESCRICAO
-              FROM AGENDA a
-              LEFT OUTER JOIN PESSOA p 
-                ON a.CLIENTE  = p.CODIGO 
-              LEFT OUTER JOIN SERVICOS s 
-                ON a.SERVICO  = s.CODIGO 
-              WHERE a.enviado_lembrete IS NULL
-                AND a.TELEFONE1 <> ''
-                AND status = 1
-                AND a.data_criado < '{data_hoje} 00:00:00'
-                AND A.data BETWEEN '{data_hoje} 00:00:00' AND '{data_hoje} 23:59:59'"""
-    try:
-        cursor = conexao.cursor()
-        cursor.execute(sql)
-        resultados = cursor.fetchall()
-        colunas = [coluna[0] for coluna in cursor.description]
-        resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in resultados]
-        return resultados_em_dicionario
-    except Exception as e:
-        print(f'Erro ao consultar agendamentos para lembretes -> motivo: {e}')
-    finally:
-        if cursor:
-            cursor.close()
+def retorna_pessoas_lembrete(conexao: fdb.Connection, tempo: datetime.time):
+    data = datetime.datetime.now()
+    data_formatada = data.strftime('%d.%m.%y')
+    hora_agora = data.time().replace(microsecond=0)
+    if hora_agora >= tempo:
+        sql = f"""SELECT a.*,p.FANTASIA, a.TELEFONE1 , s.DESCRICAO
+                FROM AGENDA a
+                LEFT OUTER JOIN PESSOA p 
+                    ON a.CLIENTE  = p.CODIGO 
+                LEFT OUTER JOIN SERVICOS s 
+                    ON a.SERVICO  = s.CODIGO 
+                WHERE a.enviado_lembrete IS NULL
+                    AND a.TELEFONE1 <> ''
+                    AND status = 1
+                    AND a.data_criado < '{data_formatada} 00:00:00'
+                    AND A.data BETWEEN '{data_formatada} 00:00:00' AND '{data_formatada} 23:59:59'"""
+        try:
+            cursor = conexao.cursor()
+            cursor.execute(sql)
+            resultados = cursor.fetchall()
+            colunas = [coluna[0] for coluna in cursor.description]
+            resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in resultados]
+            return resultados_em_dicionario
+        except Exception as e:
+            print(f'Erro ao consultar agendamentos para lembretes -> motivo: {e}')
+        finally:
+            if cursor:
+                cursor.close()
+    else:
+        return []
 
 def insere_mensagem_zap(conexao, mensagem, numero):
     codigo = numerador(conexao, 'MENSAGEM_ZAP', 'CODIGO', 'N', '', '')
