@@ -106,7 +106,9 @@ def zapautomato():
                     if ENVIAR_MENSAGEM_LEMBRETE == 1:
                         pessoas = retorna_pessoas_lembrete(conexao, TIME_MENSAGEM_LEMBRETE)
                         for pessoa in pessoas:
-                            mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO'])
+                            data_agendada = pessoa['DATA']
+                            hora_agendada = data_agendada.time().replace(microsecond=0)
+                            mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO']).replace('@hora', str(hora_agendada))
                             insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'])
                             atualiza_agenda(conexao, pessoa['CODIGO'], 'lembrete')
                             print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
