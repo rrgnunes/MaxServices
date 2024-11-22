@@ -1,16 +1,12 @@
-from funcoes import print_log, os,json, datetime,inicializa_conexao_mysql, cria_lock, apaga_lock
 import parametros
 import os
+import sys
+from funcoes import print_log, os,json, datetime,inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio
 
 
 def salva_json():
-    nome_servico = 'verificaremoto'
+    nome_servico = 'thread_verifica_remoto'
     try:
-
-        
-        if cria_lock(nome_servico):
-            print_log('Em execucao', nome_servico)
-            return
         
         inicializa_conexao_mysql()
         
@@ -41,11 +37,11 @@ def salva_json():
 
         datahoraagora = datetime.datetime.now(
             datetime.timezone(datetime.timedelta(hours=-4)))
-        # cursor = conn.cursor()
-        # cursor.execute(
-        #     f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
-        # print_log(f"Executou update remoto" , 'verificaremoto')
-        # conn.commit()
+        cursor = conn.cursor()
+        cursor.execute(
+            f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
+        print_log(f"Executou update remoto" , 'verificaremoto')
+        conn.commit()
         conn.close()
 
         config = {}
@@ -68,9 +64,18 @@ def salva_json():
         with open('C:/Users/Public/config.json', 'w') as configfile:
             json.dump(config, configfile)
 
-        apaga_lock(nome_servico)
     except Exception as a:
-        print_log(a, 'verificaremoto')
-        apaga_lock(nome_servico)
+        print_log(a, nome_servico)
 
-salva_json()
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            salva_json()
+        except Exception as e:
+            print_log(f'Ocorreu um erro ao executar - motivo: {e}')
+        finally:
+            remover_bloqueio(nome_script)

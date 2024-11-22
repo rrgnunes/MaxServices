@@ -2,18 +2,14 @@ from funcoes import *
 import fdb
 import zlib
 import parametros
-import pathlib
+import sys
 import os
 
 def xmlcontador():
-    nome_servico = 'Xml_Contador'
+    nome_servico = 'thread_xml_contador'
     print_log("Carrega configurações- xmlcontador")
     carregar_configuracoes()
     try:
-        
-        if cria_lock(nome_servico):
-            print_log("Em execucao", nome_servico)
-            return
         
         print_log("Pega dados local", nome_servico)
         cnpjs_verificados = []
@@ -103,7 +99,7 @@ def xmlcontador():
                                     SalvaNota(conMYSQL, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie)
 
                                 # Vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É NFE
-                                print_log("Inicia select NFE - xmlcontador")
+                                print_log("Inicia select NFE", nome_servico)
                                 cur.execute(f'select numero, chave, data_emissao, serie, fkempresa, xml, xml_cancelamento, situacao from nfe_master where situacao in (2,3,5) and data_emissao > dateadd(day, {dias_busca_nota}, current_date) and fkempresa = ?', (codigo_empresa,))
                                 rowsNotas = cur.fetchall()
                                 rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
@@ -121,7 +117,7 @@ def xmlcontador():
                                     SalvaNota(conMYSQL, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie)
                                     
                                 # Vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É NFCE
-                                print_log("Inicia select NFCE - xmlcontador")
+                                print_log("Inicia select NFCE", nome_servico)
                                 cur.execute(f"select numero, chave, data_emissao, serie, fkempresa, xml, xml_cancelamento, situacao from nfce_master where situacao in ('T','C','I') and chave <> 'CHAVE NÃO GERADA' and data_emissao > dateadd(day, {dias_busca_nota}, current_date) and fkempresa = ?", (codigo_empresa,))
                                 rowsNotas = cur.fetchall()
                                 rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
@@ -139,7 +135,7 @@ def xmlcontador():
                                     SalvaNota(conMYSQL, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie)
 
                                 # Vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É COMPRAS
-                                print_log("Inicia select COMPRAS - xmlcontador")
+                                print_log("Inicia select COMPRAS", nome_servico)
                                 cur.execute(f"select nr_nota, chave, dtentrada, serie, empresa, xml from compra where chave is not null and dtentrada > dateadd(day, {dias_busca_nota}, current_date) and empresa = ?", (codigo_empresa,))
                                 rowsNotas = cur.fetchall()
                                 rows_dict_notas = [dict(zip([column[0] for column in cur.description], rowNota)) for rowNota in rowsNotas]
@@ -199,7 +195,7 @@ def xmlcontador():
                                 rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]                            
 
                                 # Salva contador
-                                print_log("Inicia select contador - xmlcontador")
+                                print_log("Inicia select contador", nome_servico)
                                 if not rowsPlat:
                                     nome = row['NOME']
                                     cpf_cnpj = condicao
@@ -315,14 +311,21 @@ def xmlcontador():
                                     SalvaNota(conMYSQL, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie)
 
                         conMYSQL.commit()
-
-        apaga_lock(nome_servico)
-
     except Exception as e:
         if conMYSQL:
             conMYSQL.rollback()
         print_log(f"Erro: {e}", nome_servico)
-        apaga_lock(nome_servico)
 
 
-xmlcontador()
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            xmlcontador()
+        except Exception as e:
+            print_log(f'Ocorreu um erro ao tentar executar - motivo: {e}')
+        finally:
+            remover_bloqueio(nome_script)

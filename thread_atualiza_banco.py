@@ -1,19 +1,15 @@
+import sys
 import fdb
-from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes, cria_lock, apaga_lock
+from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes, criar_bloqueio, remover_bloqueio, pode_executar
 import parametros
 import configparser
 import os
-import pathlib
 
 def atualiza_banco():
-    nome_servico = 'Atualiza_Banco'
+    nome_servico = 'thread_atualiza_banco'
     carregar_configuracoes()
     try:
 
-        if cria_lock(nome_servico):
-            print_log('Em execucao', 'Atualiza_Banco')
-            return
-        
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
@@ -76,10 +72,18 @@ def atualiza_banco():
                         config.write(configfile)
 
                     print_log('Tabela atualizada', "Atualiza_Banco")
-        apaga_lock(nome_servico)
     except Exception as e:
         print_log(f"Erro na atualização do banco: {e}", "Atualiza_Banco")
-        apaga_lock(nome_servico)
 
 
-atualiza_banco()
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            atualiza_banco()
+        except Exception as e:
+            print_log(f'Ocorreu um erro na execução - motivo: {e}')
+        finally:
+            remover_bloqueio(nome_script)

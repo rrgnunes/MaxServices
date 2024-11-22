@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import sys
 import fdb
 import parametros
+import psutil as ps
 from pathlib import Path
 from decimal import Decimal
 from funcoes_zap import *
@@ -283,6 +284,9 @@ def mapear_tipo_firebird_mysql(tipo, precisao=None, escala=None, tamanho=None):
         tipo = 'TEXT'
     if 'BIGINT' in tipo:
         tipo = 'BIGINT'
+    if 'DECIMAL' in tipo:
+        if precisao == 4:
+            precisao = 15
 
     mapa_tipos = {
     'SMALLINT': 'SMALLINT',
@@ -318,7 +322,8 @@ def gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino):
             colunas_sql = []
             for coluna, propriedades in colunas_origem.items():
                 tipo = mapear_tipo_firebird_mysql(propriedades['tipo'], propriedades['precisao'], propriedades['escala'], propriedades['tamanho'])
-                null = propriedades.get('null', '')
+                # null = propriedades.get('null', '')
+                null = ''
 
                 coluna_def = f"`{coluna}` {tipo} {null}"
                 colunas_sql.append(coluna_def)
@@ -330,7 +335,8 @@ def gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino):
         if tabela_origem in metadados_destino:
             for coluna, propriedades in colunas_origem.items():
                 tipo = mapear_tipo_firebird_mysql(propriedades['tipo'], propriedades['precisao'], propriedades['escala'], propriedades['tamanho'])
-                null = propriedades.get('null', '')
+                # null = propriedades.get('null', '')
+                null = ''
 
                 if coluna not in metadados_destino[tabela_origem]:
                     coluna_def = f"`{coluna}` {tipo} {null}"
@@ -338,7 +344,8 @@ def gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino):
                 else:
                     prop_destino = metadados_destino[tabela_origem][coluna]
                     tipo_destino = mapear_tipo_firebird_mysql(prop_destino['tipo'], prop_destino['precisao'], prop_destino['escala'], prop_destino['tamanho'])
-                    null_destino = prop_destino.get('null', '')
+                    # null_destino = prop_destino.get('null', '')
+                    null_destino = ''
 
                     if tipo != tipo_destino or null != null_destino:
                         coluna_def = f"`{coluna}` {tipo} {null}"
@@ -740,55 +747,48 @@ script_principal = os.path.basename(sys.argv[0]).replace('.py', '')
 # Nome do arquivo de bloqueio com o nome do script principal
 LOCK_FILE = f'/tmp/{script_principal}.lock'
 # Função que verifica se o script pode ser executado
-def pode_executar():
+def pode_executar(nome_script:str) -> bool:
+    lock_file = nome_script + '.lock'
     # Verificar se o arquivo de bloqueio existe
-    if os.path.exists(LOCK_FILE):
-        with open(LOCK_FILE, 'r') as f:
+    if os.path.exists(lock_file):
+        with open(lock_file, 'r') as f:
             last_run_time_str = f.read().strip()
 
         try:
             # Converter a string de data e hora para um objeto datetime
             last_run_time = datetime.datetime.strptime(last_run_time_str, '%Y-%m-%d %H:%M:%S')
 
-            # Verificar se já se passaram mais de 2 minutos desde a última execução
-            if datetime.datetime.now() - last_run_time < datetime.timedelta(minutes=2):
-                print_log("O script está em execução ou foi executado há menos de 2 minutos.")
+            # Verificar se já se passaram mais de 5 minutos desde a última execução
+            if datetime.datetime.now() - last_run_time < datetime.timedelta(minutes=5):
+                print_log("O script está em execução ou foi executado há menos de 5 minutos.", nome_script + '.txt')
                 return False
             else:
-                print_log("Mais de 2 minutos se passaram, permitido executar novamente.")
-                return True
+                print_log("Mais de 5 minutos se passaram, verificando se script ja esta em execução", nome_script + '.txt')
+                executar = True
+                # Verifica se o script ja esta em execução
+                for proc in ps.process_iter():
+                    if proc.as_dict()['name'] == 'python.exe':
+                        if nome_script in proc.as_dict()['cmdline'][1]:
+                            executar = False
+                            print_log('Script ja esta em execução, não pode ser executado novamente', nome_script + '.txt')
+                            break
+                return executar
+
         except ValueError:
-            print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...")
+            print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...", nome_script + '.txt')
             return True
     else:
-        print_log("Nenhum arquivo de bloqueio encontrado, permitido executar.")
+        print_log("Nenhum arquivo de bloqueio encontrado, permitido executar.", nome_script + '.txt')
         return True
 
 # Função que cria o arquivo de bloqueio
-def criar_bloqueio():
-    with open(LOCK_FILE, 'w') as f:
+def criar_bloqueio(nome_script):
+    lock_file = nome_script + '.lock'
+    with open(lock_file, 'w') as f:
         f.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 # Função que remove o arquivo de bloqueio
-def remover_bloqueio():
-    if os.path.exists(LOCK_FILE):
-        os.remove(LOCK_FILE)
-
-
-def cria_lock(nome_servico: str) -> bool:
-    root = parametros.SCRIPT_PATH
-    caminho_arquivo = os.path.join(root, f'{nome_servico}.lock')
-
-    if os.path.exists(caminho_arquivo):
-        return True
-
-    with open(caminho_arquivo, 'w') as arq:
-        arq.write('Em execucao')
-
-    return False
-
-
-def apaga_lock(nome_servico: str) -> None:
-    root = parametros.SCRIPT_PATH
-    caminho_arquivo = os.path.join(root, f'{nome_servico}.lock')
-    os.remove(caminho_arquivo)
+def remover_bloqueio(nome_script):
+    lock_file = nome_script + '.lock'
+    if os.path.exists(lock_file):
+        os.remove(lock_file)

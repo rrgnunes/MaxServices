@@ -1,6 +1,8 @@
 from funcoes import *
 import parametros
 import os
+import glob
+import lzma
 import pathlib
 try:
     import dropbox
@@ -10,21 +12,17 @@ except:
     print_log('erro ao importar dropbox',"backuplocal")
 
 def backup():
-    nome_servico = 'backuplocal'
+    nome_servico = 'thread_backup_local'
     print_log("Carrega configurações da thread",nome_servico)
     try:
         
-        if cria_lock(nome_servico):
-            print_log('Em execuxao', nome_servico)
-            return
-
         inicializa_conexao_mysql()
         carregar_configuracoes()
 
-        print_log("Efetua conexão remota" , 'backuplocal')
+        print_log("Efetua conexão remota" , nome_servico)
         conn = parametros.MYSQL_CONNECTION
 
-        print_log("Pega dados local","backuplocal")
+        print_log("Pega dados local", nome_servico)
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
 
             # Verifica se conexao esta ativa, se não estiver, conecta novamente
@@ -61,7 +59,7 @@ def backup():
                         result = cursor_fb.fetchall()
                         if len(result) < 1:
                             continue
-                        print_log("Inicia backup","backuplocal")
+                        print_log("Inicia backup", nome_servico)
 
                 elif sistema_em_uso == '2':  # gfil
                     if pasta_compartilhada_backup and caminho_base_dados_gfil and caminho_gbak_firebird_gfil:
@@ -76,11 +74,11 @@ def backup():
                         result = cursor_fb.fetchall()
                         if len(result) < 1:
                             continue
-                        print_log("Inicia backup","backuplocal")
+                        print_log("Inicia backup", nome_servico)
                 
                 cursor_fb.close()
                 subprocess.call(comando, shell=True)
-                print_log(f"Executou comando {comando}","backuplocal")
+                print_log(f"Executou comando {comando}", nome_servico)
 
                 # Compacta arquivo
                 with open(f'{caminho_arquivo_backup}\\dados.fdb', 'rb') as arquivo_in:
@@ -88,12 +86,12 @@ def backup():
                     with lzma.open(f'{caminho_arquivo_backup}\\{nome_arquivo_compactado}', 'wb', preset=9) as arquivo_out:
                         arquivo_out.writelines(arquivo_in)
                 os.remove(f'{caminho_arquivo_backup}\\dados.fdb')
-                print_log(f"Criou arquivo compactado {nome_arquivo_compactado}","backuplocal")
+                print_log(f"Criou arquivo compactado {nome_arquivo_compactado}", nome_servico)
 
                 datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3)))
                 cursor = conn.cursor()
                 cursor.execute(f"UPDATE cliente_cliente set data_hora_ultimo_backup = '{datahoraagora}' where cnpj = '{cnpj}'")
-                print_log("Executou update remoto","backuplocal")
+                print_log("Executou update remoto", nome_servico)
                 conn.commit()
 
                 # Envia arquivo para Dropbox
@@ -124,15 +122,15 @@ def backup():
                     with open(arquivo_local, 'rb') as arquivo:
                         obj_dropbox.files_upload(arquivo.read(), arquivo_remoto, mode=WriteMode('overwrite'))
 
-                    print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto}","backuplocal")
+                    print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto}", nome_servico)
 
                     num_arquivos_a_manter = int(timer_minutos_backup)
                     try:
                         result = obj_dropbox.files_list_folder(diretorio_remoto)
                         arquivos_na_pasta = result.entries
-                        print(f' Quantidade de arquivos no DropBox: {len(arquivos_na_pasta)}')
+                        print_log(f'Quantidade de arquivos no DropBox: {len(arquivos_na_pasta)}', nome_servico)
                     except dropbox.exceptions.ApiError as e:
-                        print(f"Erro ao listar arquivos na pasta remota: {e}","backuplocal")
+                        print_log(f"Erro ao listar arquivos na pasta remota: {e}", nome_servico)
                         arquivos_na_pasta = []
 
                     if len(arquivos_na_pasta) > num_arquivos_a_manter:
@@ -142,11 +140,11 @@ def backup():
                         try:
                             for arquivo in arquivos_em_excesso:
                                 obj_dropbox.files_delete_v2(arquivo.path_display)
-                                print_log(f"Arquivo excluído remoto: {arquivo.path_display}.", "backuplocal")
+                                print_log(f"Arquivo excluído remoto: {arquivo.path_display}.", nome_servico)
                             # obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
                             # print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.","backuplocal")
                         except dropbox.exceptions.ApiError as e:
-                            print_log(f"Erro ao excluir o arquivo mais antigo: {e}","backuplocal")
+                            print_log(f"Erro ao excluir o arquivo mais antigo: {e}", nome_servico)
 
                     extensao = '.xz'
                     arquivos = glob.glob(os.path.join(caminho_arquivo_backup, '*' + extensao))
@@ -157,18 +155,26 @@ def backup():
                         arquivos_excedentes = arquivos[:num_arquivos_excedentes]
                         for arquivo in arquivos_excedentes:
                             os.remove(arquivo)
-                            print_log(f"Arquivo excluído local: {arquivo}","backuplocal")
+                            print_log(f"Arquivo excluído local: {arquivo}", nome_servico)
 
-                    print_log('Termina backup',"backuplocal")
+                    print_log('Termina backup', nome_servico)
                 except Exception as e:
-                    apaga_lock(nome_servico)
-                    print_log(e,"backuplocal")
+                    print_log(e, nome_servico)
                 finally:
-                    print_log(f'Finalizado {data_hora_formatada}',"backuplocal")
+                    print_log(f'Finalizado {data_hora_formatada}', nome_servico)
                     obj_dropbox.close()
-        apaga_lock(nome_servico)
     except Exception as e:
-        print_log(e,"backuplocal")
-        apaga_lock(nome_servico)
+        print_log(e, nome_servico)
 
-backup()        
+
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            backup()
+        except Exception as e:
+            print_log(f'Ocorreu um erro ao executar - motivo:{e}')
+        finally:
+            remover_bloqueio(nome_script)
