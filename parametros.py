@@ -1,10 +1,14 @@
 # parametros.py
 import os
+import fdb
 import mysql
 import mysql.connector
 
 # Credenciais MySQL
+#Contabo
 HOSTMYSQL = "maxsuportsistemas.com"
+#Kinghost
+# HOSTMYSQL = "177.153.69.3"
 USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
 BASEMYSQL = "dados"
@@ -35,7 +39,7 @@ LAST_IMAGE = ''
 # Conexões globais (inicialmente None)
 MYSQL_CONNECTION: mysql.connector.MySQLConnection = None
 MYSQL_CONNECTION_REPLICADOR: mysql.connector.MySQLConnection = None
-FIREBIRD_CONNECTION = None
+FIREBIRD_CONNECTION: fdb.Connection  = None
 
 # Variáveis globais
 CNPJ_CONFIG = {}

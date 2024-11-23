@@ -54,7 +54,7 @@ def generate_trigger_sql(cursor):
             CREATE TRIGGER TR_{upper_table_name}_INSERT AFTER INSERT ON {table_name} FOR EACH ROW
             BEGIN
                 IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
-                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA) VALUES ('{upper_table_name}', 'I', NEW.{pk_column}, NEW.CNPJ_EMPRESA);
+                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA, CODIGO_GLOBAL) VALUES ('{upper_table_name}', 'I', NEW.{pk_column}, NEW.CNPJ_EMPRESA, NEW.CODIGO_GLOBAL);
                 END IF;
             END;
             """
@@ -65,7 +65,7 @@ def generate_trigger_sql(cursor):
             CREATE TRIGGER TR_{upper_table_name}_UPDATE AFTER UPDATE ON {table_name} FOR EACH ROW
             BEGIN
                 IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
-                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA) VALUES ('{upper_table_name}', 'U', NEW.{pk_column}, NEW.CNPJ_EMPRESA);
+                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA, CODIGO_GLOBAL) VALUES ('{upper_table_name}', 'U', NEW.{pk_column}, NEW.CNPJ_EMPRESA, NEW.CODIGO_GLOBAL);
                 END IF;
             END;
             """
@@ -76,7 +76,7 @@ def generate_trigger_sql(cursor):
             CREATE TRIGGER TR_{upper_table_name}_DELETE AFTER DELETE ON {table_name} FOR EACH ROW
             BEGIN
                 IF (SUBSTRING_INDEX(USER(), '@', 1) = 'maxsuport') THEN
-                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA) VALUES ('{upper_table_name}', 'D', OLD.{pk_column}, OLD.CNPJ_EMPRESA);
+                    INSERT INTO REPLICADOR (TABELA, ACAO, CHAVE, CNPJ_EMPRESA, CODIGO_GLOBAL) VALUES ('{upper_table_name}', 'D', OLD.{pk_column}, OLD.CNPJ_EMPRESA, OLD.CODIGO_GLOBAL);
                 END IF;
             END;
             """
@@ -324,7 +324,7 @@ def column(conn):
 
 if __name__ == '__main__':
     print('Iniciando')
-    # trigger(conns)
+    trigger(conn)
 
     # column(conn)
 

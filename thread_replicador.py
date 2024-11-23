@@ -1,20 +1,17 @@
 from mysql.connector import Error
 import fdb
+import mysql.vendor
+import mysql.vendor.plugin
 import parametros
 import mysql.connector
 import re
 import time
-from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log
-
-carregar_configuracoes()
-nome_servico = 'Replicador'
-connection_firebird = parametros.FIREBIRD_CONNECTION
-
-inicializa_conexao_mysql_replicador('dados')
-connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
+import os
+import sys
+from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log, pode_executar, criar_bloqueio, remover_bloqueio
 
 #===============FIREBIRD===================
-def verifica_empresa_firebird(conn, dados: dict) -> str:
+def verifica_empresa_firebird(conn, dados: dict) -> tuple[int, str]:
     cursor = conn.cursor()
     codigo_empresa = 0
     for coluna, valor in dados.items():
@@ -74,7 +71,7 @@ def buscar_nome_chave_primaria(tabela):
         return None
 
 
-def buscar_elemento_firebird(tabela, codigo):
+def buscar_elemento_firebird(tabela:str, codigo:int, envio:bool=True):
     try:
         cursor = connection_firebird.cursor()
 
@@ -92,10 +89,12 @@ def buscar_elemento_firebird(tabela, codigo):
         if dados:
             colunas = [desc[0] for desc in cursor.description]
             dados = dict(zip(colunas, dados))
+        else:
+            print_log(f'Não há elemento Firebird com esta chave - chave: {codigo} (pode ter sido excluido ou precisa ser adicionado!)')
 
         return dados
 
-    except fdb.fbcore.DatabaseError as e:
+    except Exception as e:
         print_log(f"Erro ao buscar elemento no Firebird: {e}", nome_servico)
         return None
     finally:
@@ -131,7 +130,8 @@ def update_firebird(tabela, codigo, dados):
 
             valores = isblob(dados)
             valores.append(codigo)
-
+            
+            print_log(f'Update na tabela {tabela} -> chave: {codigo}')
             cursor.execute(sql_update, valores)
 
             connection_firebird.commit()
@@ -140,7 +140,6 @@ def update_firebird(tabela, codigo, dados):
         except Exception as e:
             print_log(f"Erro ao atualizar dados no Firebird: {e}", nome_servico)
             connection_firebird.rollback()
-
 
 
 def insert_firebird(tabela, dados):
@@ -154,6 +153,7 @@ def insert_firebird(tabela, dados):
 
             sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
+            print_log(f'Insert na tabela {tabela}')
             cursor.execute(sql_insert, valores)
 
             connection_firebird.commit()
@@ -172,6 +172,7 @@ def delete_firebird(tabela, codigo):
 
         sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = ?"
 
+        print_log(f'Delete na tabela: {tabela} -> chave: {codigo}')
         cursor.execute(sql_delete, (codigo,))
         connection_firebird.commit()
 
@@ -199,7 +200,7 @@ def consulta_cnpjs_local() -> list | None:
     except Exception as e:
         print_log(f'Erro ao consultar os cnpjs locais -> motivo: {e}')
 
-def isblob(dados):
+def isblob(dados: dict):
     valores = []
     for key, valor in dados.items():
         if isinstance(valor, fdb.fbcore.BlobReader):  # Verifica se o valor é BLOB
@@ -249,7 +250,7 @@ def delete_registro_replicador(tabela, acao, chave, firebird=True):
 
 #===============MYSQL=======================
 
-def buscar_alteracoes_replicador_mysql(empresas):
+def buscar_alteracoes_replicador_mysql(empresas: list) -> list:
     try:
         alteracoes = []
         if empresas != None:
@@ -306,21 +307,28 @@ def buscar_valor_chave_primaria(tabela):
 
     return
 
-def buscar_elemento_mysql(tabela, codigo):
+def buscar_elemento_mysql(tabela: str, codigo: int, codigo_global: int = 0) -> dict | None:
     try:
         
         cursor = connection_mysql.cursor(dictionary=True)
-        chave_primaria = buscar_nome_chave_primaria(tabela)
+        if codigo_global:
+            sql_select = f"SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = %s"
+            cursor.execute(sql_select, (codigo_global,))
+        else:
+            chave_primaria = buscar_nome_chave_primaria(tabela)
+            if not chave_primaria:
+                print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
+                return None
         
-        if not chave_primaria:
-            print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
-            return None
-        
-        sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s"
+            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s"
+            cursor.execute(sql_select, (codigo,))
 
-        cursor.execute(sql_select, (codigo,))
         dados = cursor.fetchone()
 
+        if dados == None:
+            print_log(f'Não há elemento que possua esta chave no Mysql - chave: {codigo} ou este código global: {codigo_global}', nome_servico)
+            return None
+        
         dados = dict(dados)
         dados.pop('CNPJ_EMPRESA')
 
@@ -342,25 +350,29 @@ def extrair_detalhes_chave_estrangeira(erro, dados):
         return tabela_referenciada, valor_chave_estrangeira
     return None, None
 
-def update_mysql(tabela, codigo, dados):
+def update_mysql(tabela: str, codigo: int, dados: dict):
         try:
             cursor = connection_mysql.cursor()
-            coluna_chave_primaria = buscar_nome_chave_primaria(tabela)
+            set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
             valores = isblob(dados)
-
             codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, dados)
+
+            coluna_chave_primaria = buscar_nome_chave_primaria(tabela)
             if cnpj:
-                set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
                 set_clause += ', CNPJ_EMPRESA = %s'
-                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
                 valores.append(cnpj)
-                valores.append(codigo)
+                if dados['CODIGO_GLOBAL']:
+                    sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO_GLOBAL = {dados['CODIGO_GLOBAL']}"
+                else:
+                    sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s AND CNPJ_EMPRESA = %s"
+                    valores.append(codigo)
+                    valores.append(cnpj)
             else:
-                set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
-                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
+                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s AND CNPJ_EMPRESA = %s"
                 valores.append(codigo)
+                valores.append(cnpj)
             
-            print(f'Update na tabela {tabela}')
+            print_log(f'Update na tabela {tabela} -> chave: {codigo} -> cnpj:{cnpj}', nome_servico)
             cursor.execute(sql_update, valores)
 
             connection_mysql.commit()
@@ -381,11 +393,12 @@ def update_mysql(tabela, codigo, dados):
                 insert_mysql(tabela_referenciada, elemento_firebird)
 
                 #tentar update dados do começo
-                update_mysql(tabela,dados)
+                update_mysql(tabela, codigo,dados)
 
-def insert_mysql(tabela, dados):
+def insert_mysql(tabela: str, dados: dict):
     try:
         cursor_mysql = connection_mysql.cursor()
+        dados.pop('CODIGO_GLOBAL')
         valores = isblob(dados)
 
         codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, dados)
@@ -400,7 +413,7 @@ def insert_mysql(tabela, dados):
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-        print(f'Insert na tabela {tabela}')
+        print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}', nome_servico)
         cursor_mysql.execute(sql_insert, valores)
 
         connection_mysql.commit()
@@ -497,13 +510,15 @@ def delete_mysql(tabela, codigo):
 def processar_alteracoes():
 
     print_log('Iniciando processamento de alteracoes...', nome_servico)
-    # firebird_mysql()
-
+    
+    firebird_mysql()
     mysql_firebird()
 
     
      
 def firebird_mysql():
+
+    print_log('Iniciando Envio de dados...')
 
     alteracoes_firebird = buscar_alteracoes_firebird()
 
@@ -514,8 +529,8 @@ def firebird_mysql():
         acao = alteracao[1].upper()
         valor = alteracao[2]
         
-        existe_elemento_mysql = buscar_elemento_mysql(tabela,valor)
         elemento_firebird = buscar_elemento_firebird(tabela, valor)
+        existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, elemento_firebird['CODIGO_GLOBAL'])
 
         if elemento_firebird is None:
             delete_registro_replicador(tabela, acao, valor)
@@ -545,6 +560,8 @@ def firebird_mysql():
 
 def mysql_firebird():
 
+    print_log('Iniciando Recebimento de dados...')
+
     empresas = consulta_cnpjs_local()
 
     alteracoes_mysql = buscar_alteracoes_replicador_mysql(empresas)
@@ -554,9 +571,10 @@ def mysql_firebird():
         tabela = alteracao[0].upper()
         acao = alteracao[1].upper()
         valor = alteracao[2]
+        codigo_global = alteracao[4]
         
-        elemento_mysql = buscar_elemento_mysql(tabela,valor)
-        existe_elemento_firebird = buscar_elemento_firebird(tabela, valor)
+        elemento_mysql = buscar_elemento_mysql(tabela, valor, codigo_global)
+        existe_elemento_firebird = buscar_elemento_firebird(tabela, valor, False)
 
         # SE JA EXISTE ELEMENTO FIREBIRD
         if existe_elemento_firebird:
@@ -576,8 +594,27 @@ def mysql_firebird():
 
         delete_registro_replicador(tabela, acao, valor, firebird=False)
 
-while True:
 
-    processar_alteracoes()
-    print('Esperando 10 segundos....')
-    time.sleep(10)
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            carregar_configuracoes()
+            nome_servico = 'thread_replicador'
+            connection_firebird = parametros.FIREBIRD_CONNECTION
+
+            inicializa_conexao_mysql_replicador('dados')
+            connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
+
+            while True:
+                processar_alteracoes()
+
+                print('Esperando 10 segundos....')
+                time.sleep(10)
+        except Exception as e:
+            print_log(f'Ocorreu um erro ao executar: {e}', nome_script)
+        finally:
+            remover_bloqueio(nome_script)
