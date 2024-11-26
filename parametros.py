@@ -3,12 +3,12 @@ import os
 
 # Credenciais MySQL
 HOSTMYSQL = "177.153.69.3"
-USERMYSQL = "maxservices"
-PASSMYSQL = "oC8qUsDp"
+USERMYSQL = "dinheiro"
+PASSMYSQL = "MT49T3.6%B"
 BASEMYSQL = "maxservices"
 
 # Credenciais Firebird
-USERFB = 'maxservices'
+USERFB = 'maxsuport'
 PASSFB = 'oC8qUsDp'
 HOSTFB = 'localhost'
 DATABASEFB = ''  # Atualizar conforme necessário
@@ -32,7 +32,6 @@ LAST_IMAGE = ''
 
 # Conexões globais (inicialmente None)
 MYSQL_CONNECTION = None
-MYSQL_CONNECTION_REPLICADOR = None
 FIREBIRD_CONNECTION = None
 
 # Variáveis globais
