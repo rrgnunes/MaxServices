@@ -2,6 +2,10 @@ import requests
 import json
 import time
 import parametros
+import base64
+from PIL import Image, ImageOps
+from io import BytesIO
+import os
 
 secret_key = 'THISISMYSECURETOKEN'
 url = f"https://zap.maxsuportsistemas.com"
@@ -113,3 +117,28 @@ def receber_mensagem(session):
     response = requests.get(enpoint, headers=headers)
     response = retorna_json(response)       
     return response 
+
+def add_border_to_image(image, border, color=0):
+    """
+    Adiciona uma borda ao redor de uma imagem.
+    :param image: Imagem PIL.
+    :param border: Largura da borda.
+    :param color: Cor da borda.
+    :return: Imagem PIL com a borda.
+    """
+    if isinstance(border, int):
+        border = (border, border)
+    return ImageOps.expand(image, border=border, fill=color)
+
+def gera_qrcode(data_qrcode):
+    # Decodifica o QR Code de Base64 para dados de imagem
+    qr_img_data = base64.b64decode(data_qrcode)
+    if parametros.LAST_IMAGE != data_qrcode:
+       parametros.LAST_IMAGE = data_qrcode
+       os.remove("c:\maxsuport\qr_code_with_border.png")
+    # Cria uma imagem a partir dos dados decodificados
+    image = Image.open(BytesIO(qr_img_data))
+    # Adiciona uma borda à imagem
+    bordered_image = add_border_to_image(image, border=10, color='white')
+    # Salva a imagem com borda
+    bordered_image.save("c:\maxsuport\qr_code_with_border.png")

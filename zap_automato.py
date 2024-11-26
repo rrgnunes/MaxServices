@@ -1,5 +1,5 @@
 import mysql.connector
-from funcoes import inicializa_conexao_mysql, select,atualiza_mensagem,salva_retorno,print_log
+from funcoes import inicializa_conexao_mysql, select,atualiza_mensagem,salva_retorno,print_log, pode_executar, criar_bloqueio, remover_bloqueio
 from funcoes_zap import generate_token, start_session,envia_mensagem_zap
 import parametros
 import os
@@ -54,22 +54,19 @@ def zapautomato():
         ultimo_cnpj = zap['cliente_id']
         time.sleep(10)
 
-# Executa a função principal para automatizar o envio de mensagens
-# Nome do arquivo de bloqueio
-LOCK_FILE = '/tmp/zap_automato.lock'
 
-# Verificar se o arquivo de bloqueio existe
-if os.path.exists(LOCK_FILE):
-    print_log("O script já está em execução.")
-    sys.exit()
+if __name__ == '__main__':
+    # Pega o nome do arquivo
+    script_name = os.path.basename(sys.argv[0]).replace('.py', '')  
 
-# Criar o arquivo de bloqueio
-open(LOCK_FILE, 'w').close()
-
-try:
-    # Executa a função principal para automatizar o envio de mensagens
-    zapautomato()
-finally:
-    # Remover o arquivo de bloqueio ao final da execução
-    if os.path.exists(LOCK_FILE):
-        os.remove(LOCK_FILE)
+    # verifica se pode ser executado
+    if pode_executar(script_name):
+        # cria o arquivo de bloqueio com a data e hora em que foi iniciado
+        criar_bloqueio(script_name)
+        try:
+            zapautomato()
+        except Exception as e:
+            print_log(f'Ocorreu um erro ao executar: {e}')
+        finally:
+            # ao finalizar a execução remove o arquivo de bloqueio
+            remover_bloqueio(script_name)

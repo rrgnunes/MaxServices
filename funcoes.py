@@ -10,6 +10,7 @@ import parametros
 import psutil as ps
 from pathlib import Path
 from decimal import Decimal
+import subprocess
 from funcoes_zap import *
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
@@ -568,7 +569,7 @@ def insere_mensagem_zap(conexao, mensagem, numero):
     data_hora_atual = datetime.datetime.now()
     data_str = data_hora_atual.strftime('%Y-%m-%d')
     hora_str = data_hora_atual.strftime('%H:%M:%S')
-
+    status = 'PENDENTE'
     cursor = parametros.MYSQL_CONNECTION.cursor()
     cursor.execute("""
         UPDATE zap_zap
@@ -577,6 +578,21 @@ def insere_mensagem_zap(conexao, mensagem, numero):
         WHERE CODIGO = %s;
     """, (status,data_str + ' ' + hora_str, codigo))
     parametros.MYSQL_CONNECTION.commit()
+
+def numerador(conexao, tabela, campo, filtra, where, valor):
+    resultado = 0
+    cursor = conexao.cursor()
+    if filtra == 'N':
+        cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela}")
+    elif filtra == 'S':
+        cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela} WHERE {where} = {valor}")
+    # Obtém os nomes das colunas
+    colunas = [coluna[0] for coluna in cursor.description]
+    # Constrói uma lista de dicionários, onde cada dicionário representa uma linha
+    resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+    if resultados_em_dicionario != None:
+        resultado = resultados_em_dicionario[0]['MAIOR'] + 1
+    return resultado
 
 def salva_retorno(codigo, retorno):
     inicializa_conexao_mysql()
