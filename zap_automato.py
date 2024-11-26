@@ -8,21 +8,26 @@ import time
 
 def zapautomato():
     # Definir as credenciais do MySQL
-    parametros.HOSTMYSQL = "localhost"
+    parametros.HOSTMYSQL = "177.153.69.3"
     
     # Inicializa a conexão com o banco de dados MySQL
     inicializa_conexao_mysql()
     print_log("Conexão com MySQL inicializada.")
     
     # Seleciona mensagens pendentes de envio no banco de dados
-    resultado_zap = select('SELECT codigo, datahora, datahora_enviado, mensagem, fone, status, cliente_id FROM zap_zap where status = "PENDENTE"')
+    resultado_zap = select('SELECT codigo, datahora, datahora_enviado, mensagem, fone, status, cliente_id FROM zap_zap where status = "PENDENTE" order by cliente_id')
     print_log(f"Mensagens pendentes obtidas: {len(resultado_zap)} mensagens.")
  
     # Gera um token para o cliente
     token_gerado = generate_token(resultado_zap[0]['cliente_id'])
     parametros.TOKEN_ZAP = token_gerado['token']
+    ultimo_cnpj = ''
 
     for zap in resultado_zap:
+        if zap['cliente_id'] != ultimo_cnpj:
+            token_gerado = generate_token(resultado_zap[0]['cliente_id'])  
+            parametros.TOKEN_ZAP = token_gerado['token']
+
         print_log(f"Token gerado para o cliente {zap['cliente_id']}: {parametros.TOKEN_ZAP}")
         
         # Inicia a sessão de envio de mensagens
@@ -46,7 +51,7 @@ def zapautomato():
                 # Salva a mensagem de erro de retorno do envio
                 salva_retorno(zap['codigo'], retorno_json['message'])
                 print_log(f"Erro ao enviar mensagem {zap['codigo']}: {retorno_json['message']}")
-
+        ultimo_cnpj = zap['cliente_id']
         time.sleep(10)
 
 # Executa a função principal para automatizar o envio de mensagens

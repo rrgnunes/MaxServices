@@ -3,9 +3,6 @@ import os
 import mysql.connector
 from mysql.connector import Error
 import inspect
-<<<<<<< HEAD
-from pathlib import Path
-=======
 import xml.etree.ElementTree as ET
 import sys
 import fdb
@@ -13,7 +10,6 @@ import parametros
 import psutil as ps
 from pathlib import Path
 from decimal import Decimal
->>>>>>> e352db92135aa0d5b956cdfa123921f87a7e8416
 from funcoes_zap import *
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
@@ -58,7 +54,8 @@ def inicializa_conexao_mysql():
                 host=parametros.HOSTMYSQL,
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
-                database=parametros.BASEMYSQL
+                database=parametros.BASEMYSQL,
+                auth_plugin='mysql_native_password'  # Força o uso do plugin correto
             )
         print_log("Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:
@@ -137,9 +134,8 @@ def select(sql_query, values=None):
     finally:
         if parametros.MYSQL_CONNECTION.is_connected():
             cursor.close()
-<<<<<<< HEAD
             parametros.MYSQL_CONNECTION.close()        
-=======
+
             connection.close()        
 
 def exibe_alerta(aviso):
@@ -499,14 +495,11 @@ def config_zap(conexao):
     colunas = [coluna[0] for coluna in cursor.description]
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
     return resultados_em_dicionario[0]
->>>>>>> e352db92135aa0d5b956cdfa123921f87a7e8416
+
 
 
 def atualiza_mensagem(codigo, status):
     inicializa_conexao_mysql()
-
-<<<<<<< HEAD
-=======
 
 def retorna_pessoas(conexao):
     cursor = conexao.cursor()
@@ -572,7 +565,6 @@ def retorna_pessoas_lembrete(conexao: fdb.Connection, tempo: datetime.time):
 
 def insere_mensagem_zap(conexao, mensagem, numero):
     codigo = numerador(conexao, 'MENSAGEM_ZAP', 'CODIGO', 'N', '', '')
->>>>>>> e352db92135aa0d5b956cdfa123921f87a7e8416
     data_hora_atual = datetime.datetime.now()
     data_str = data_hora_atual.strftime('%Y-%m-%d')
     hora_str = data_hora_atual.strftime('%H:%M:%S')
@@ -590,18 +582,11 @@ def salva_retorno(codigo, retorno):
     inicializa_conexao_mysql()
     cursor = parametros.MYSQL_CONNECTION.cursor()
     cursor.execute("""
-<<<<<<< HEAD
         UPDATE zap_zap
         SET retorno = %s
         WHERE CODIGO = %s;
     """, (retorno, codigo))
-    parametros.MYSQL_CONNECTION.commit()    
-=======
-        UPDATE PESSOA
-        SET ANO_ENVIO_MENSAGEM_ANIVERSARIO = ?
-        WHERE CODIGO = ?;
-    """, (ano, codigo))
-    conexao.commit()
+    parametros.MYSQL_CONNECTION.commit()
 
 def atualiza_agenda(conexao: fdb.Connection, codigo: int, tipo: str='') -> None:
     try:
@@ -704,4 +689,3 @@ def remover_bloqueio(nome_script):
     lock_file = nome_script + '.lock'
     if os.path.exists(lock_file):
         os.remove(lock_file)
->>>>>>> e352db92135aa0d5b956cdfa123921f87a7e8416
