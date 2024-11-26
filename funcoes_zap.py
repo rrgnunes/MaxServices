@@ -3,8 +3,8 @@ import json
 import time
 import parametros
 
-secret_key = 'ERTYHN^dsdasfds484D^d^'
-url = f"http://91.108.126.27:8081"
+secret_key = 'THISISMYSECURETOKEN'
+url = f"https://zap.maxsuportsistemas.com"
 
 def retorna_json(resposta):
     response_dict = json.loads(resposta.text)
