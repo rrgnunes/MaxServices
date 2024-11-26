@@ -1,20 +1,15 @@
+import sys
 import fdb
-from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes
+from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes, criar_bloqueio, remover_bloqueio, pode_executar
 import parametros
 import configparser
 import os
-import pathlib
 
 def atualiza_banco():
+    nome_servico = 'thread_atualiza_banco'
     carregar_configuracoes()
     try:
-        lock_atualiza_banco = os.path.join(pathlib.Path(__file__).parent, 'lock_atualiza_banco.txt')
-        if os.path.exists(lock_atualiza_banco):
-            print_log('Em execucao', 'Atualiza_Banco')
-            return
-        else:
-            with open(lock_atualiza_banco, 'w') as arq:
-                arq.write('em execucao')
+
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
@@ -38,9 +33,9 @@ def atualiza_banco():
                     atualiza_banco = config['manutencao']['atualizabanco']
 
                 if str(atualiza_banco) == '1':
-                    server_origem = "177.153.69.3"
+                    server_origem = "maxsuportsistemas.com"
                     port_origem = 3050
-                    path_origem = "/home/maxsuport/base/maxsuport/dados.fdb"
+                    path_origem = "/home/base/dados.fdb"
 
                     server_destino = "127.0.0.1"
                     port_destino = porta_firebird_maxsuport
@@ -77,10 +72,18 @@ def atualiza_banco():
                         config.write(configfile)
 
                     print_log('Tabela atualizada', "Atualiza_Banco")
-        os.remove(lock_atualiza_banco)
     except Exception as e:
         print_log(f"Erro na atualização do banco: {e}", "Atualiza_Banco")
-        os.remove(lock_atualiza_banco)
 
 
-atualiza_banco()
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            atualiza_banco()
+        except Exception as e:
+            print_log(f'Ocorreu um erro na execução - motivo: {e}')
+        finally:
+            remover_bloqueio(nome_script)

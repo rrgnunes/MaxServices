@@ -1,22 +1,21 @@
 import fdb
-from funcoes import os,json,datetime,atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas, salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas, insere_mensagem_zap, carregar_configuracoes
 import parametros
 import os
-import pathlib
+import sys
 import datetime as dt
+from funcoes import (
+    os,json,datetime,atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
+    salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
+    insere_mensagem_zap, carregar_configuracoes, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio
+    )
 
 
 def zapautomato():
-    arquivo_zap = os.path.join(pathlib.Path(__file__).parent, 'zap.txt')
-    nome_servico = 'zap_automato'
+    
+    nome_servico = 'thread_zap_automato'
     #carrega config
-    print_log(f'Iniciando',nome_servico)
-    if os.path.exists(arquivo_zap):
-        print_log('Em execucao', nome_servico)
-        return
-    else:
-        with open(arquivo_zap, 'w') as arq:
-            arq.write('em execucao')
+    print_log(f'Iniciando', nome_servico)
+
     carregar_configuracoes()
     if os.path.exists("C:/Users/Public/config.json"):
         with open('C:/Users/Public/config.json', 'r') as config_file:
@@ -32,7 +31,7 @@ def zapautomato():
                 data_hora = datetime.datetime.now()
                 data_hora_formatada = data_hora.strftime(
                     '%Y_%m_%d_%H_%M_%S')
-                print_log(f'Vou validar para enviar mensagem',nome_servico)
+                print_log(f'Vou validar para enviar mensagem', nome_servico)
 
                 try:
                     con_mysql = parametros.MYSQL_CONNECTION
@@ -43,11 +42,11 @@ def zapautomato():
                     if cnpj != empresa[0]:
                         continue
                 except Exception as e:
-                    print_log(f'Não foi possivel verificar a empresa 1: {e}')
+                    print_log(f'Não foi possivel verificar a empresa 1: {e}', nome_servico)
 
                 if ativo == 1 and sistema_em_uso == '1':
                     server = "localhost"
-                    port = porta_firebird_maxsuport  # Substitua pelo número da porta real, se diferente
+                    port = porta_firebird_maxsuport
                     path = caminho_base_dados_maxsuport
                     user = parametros.USERFB
                     password = parametros.PASSFB
@@ -58,46 +57,58 @@ def zapautomato():
 
                     ENVIAR_MENSAGEM_ANIVERSARIO = cfg_zap['ENVIAR_MENSAGEM_ANIVERSARIO'] = 1
                     ENVIAR_MENSAGEM_PROMOCAO    = cfg_zap['ENVIAR_MENSAGEM_PROMOCAO'] = 1
+                    ENVIAR_MENSAGEM_LEMBRETE    = cfg_zap['ENVIAR_MENSAGEM_LEMBRETE']
                     ENVIAR_MENSAGEM_DIARIO      = cfg_zap['ENVIAR_MENSAGEM_DIARIO']
-                    MENSAGEM_ANIVERSARIO        = cfg_zap['MENSAGEM_ANIVERSARIO']
-                    MENSAGEM_PROMOCAO           = cfg_zap['MENSAGEM_PROMOCAO']
-                    MENSAGEM_DIARIO             = cfg_zap['MENSAGEM_DIARIO']
                     DIA_MENSAGEM_DIARIA         = cfg_zap['DIA_MENSAGEM_DIARIA']
                     TIME_MENSAGEM_DIARIA        = cfg_zap['TIME_MENSAGEM_DIARIA']
+                    TIME_MENSAGEM_LEMBRETE      = cfg_zap['TIME_MENSAGEM_LEMBRETE']
                     ULTIMO_ENVIO_ANIVERSARIO    = cfg_zap['ULTIMO_ENVIO_ANIVERSARIO']
                     ULTIMO_ENVIO_DIARIO         = cfg_zap['ULTIMO_ENVIO_DIARIO']
                     ULTIMO_ENVIO_PROMOCAO       = cfg_zap['ULTIMO_ENVIO_PROMOCAO']                         
-                    MENSAGEM_PREAGENDAMENTO     = cfg_zap['MENSAGEM_PREAGENDAMENTO']                         
+                    MENSAGEM_ANIVERSARIO        = cfg_zap['MENSAGEM_ANIVERSARIO']
+                    MENSAGEM_PROMOCAO           = cfg_zap['MENSAGEM_PROMOCAO']
+                    MENSAGEM_DIARIO             = cfg_zap['MENSAGEM_DIARIO']
+                    MENSAGEM_PREAGENDAMENTO     = cfg_zap['MENSAGEM_PREAGENDAMENTO']
+                    MENSAGEM_LEMBRETE           = cfg_zap['MENSAGEM_LEMBRETE']               
 
-                    print_log(f'Dados da configuração recebidos',nome_servico)
+                    print_log(f'Dados da configuração recebidos', nome_servico)
 
                     # MENSAGEM DIARIA
                     pessoas = retorna_pessoas_mensagemdiaria(conexao, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
                     for pessoa in pessoas:
-                        MENSAGEM_DIARIO = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
-                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO, pessoa['CELULAR1'])
-                        print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}',nome_servico)
+                        MENSAGEM_DIARIO_FINAL = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
+                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'])
+                        print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}', nome_servico)
 
                     # MENSAGEM ANIVERSARIO
                     pessoas = retorna_pessoas(conexao)
-
                     for pessoa in pessoas:
                         ano_atual = datetime.datetime.now().year
                         if pessoa['ANO_ENVIO_MENSAGEM_ANIVERSARIO'] != ano_atual:
-                            MENSAGEM_ANIVERSARIO = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
-                            insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO, pessoa['CELULAR1'])
+                            MENSAGEM_ANIVERSARIO_FINAL = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
+                            insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO_FINAL, pessoa['CELULAR1'])
                             atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
-                            print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}',nome_servico)
+                            print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}', nome_servico)
                     
-                    # MENSAGEM DE PRE AGENDMANETO
+                    # MENSAGEM DE PRE AGENDAMENTO
                     pessoas = retorna_pessoas_preagendadas(conexao)
-
                     for pessoa in pessoas:                        
-                        MENSAGEM_PREAGENDAMENTO = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
-                        insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO, pessoa['CELULAR1'])
-                        atualiza_agenda(conexao,pessoa['CODIGO'])
-                        print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}',nome_servico)                            
+                        MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
+                        insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'])
+                        atualiza_agenda(conexao,pessoa['CODIGO'], 'pre_agendamento')
+                        print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}', nome_servico)     
 
+                    # MENSAGEM DE LEMBRETE 
+                    if ENVIAR_MENSAGEM_LEMBRETE == 1:
+                        pessoas = retorna_pessoas_lembrete(conexao, TIME_MENSAGEM_LEMBRETE)
+                        for pessoa in pessoas:
+                            data_agendada = pessoa['DATA']
+                            hora_agendada = data_agendada.time().replace(microsecond=0)
+                            mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO']).replace('@hora', str(hora_agendada))
+                            insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'])
+                            atualiza_agenda(conexao, pessoa['CODIGO'], 'lembrete')
+                            print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
+                    
                     # Salva mensagem em banco remoto e altera status em banco local
                     try:
                         con_fb = parametros.FIREBIRD_CONNECTION
@@ -122,10 +133,8 @@ def zapautomato():
                         print_log('Mensagens salvas em servidor remoto', nome_servico)
                         con_fb.close()
                         con_mysql.close()
-                        os.remove(arquivo_zap)
                     except Exception as e:
                         print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
-                        os.remove(arquivo_zap)
                         raise e
             except Exception as a:
                 try:
@@ -135,7 +144,17 @@ def zapautomato():
                         con_mysql.rollback()
                 except Exception as e:
                     pass
-                print_log(f'{a}',nome_servico)
-                os.remove(arquivo_zap)
+                print_log(f'{a}', nome_servico)
 
-zapautomato()
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            zapautomato()
+        except Exception as e:
+            print_log(f'Ocorreu um erro ao executar - motivo: {e}')
+        finally:
+            remover_bloqueio(nome_script)

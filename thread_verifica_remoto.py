@@ -1,26 +1,20 @@
-from funcoes import print_log, os,json,inicializa_conexao_mysql,datetime
 import parametros
 import os
-import pathlib
+import sys
+from funcoes import print_log, os,json, datetime,inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio
 
 
 def salva_json():
+    nome_servico = 'thread_verifica_remoto'
     try:
-
-        lock_verifica_remoto = os.path.join(pathlib.Path(__file__).parent, 'lock_verifica_remoto.txt')
-        if os.path.exists(lock_verifica_remoto):
-            print_log('Em execucao', 'verificaremoto')
-            return
-        else:
-            with open(lock_verifica_remoto, 'w') as arq:
-                arq.write('em execucao')
+        
         inicializa_conexao_mysql()
         
-        print_log("Efetua conexão remota" , 'verificaremoto')
+        print_log("Efetua conexão remota" , nome_servico)
         conn = parametros.MYSQL_CONNECTION
 
         # pego dados do arquivo
-        print_log(f"Carrega arquivo {parametros.SCRIPT_PATH}\\cnpj.txt" , 'verificaremoto')
+        print_log(f"Carrega arquivo {parametros.SCRIPT_PATH}\\cnpj.txt" , nome_servico)
         if os.path.exists(f"{parametros.SCRIPT_PATH}\\cnpj.txt"):
             with open(f"{parametros.SCRIPT_PATH}\\cnpj.txt", 'r') as config_file:
                 cnpj_list = config_file.read().split('\n')
@@ -39,15 +33,15 @@ def salva_json():
                     ip
             FROM cliente_cliente where cnpj in ({cnpj})""")
         rows = cursor.fetchall()
-        print_log(f"Consultou remoto cnpj's {cnpj}" , 'verificaremoto')
+        print_log(f"Consultou remoto cnpj's {cnpj}" , nome_servico)
 
         datahoraagora = datetime.datetime.now(
             datetime.timezone(datetime.timedelta(hours=-4)))
-        # cursor = conn.cursor()
-        # cursor.execute(
-        #     f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
-        # print_log(f"Executou update remoto" , 'verificaremoto')
-        # conn.commit()
+        cursor = conn.cursor()
+        cursor.execute(
+            f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
+        print_log(f"Executou update remoto" , 'verificaremoto')
+        conn.commit()
         conn.close()
 
         config = {}
@@ -70,9 +64,18 @@ def salva_json():
         with open('C:/Users/Public/config.json', 'w') as configfile:
             json.dump(config, configfile)
 
-        os.remove(lock_verifica_remoto)
     except Exception as a:
-        print_log(a, 'verificaremoto')
-        os.remove(lock_verifica_remoto)
+        print_log(a, nome_servico)
 
-salva_json()
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            salva_json()
+        except Exception as e:
+            print_log(f'Ocorreu um erro ao executar - motivo: {e}')
+        finally:
+            remover_bloqueio(nome_script)

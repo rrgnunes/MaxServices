@@ -1,10 +1,15 @@
 import fdb
+import os
+import sys
 import mysql.connector
 import parametros
-from funcoes import extrair_metadados, extrair_metadados_mysql, gerar_scripts_diferentes_mysql, executar_scripts_mysql,  print_log, inicializa_conexao_mysql_replicador
+from funcoes import (
+    extrair_metadados, extrair_metadados_mysql, gerar_scripts_diferentes_mysql, executar_scripts_mysql,
+    print_log, inicializa_conexao_mysql_replicador, pode_executar, criar_bloqueio, remover_bloqueio
+)
 
 def atualiza_banco_mysql():
-    nome_servico = 'Atualiza_banco_mysql'
+    nome_servico = 'thread_atualiza_banco_mysql'
     try:
         print_log('Verificando se precisa atualizar banco remoto', nome_servico)
         try:
@@ -22,9 +27,9 @@ def atualiza_banco_mysql():
 
         try:
             fdb.load_api('C:\\Program Files\\Firebird\\Firebird_2_5\\bin\\fbclient.dll')
-            server_origem = "177.153.69.3"
+            server_origem = "maxsuportsistemas.com"
             port_origem = 3050
-            path_origem = "/home/maxsuport/base/maxsuport/dados.fdb"
+            path_origem = "/home/base/dados.fdb"
             dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
             conexao_origem_fb = fdb.connect(dsn=dsn_origem, user='SYSDBA', password='masterkey')
             print_log('Conexao firebird estabelecida com sucesso', nome_servico)
@@ -34,7 +39,7 @@ def atualiza_banco_mysql():
         metadados_origem = extrair_metadados(conexao_origem_fb)
 
         for bd in bds:
-            if bd[0].isdigit():
+            if bd[0] == 'dados':
                 inicializa_conexao_mysql_replicador(bd[0])
                 conexao_destino_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
                 metadados_destino = extrair_metadados_mysql(conexao_destino_mysql)
@@ -47,4 +52,15 @@ def atualiza_banco_mysql():
     except Exception as e:
         print_log(f'{e}', nome_servico)
 
-atualiza_banco_mysql()
+
+if __name__ == '__main__':
+
+    nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+    if pode_executar(nome_script):
+        criar_bloqueio(nome_script)
+        try:
+            atualiza_banco_mysql()
+        except Exception as e:
+            print_log(f'Ocorreu um erro na execução - motivo: {e}')
+        finally:
+            remover_bloqueio(nome_script)
