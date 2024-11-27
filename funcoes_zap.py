@@ -87,6 +87,15 @@ def status_session(session):
 
     return tudo_ok  
 
+def close_zap(session):
+    headers = {
+        "Authorization": f"Bearer {parametros.TOKEN_ZAP}",
+        "Content-Type": "application/json"
+    }    
+    enpoint = f'{url}/api/{session}/logout-session'
+    response = requests.post(enpoint, headers=headers)
+    enpoint = f'{url}/api/{session}/close-session'
+    response = requests.post(enpoint, headers=headers)
 
 def envia_mensagem_zap(session, numero, mensagem):
     enpoint = f'{url}/api/{session}/send-message'
@@ -142,3 +151,12 @@ def gera_qrcode(data_qrcode):
     bordered_image = add_border_to_image(image, border=10, color='white')
     # Salva a imagem com borda
     bordered_image.save("c:\maxsuport\qr_code_with_border.png")
+
+def qrcode_session(session):
+    enpoint = f'{url}/api/{session}/qrcode-session'
+    headers = {
+        "accept": "*/*",
+        "Authorization": "Bearer " + parametros.TOKEN_ZAP
+    }
+    response = requests.get(enpoint, headers=headers)
+    print(response.text)

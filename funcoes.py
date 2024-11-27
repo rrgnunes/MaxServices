@@ -62,7 +62,77 @@ def inicializa_conexao_mysql():
     except mysql.connector.Error as err:
         print_log(f"Erro ao conectar ao MySQL: {err}")
 
-   
+def inicializa_conexao_firebird(path_dll):
+    try:
+        fdb.load_api(path_dll)
+        if parametros.FIREBIRD_CONNECTION is None:
+            parametros.FIREBIRD_CONNECTION = fdb.connect(
+                host=parametros.HOSTFB,
+                database=parametros.DATABASEFB,
+                user=parametros.USERFB,
+                password=parametros.PASSFB,
+                port=int(parametros.PORTFB)
+            )
+        print_log("Conexão com Firebird estabelecida com sucesso.")
+    except fdb.fbcore.DatabaseError as err:
+        print_log(f"Erro ao conectar ao Firebird: {err}")
+
+def carregar_configuracoes():
+    try:
+        with open('C:/Users/Public/config.json', 'r') as config_file:
+            parametros.CNPJ_CONFIG = json.load(config_file)
+            print_log("Configurações carregadas com sucesso.")
+            atualizar_conexoes_firebird()
+            inicializa_conexao_mysql()
+    except Exception as e:
+        print_log(f"Erro ao carregar configurações: {e}")
+
+def atualizar_conexoes_firebird():
+    for cnpj, dados in parametros.CNPJ_CONFIG['sistema'].items():
+        caminho_gbak_firebird_maxsuport = dados['caminho_gbak_firebird_maxsuport']
+        path_dll = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
+        parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
+        parametros.PORTFB = dados['porta_firebird_maxsuport'] 
+        inicializa_conexao_firebird(path_dll)
+
+def lerconfig():
+    path_config_thread = os.path.join(parametros.SCRIPT_PATH, "config.json")
+    if os.path.exists(path_config_thread):
+        with open(path_config_thread, 'r') as config_file:
+            config_thread = json.load(config_file)
+    return config_thread
+
+def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):
+    try:
+        cursor_notafiscal = conn.cursor()
+        cursor_notafiscal.execute(f'SELECT * FROM maxservices.notafiscal_notafiscal nn WHERE nn.chave = "{chave}"')
+        rows_nota_fiscal = cursor_notafiscal.fetchall()
+        if not rows_nota_fiscal:
+            sql = f"""INSERT INTO maxservices.notafiscal_notafiscal 
+                (numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento,
+                    cliente_id, contador_id, ie)
+                VALUES('{numero}', '{chave}', '{tipo_nota}', '{serie}',
+                        '{data_nota}', '{xml}', '{xml_cancelamento}',
+                        '{cliente_id}', '{contador_id}', '{cliente_ie}')"""
+        else:
+            sql = f"""UPDATE maxservices.notafiscal_notafiscal SET 
+                        numero = '{numero}',
+                        chave = '{chave}',
+                        tipo_nota='{tipo_nota}',
+                        serie='{serie}',
+                        data_nota='{data_nota}',
+                        xml='{xml}',
+                        xml_cancelamento='{xml_cancelamento}',
+                        cliente_id='{cliente_id}',
+                        contador_id='{contador_id}',
+                        ie= '{cliente_ie}'
+                       WHERE chave = '{chave}'""" 
+            
+        cursor_notafiscal.execute(sql)
+        print_log(f'Salvando nota {tipo_nota} - {chave}')
+        cursor_notafiscal.close()
+    except Exception as a:
+        print_log(a)  
 
 def insert(sql_query, values):
     try:
