@@ -26,7 +26,7 @@ def atualiza_banco():
             config.read(SCRIPT_PATH + '/banco.ini')
 
             if ativo and sistema_em_uso == '1':
-                print_log('Vou checar se é para atualizar', 'Atualiza_Banco')
+                print_log('Vou checar se é para atualizar', nome_servico)
                 atualiza_banco = 0
 
                 if 'manutencao' in config and 'atualizabanco' in config['manutencao']:
@@ -59,11 +59,11 @@ def atualiza_banco():
                     erros = executar_scripts_sql(conexao_destino, scripts_sql)
 
                     if erros:
-                        print_log("Erros encontrados durante a execução dos scripts:", "Atualiza_Banco")
+                        print_log("Erros encontrados durante a execução dos scripts:", nome_servico)
                         for erro in erros:
-                            print_log(f"    Script: {erro['script']}\nErro: {erro['erro']}\n", 'Atualiza_Banco')
+                            print_log(f"    Script: {erro['script']}\nErro: {erro['erro']}\n", nome_servico)
                     else:
-                        print_log('Todos os scripts foram executados com sucesso.', 'Atualiza_Banco')
+                        print_log('Todos os scripts foram executados com sucesso.', nome_servico)
 
                     config['manutencao']['atualizabanco'] = '0'
 
@@ -71,9 +71,9 @@ def atualiza_banco():
                     with open(SCRIPT_PATH + '/banco.ini', 'w') as configfile:
                         config.write(configfile)
 
-                    print_log('Tabela atualizada', "Atualiza_Banco")
+                    print_log('Tabela atualizada', nome_servico)
     except Exception as e:
-        print_log(f"Erro na atualização do banco: {e}", "Atualiza_Banco")
+        print_log(f"Erro na atualização do banco: {e}", nome_servico)
 
 
 if __name__ == '__main__':
@@ -84,6 +84,6 @@ if __name__ == '__main__':
         try:
             atualiza_banco()
         except Exception as e:
-            print_log(f'Ocorreu um erro na execução - motivo: {e}')
+            print_log(f'Ocorreu um erro na execução - motivo: {e}', nome_script)
         finally:
             remover_bloqueio(nome_script)

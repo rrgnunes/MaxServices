@@ -14,7 +14,7 @@ PASSMYSQL = "oC8qUsDp"
 BASEMYSQL = "dados"
 
 # Credenciais Firebird
-USERFB = 'maxsuport'
+USERFB = 'maxservices'
 PASSFB = 'oC8qUsDp'
 HOSTFB = 'localhost'
 DATABASEFB = ''  # Atualizar conforme necessário
