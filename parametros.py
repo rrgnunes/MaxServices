@@ -6,7 +6,7 @@ import mysql.connector
 
 # Credenciais MySQL
 #Contabo
-HOSTMYSQL = "maxsuportsistemas.com"
+HOSTMYSQL = "10.105.96.106"
 #Kinghost
 # HOSTMYSQL = "177.153.69.3"
 USERMYSQL = "maxservices"
