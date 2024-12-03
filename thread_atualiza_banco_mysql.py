@@ -26,7 +26,7 @@ def atualiza_banco_mysql():
             return
 
         try:
-            fdb.load_api('C:\\Program Files\\Firebird\\Firebird_2_5\\bin\\fbclient.dll')
+            fdb.load_api('/home/MaxServices/libfbclient.so.2.5.9')
             server_origem = "maxsuportsistemas.com"
             port_origem = 3050
             path_origem = "/home/base/dados.fdb"
