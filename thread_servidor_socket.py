@@ -3,7 +3,6 @@ import socket
 import threading
 import json
 import fdb
-import os
 from datetime import datetime, date
 from decimal import Decimal
 import parametros
