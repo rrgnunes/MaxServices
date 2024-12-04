@@ -19,7 +19,7 @@ def get_tables(conn: fdb.Connection) -> list:
             sql = """select
                         trim(rr.rdb$relation_name)
                     from rdb$relations rr
-                    where rr.rdb$system_flag = 0 and rr.rdb$relation_name not in (upper('replicador'), upper('agenda'), 'V_AJUSTE_ESTOQUE','V_OS', 'V_PRODUTOS', 'V_VENDAS_NFCE')
+                    where rr.rdb$system_flag = 0 and rr.rdb$relation_name not in (upper('replicador'), 'V_AJUSTE_ESTOQUE','V_OS', 'V_PRODUTOS', 'V_VENDAS_NFCE')
                     order by rr.rdb$relation_name"""
             cursor: fdb.fbcore.Cursor = conn.cursor()
             cursor.execute(sql)
