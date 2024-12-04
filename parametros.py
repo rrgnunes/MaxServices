@@ -5,13 +5,16 @@ import mysql
 import mysql.connector
 
 # Credenciais MySQL
-#Contabo
-HOSTMYSQL = "maxsuportsistemas.com"
-#Kinghost
-# HOSTMYSQL = "177.153.69.3"
+# Plataforma
+HOSTMYSQL = "177.153.69.3"
 USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
-BASEMYSQL = "dados"
+BASEMYSQL = "maxservices"
+
+# Replicador
+HOSTMYSQL_REP = "maxsuportsistemas.com"
+BASEMYSQL_REP = "dados"
+
 
 # Credenciais Firebird
 USERFB = 'maxservices'

@@ -228,14 +228,14 @@ def VerificaVersaoOnline(arquivo_versao):
         print_log(a)    
     return versao_online
 
-def inicializa_conexao_mysql_replicador(database):
+def inicializa_conexao_mysql_replicador():
     try:
         if parametros.MYSQL_CONNECTION_REPLICADOR == None:
             parametros.MYSQL_CONNECTION_REPLICADOR = mysql.connector.connect(
-                host=parametros.HOSTMYSQL,
+                host=parametros.HOSTMYSQL_REP,
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
-                database=database
+                database=parametros.BASEMYSQL_REP
             )
         print_log(f"Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:

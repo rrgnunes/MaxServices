@@ -579,7 +579,7 @@ if __name__ == '__main__':
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION
 
-            inicializa_conexao_mysql_replicador('dados')
+            inicializa_conexao_mysql_replicador()
             connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
 
             while True:

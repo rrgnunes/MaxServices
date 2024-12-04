@@ -4,10 +4,10 @@ import fdb.fbcore
 def connect_firebird() -> fdb.Connection:
     try:
         conn = fdb.connect(host='localhost',
-                        database='C:/MaxSuport_Rian/Dados/Dados.fdb',
-                        user='maxsuport',
-                        password='oC8qUsDp',
-                        port=3050)
+                        database='C:\\MaxSuport_Rian\\Dados\\Dados.fdb',
+                        user='sysdba',
+                        password='masterkey',
+                        port=3050) 
         return conn
     except Exception as e:
         print(f'Não foi possível se conectar ao banco de dados -> motivo: {e}')
