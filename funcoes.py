@@ -587,6 +587,7 @@ def retorna_pessoas(conexao):
     return resultados_em_dicionario
 
 def retorna_pessoas_mensagemdiaria(conexao, envia_mensagem_diaria, dia_mensagem, hora_mensagem, ultimo_envio):
+    pessoas_dicionario = []
     if envia_mensagem_diaria == 1:
         data_hoje = datetime.datetime.now().strftime('%d.%m.%Y')
         dia_semana_hoje = datetime.datetime.now().isoweekday() - 1

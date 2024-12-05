@@ -578,16 +578,10 @@ if __name__ == '__main__':
             carregar_configuracoes()
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION
-
             inicializa_conexao_mysql_replicador()
             connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
-
-            while True:
-                processar_alteracoes()
-
-                print('Esperando 10 segundos....')
-                connection_mysql.reconnect()
-                time.sleep(10)
+            
+            processar_alteracoes()
         except Exception as e:
             print_log(f'Ocorreu um erro ao executar: {e}', nome_script)
         finally:

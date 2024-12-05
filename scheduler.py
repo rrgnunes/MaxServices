@@ -35,7 +35,8 @@ def setup_schedules():
         {'path': scripts_directory / 'thread_verifica_remoto.py', 'interval': 5},  # 5 segundos
         {'path': scripts_directory / 'thread_xml_contador.py', 'interval': 600},  # 10 minutos
         {'path': scripts_directory / 'thread_zap_automato.py', 'interval': 60},  # 1 minuto
-        {'path': scripts_directory / 'thread_bloqueio.py', 'interval': 5}  # 5 segundos
+        {'path': scripts_directory / 'thread_bloqueio.py', 'interval': 5},  # 5 segundos
+        {'path': scripts_directory / 'thread_replicador.py', 'interval': 10} # 10 segundos
     ]
 
     for script in scripts:
