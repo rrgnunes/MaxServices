@@ -589,9 +589,10 @@ def retorna_pessoas(conexao):
 def retorna_pessoas_mensagemdiaria(conexao, envia_mensagem_diaria, dia_mensagem, hora_mensagem, ultimo_envio):
     pessoas_dicionario = []
     if envia_mensagem_diaria == 1:
-        data_hoje = datetime.datetime.now().strftime('%d.%m.%Y')
+        data_hoje = datetime.datetime.now()
         dia_semana_hoje = datetime.datetime.now().isoweekday() - 1
-        hora = datetime.datetime.now().strftime('%H:%M:%S')
+        hora = data_hoje.strftime('%H:%M:%S')
+        hora = datetime.datetime.strptime(hora, '%H:%M:%S').time()
         if ultimo_envio < data_hoje:
             if dia_mensagem == dia_semana_hoje:
                 if hora_mensagem < hora:
@@ -666,15 +667,15 @@ def insere_mensagem_zap(conexao, mensagem, numero):
     data_hora_atual = datetime.datetime.now()
     data_str = data_hora_atual.strftime('%Y-%m-%d')
     hora_str = data_hora_atual.strftime('%H:%M:%S')
+    fone = numero[0:2] + numero[3:]
     status = 'PENDENTE'
-    cursor = parametros.MYSQL_CONNECTION.cursor()
+    cursor = conexao.cursor()
     cursor.execute("""
-        UPDATE zap_zap
-        SET STATUS = %s,
-            DATAHORA_ENVIADO = %s
-        WHERE CODIGO = %s;
-    """, (status,data_str + ' ' + hora_str, codigo))
-    parametros.MYSQL_CONNECTION.commit()
+        INSERT INTO MENSAGEM_ZAP
+        (CODIGO, "DATA", MENSAGEM, FONE, STATUS, HORA)
+        VALUES(?, ?, ?, ?, ?, ?);
+    """, (codigo, data_str, mensagem, fone, status, hora_str))
+    conexao.commit()
 
 def numerador(conexao, tabela, campo, filtra, where, valor):
     resultado = 0
@@ -683,11 +684,9 @@ def numerador(conexao, tabela, campo, filtra, where, valor):
         cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela}")
     elif filtra == 'S':
         cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela} WHERE {where} = {valor}")
-    # Obtém os nomes das colunas
     colunas = [coluna[0] for coluna in cursor.description]
-    # Constrói uma lista de dicionários, onde cada dicionário representa uma linha
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
-    if resultados_em_dicionario != None:
+    if resultados_em_dicionario:
         resultado = resultados_em_dicionario[0]['MAIOR'] + 1
     return resultado
 
@@ -754,14 +753,14 @@ def envia_mensagem(conexao, session):
 # Obtém o nome do arquivo do script principal (quem está chamando este código)
 script_principal = os.path.basename(sys.argv[0]).replace('.py', '')
 
-# Nome do arquivo de bloqueio com o nome do script principal
-LOCK_FILE = f'/tmp/{script_principal}.lock'
+
 # Função que verifica se o script pode ser executado
 def pode_executar(nome_script:str) -> bool:
     lock_file = nome_script + '.lock'
+    caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
     # Verificar se o arquivo de bloqueio existe
-    if os.path.exists(lock_file):
-        with open(lock_file, 'r') as f:
+    if os.path.exists(caminho_lock_file):
+        with open(caminho_lock_file, 'r') as f:
             last_run_time_str = f.read().strip()
 
         try:
@@ -794,11 +793,15 @@ def pode_executar(nome_script:str) -> bool:
 # Função que cria o arquivo de bloqueio
 def criar_bloqueio(nome_script):
     lock_file = nome_script + '.lock'
-    with open(lock_file, 'w') as f:
+    caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
+    if not os.path.exists(Path(caminho_lock_file).parent):
+        os.makedirs(Path(caminho_lock_file).parent)
+    with open(caminho_lock_file, 'w') as f:
         f.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 # Função que remove o arquivo de bloqueio
 def remover_bloqueio(nome_script):
     lock_file = nome_script + '.lock'
-    if os.path.exists(lock_file):
-        os.remove(lock_file)
+    caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
+    if os.path.exists(caminho_lock_file):
+        os.remove(caminho_lock_file)
