@@ -7,16 +7,17 @@ import psutil
 
 def is_running(script_path):
     script_name = os.path.basename(script_path)
-    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-        cmdline = proc.info['cmdline']
-        if cmdline and script_name in cmdline:
-            return True
+    for proc in psutil.process_iter():
+        if proc.name().lower() == 'python.exe':
+            cmdline = proc.as_dict()['cmdline'][1]
+            if cmdline and script_name in cmdline:
+                return True
     return False
 
 def run_script(script_path):
     if not is_running(script_path):
         try:
-            subprocess.Popen(['python', script_path])
+            subprocess.Popen(f'python {script_path}', shell=True)
             print(f"Executando {script_path}")
         except Exception as e:
             print(f"Erro ao executar {script_path}: {e}")
@@ -32,7 +33,7 @@ def setup_schedules():
         {'path': scripts_directory / 'thread_atualiza_banco.py', 'interval': 10},  # 10 segundos
         {'path': scripts_directory / 'thread_IBPT_NCM_CEST.py', 'interval': 1800},  # 30 minutos
         {'path': scripts_directory / 'thread_servidor_socket.py', 'interval': 0},  # Executa uma vez
-        {'path': scripts_directory / 'thread_verifica_remoto.py', 'interval': 5},  # 5 segundos
+        {'path': scripts_directory / 'thread_verifica_remoto.py', 'interval': 30},  # 5 segundos
         {'path': scripts_directory / 'thread_xml_contador.py', 'interval': 600},  # 10 minutos
         {'path': scripts_directory / 'thread_zap_automato.py', 'interval': 60},  # 1 minuto
         {'path': scripts_directory / 'thread_bloqueio.py', 'interval': 5},  # 5 segundos

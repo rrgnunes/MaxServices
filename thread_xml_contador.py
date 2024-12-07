@@ -77,8 +77,12 @@ def xmlcontador():
                                 # curPlataform.execute(f'select * from notafiscal_contador where cpf_cnpj = "{condicao}"')
                                 # rowsPlat = curPlataform.fetchall()
                                 # rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
-                                
-                                contador = rows_dict_plat[0]['id']  # get id contador
+                                try:
+                                    contador = rows_dict_plat[0]['id']  # get id contador    
+                                except Exception as e:
+                                    if 'list index out of range' in str(e).lower():
+                                        continue
+                                    raise
 
                                 # Vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É MDFE
                                 print_log("Inicia select MDFE", nome_servico)
@@ -195,18 +199,23 @@ def xmlcontador():
                                 rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]                            
 
                                 # Salva contador
-                                print_log("Inicia select contador", nome_servico)
-                                if not rowsPlat:
-                                    nome = row['NOME']
-                                    cpf_cnpj = condicao
-                                    cnpj_empresa = row['CNPJ_EMPRESA']
-                                    curPlataform.execute(f'insert into notafiscal_contador(nome, cpf_cnpj, cnpj_empresa) values("{nome}", "{cpf_cnpj}", "{cnpj_empresa}")')
+                                # print_log("Inicia select contador", nome_servico)
+                                # if not rowsPlat:
+                                #     nome = row['NOME']
+                                #     cpf_cnpj = condicao
+                                #     cnpj_empresa = row['CNPJ_EMPRESA']
+                                #     curPlataform.execute(f'insert into notafiscal_contador(nome, cpf_cnpj, cnpj_empresa) values("{nome}", "{cpf_cnpj}", "{cnpj_empresa}")')
 
                                 curPlataform.execute(f'select * from notafiscal_contador where cpf_cnpj = "{condicao}"')
                                 rowsPlat = curPlataform.fetchall()
                                 rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
                                 
-                                contador = rows_dict_plat[0]['id']  # get id contador
+                                try:
+                                    contador = rows_dict_plat[0]['id']  # get id contador    
+                                except Exception as e:
+                                    if 'list index out of range' in str(e).lower():
+                                        continue
+                                    raise
 
                                 # Salva notas NFE
                                 cur.execute(f'''SELECT c.NOME, c.CPF, c.CNPJ, d.CNPJ as CNPJ_EMPRESA, DATA_EMIS_NFE, XML, XML_CANCELAM, n.NUMERO, n.CHAVE, n.SERIE  

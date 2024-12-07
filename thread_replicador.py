@@ -1,13 +1,12 @@
-from mysql.connector import Error
 import fdb
 import mysql.vendor
 import mysql.vendor.plugin
 import parametros
 import mysql.connector
 import re
-import time
 import os
 import sys
+from mysql.connector import Error
 from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log, pode_executar, criar_bloqueio, remover_bloqueio
 
 #===============FIREBIRD===================
@@ -110,11 +109,18 @@ def buscar_alteracoes_firebird():
 
             alteracoes = cursor.fetchall()
 
+            if not alteracoes:
+                return []
+
+            colunas = [coluna[0] for coluna in cursor.description]
+            alteracoes_dict = [dict(zip(colunas, linha)) for linha in alteracoes]
+
             cursor.close()
             
-            return alteracoes
+            return alteracoes_dict
+    
         
-        except fdb.fbcore.DatabaseError as e:
+        except Exception as e:
             print_log(f"verificar alteração:{e}", nome_servico)
             connection_firebird.rollback()
 
@@ -490,10 +496,12 @@ def firebird_mysql():
 
 
     for alteracao in alteracoes_firebird:
+        if not alteracao:
+            continue
         
-        tabela = alteracao[0].upper()
-        acao = alteracao[1].upper()
-        valor = alteracao[2]
+        tabela = alteracao['TABELA'].upper()
+        acao = alteracao['ACAO'].upper()
+        valor = alteracao['CHAVE']
         
         elemento_firebird = buscar_elemento_firebird(tabela, valor)
 
@@ -576,9 +584,9 @@ if __name__ == '__main__':
         criar_bloqueio(nome_script)
         try:
             carregar_configuracoes()
+            inicializa_conexao_mysql_replicador()
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION
-            inicializa_conexao_mysql_replicador()
             connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
             
             processar_alteracoes()

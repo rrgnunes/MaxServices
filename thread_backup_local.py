@@ -16,7 +16,6 @@ def backup():
     print_log("Carrega configurações da thread",nome_servico)
     try:
         
-        inicializa_conexao_mysql()
         carregar_configuracoes()
 
         print_log("Efetua conexão remota" , nome_servico)
@@ -77,6 +76,7 @@ def backup():
                         print_log("Inicia backup", nome_servico)
                 
                 cursor_fb.close()
+                conn_fb.close()
                 subprocess.call(comando, shell=True)
                 print_log(f"Executou comando {comando}", nome_servico)
 
@@ -93,6 +93,7 @@ def backup():
                 cursor.execute(f"UPDATE cliente_cliente set data_hora_ultimo_backup = '{datahoraagora}' where cnpj = '{cnpj}'")
                 print_log("Executou update remoto", nome_servico)
                 conn.commit()
+                conn.close()
 
                 # Envia arquivo para Dropbox
                 pasta_sistema = 'maxsuport' if sistema_em_uso == '1' else 'gfil'
@@ -125,26 +126,26 @@ def backup():
                     print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto}", nome_servico)
 
                     num_arquivos_a_manter = int(timer_minutos_backup)
-                    try:
-                        result = obj_dropbox.files_list_folder(diretorio_remoto)
-                        arquivos_na_pasta = result.entries
-                        print_log(f'Quantidade de arquivos no DropBox: {len(arquivos_na_pasta)}', nome_servico)
-                    except dropbox.exceptions.ApiError as e:
-                        print_log(f"Erro ao listar arquivos na pasta remota: {e}", nome_servico)
-                        arquivos_na_pasta = []
+                    # try:
+                    #     result = obj_dropbox.files_list_folder(diretorio_remoto)
+                    #     arquivos_na_pasta = result.entries
+                    #     print_log(f'Quantidade de arquivos no DropBox: {len(arquivos_na_pasta)}', nome_servico)
+                    # except dropbox.exceptions.ApiError as e:
+                    #     print_log(f"Erro ao listar arquivos na pasta remota: {e}", nome_servico)
+                    #     arquivos_na_pasta = []
 
-                    if len(arquivos_na_pasta) > num_arquivos_a_manter:
-                        arquivos_na_pasta.sort(key=lambda entry: entry.server_modified)
-                        qtd_arquivos_excesso = len(arquivos_na_pasta) - num_arquivos_a_manter
-                        arquivos_em_excesso = arquivos_na_pasta[:qtd_arquivos_excesso]
-                        try:
-                            for arquivo in arquivos_em_excesso:
-                                obj_dropbox.files_delete_v2(arquivo.path_display)
-                                print_log(f"Arquivo excluído remoto: {arquivo.path_display}.", nome_servico)
-                            # obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
-                            # print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.","backuplocal")
-                        except dropbox.exceptions.ApiError as e:
-                            print_log(f"Erro ao excluir o arquivo mais antigo: {e}", nome_servico)
+                    # if len(arquivos_na_pasta) > num_arquivos_a_manter:
+                    #     arquivos_na_pasta.sort(key=lambda entry: entry.server_modified)
+                    #     qtd_arquivos_excesso = len(arquivos_na_pasta) - num_arquivos_a_manter
+                    #     arquivos_em_excesso = arquivos_na_pasta[:qtd_arquivos_excesso]
+                    #     try:
+                    #         for arquivo in arquivos_em_excesso:
+                    #             obj_dropbox.files_delete_v2(arquivo.path_display)
+                    #             print_log(f"Arquivo excluído remoto: {arquivo.path_display}.", nome_servico)
+                    #         # obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
+                    #         # print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.","backuplocal")
+                    #     except dropbox.exceptions.ApiError as e:
+                    #         print_log(f"Erro ao excluir o arquivo mais antigo: {e}", nome_servico)
 
                     extensao = '.xz'
                     arquivos = glob.glob(os.path.join(caminho_arquivo_backup, '*' + extensao))

@@ -37,10 +37,9 @@ def salva_json():
 
         datahoraagora = datetime.datetime.now(
             datetime.timezone(datetime.timedelta(hours=-4)))
-        cursor = conn.cursor()
         cursor.execute(
             f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
-        print_log(f"Executou update remoto" , 'verificaremoto')
+        print_log(f"Executou update remoto" , nome_servico)
         conn.commit()
         conn.close()
 

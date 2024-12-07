@@ -205,8 +205,8 @@ def select(sql_query, values=None):
     finally:
         if parametros.MYSQL_CONNECTION.is_connected():
             cursor.close()
-            parametros.MYSQL_CONNECTION.close()        
-
+            parametros.MYSQL_CONNECTION.close()
+        if connection.is_connected():
             connection.close()        
 
 def exibe_alerta(aviso):
@@ -235,7 +235,8 @@ def inicializa_conexao_mysql_replicador():
                 host=parametros.HOSTMYSQL_REP,
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
-                database=parametros.BASEMYSQL_REP
+                database=parametros.BASEMYSQL_REP,
+                auth_plugin='mysql_native_password'
             )
         print_log(f"Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:
@@ -419,7 +420,8 @@ def extrair_metadados(conexao):
     """)
     
     metadados = {}
-    for row in cursor.fetchall():
+    results = cursor.fetchall()
+    for row in results:
         tabela = row[0].strip()
         coluna = row[1].strip() 
         tipo = row[5]
@@ -488,8 +490,8 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
                 null = propriedades.get('null', '')
 
                 if coluna not in metadados_destino[tabela_origem]:
-                    if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP'):
-                        if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP'):
+                    if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP', 'BLOB SUB_TYPE 1', 'BLOB SUB_TYPE 0'):
+                        if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP', 'BLOB SUB_TYPE 1', 'BLOB SUB_TYPE 0'):
                             coluna_def = f"{coluna} {tipo} {null}"
                         else:
                             coluna_def = f"{coluna} {tipo}({propriedades['precisao']},{str(propriedades['escala']).replace('-','')}) {null}"
@@ -516,13 +518,14 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
     
     return scripts_sql
 
-def executar_scripts_sql(conexao, scripts_sql):
+def executar_scripts_sql(conexao, scripts_sql, nome_servico):
     erros = []
     for script in scripts_sql:
         try:
             cursor = conexao.cursor()
             cursor.execute(script)
             conexao.commit()
+            print_log(f'Executado: {script}', nome_servico)
         except Exception as e:
             erros.append({'script': script, 'erro': str(e)})
     return erros   
@@ -769,18 +772,18 @@ def pode_executar(nome_script:str) -> bool:
 
             # Verificar se já se passaram mais de 5 minutos desde a última execução
             if datetime.datetime.now() - last_run_time < datetime.timedelta(minutes=5):
-                print_log("O script está em execução ou foi executado há menos de 5 minutos.", nome_script + '.txt')
+                print_log("O script está em execução ou foi executado há menos de 5 minutos.", nome_script)
                 return False
             else:
-                print_log("Mais de 5 minutos se passaram, verificando se script ja esta em execução", nome_script + '.txt')
+                print_log("Mais de 5 minutos se passaram, permitido executar.", nome_script)
                 executar = True
-                # Verifica se o script ja esta em execução
-                for proc in ps.process_iter():
-                    if proc.as_dict()['name'] == 'python.exe':
-                        if nome_script in proc.as_dict()['cmdline'][1]:
-                            executar = False
-                            print_log('Script ja esta em execução, não pode ser executado novamente', nome_script + '.txt')
-                            break
+                # # Verifica se o script ja esta em execução
+                # for proc in ps.process_iter():
+                #     if proc.as_dict()['name'] == 'python.exe':
+                #         if nome_script in proc.as_dict()['cmdline'][1]:
+                #             executar = False
+                #             print_log('Script ja esta em execução, não pode ser executado novamente', nome_script + '.txt')
+                #             break
                 return executar
 
         except ValueError:

@@ -30,7 +30,7 @@ def atualiza_banco():
                 atualiza_banco = 0
 
                 if 'manutencao' in config and 'atualizabanco' in config['manutencao']:
-                    atualiza_banco = config['manutencao']['atualizabanco']
+                    atualiza_banco = config['manutencao']['atualizabanco'] = '1'
 
                 if str(atualiza_banco) == '1':
                     server_origem = "maxsuportsistemas.com"
@@ -40,7 +40,7 @@ def atualiza_banco():
                     server_destino = "127.0.0.1"
                     port_destino = porta_firebird_maxsuport
                     path_destino = caminho_base_dados_maxsuport
-                    user_destino = parametros.USERFB
+                    user_destino = 'maxsuport'
                     password_destino = parametros.PASSFB
 
                     dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
@@ -56,7 +56,7 @@ def atualiza_banco():
                     
                     scripts_sql = gerar_scripts_diferencas(metadados_origem, metadados_destino)
 
-                    erros = executar_scripts_sql(conexao_destino, scripts_sql)
+                    erros = executar_scripts_sql(conexao_destino, scripts_sql, nome_servico)
 
                     if erros:
                         print_log("Erros encontrados durante a execução dos scripts:", nome_servico)
