@@ -30,7 +30,7 @@ def atualiza_banco():
                 atualiza_banco = 0
 
                 if 'manutencao' in config and 'atualizabanco' in config['manutencao']:
-                    atualiza_banco = config['manutencao']['atualizabanco'] = '1'
+                    atualiza_banco = config['manutencao']['atualizabanco']
 
                 if str(atualiza_banco) == '1':
                     server_origem = "maxsuportsistemas.com"
