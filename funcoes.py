@@ -593,18 +593,24 @@ def retorna_pessoas_mensagemdiaria(conexao, envia_mensagem_diaria, dia_mensagem,
     pessoas_dicionario = []
     if envia_mensagem_diaria == 1:
         data_hoje = datetime.datetime.now()
-        dia_semana_hoje = datetime.datetime.now().isoweekday() - 1
-        hora = data_hoje.strftime('%H:%M:%S')
-        hora = datetime.datetime.strptime(hora, '%H:%M:%S').time()
+        dia_semana_hoje = datetime.datetime.now().isoweekday()
+        dia_semana_hoje = 0 if dia_semana_hoje == 7 else dia_semana_hoje
+        hora = data_hoje.time().replace(second=0,microsecond=0)
         if ultimo_envio < data_hoje:
             if dia_mensagem == dia_semana_hoje:
-                if hora_mensagem < hora:
-                    sql = "select codigo, fantasia, celular1 from pessoa p where p.celular1 <> '' and p.ativo = 'S'"
-                    cursor = conexao.cursor()
-                    cursor.execute(sql)
-                    colunas = [coluna[0] for coluna in cursor.description]
-                    pessoas = cursor.fetchall()
-                    pessoas_dicionario = [dict(zip(colunas, pessoa)) for pessoa in pessoas]
+                if hora_mensagem == hora:
+                    try:
+                        sql = "select codigo, fantasia, celular1 from pessoa p where p.celular1 <> '' and p.ativo = 'S'"
+                        cursor = conexao.cursor()
+                        cursor.execute(sql)
+                        colunas = [coluna[0] for coluna in cursor.description]
+                        pessoas = cursor.fetchall()
+                        pessoas_dicionario = [dict(zip(colunas, pessoa)) for pessoa in pessoas]
+                        cursor.execute('update config set ultimo_envio_diario = ?', (datetime.datetime.strftime(data_hoje, '%d.%m.%Y %H:%M:%S'),))
+                        conexao.commit()
+                    except Exception as e:
+                        conexao.rollback()
+                        print_log(f'Nao foi possivel capturar registros para mensagem diaria: {e}')
     return pessoas_dicionario
 
 def atualiza_ano_cliente(conexao, codigo, ano):

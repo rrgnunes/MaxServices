@@ -80,6 +80,17 @@ def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0):
 
         if codigo_global > 0:
             sql_select = f'SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = {codigo_global}'
+            cursor.execute(sql_select)
+            dados = cursor.fetchone()
+
+            if not dados:
+                chave_primaria = buscar_nome_chave_primaria(tabela)
+                if not chave_primaria:
+                    print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
+                    return None
+                sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
+                cursor.execute(sql_select)
+                dados = cursor.fetchone()
         else:
             chave_primaria = buscar_nome_chave_primaria(tabela)
 
@@ -87,11 +98,11 @@ def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0):
                 print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
                 return None
             
-            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = {codigo}"
+            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
 
-        cursor.execute(sql_select)
+            cursor.execute(sql_select)
 
-        dados = cursor.fetchone()
+            dados = cursor.fetchone()
 
         if dados:
             colunas = [desc[0] for desc in cursor.description]

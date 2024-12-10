@@ -8,10 +8,16 @@ import psutil
 def is_running(script_path):
     script_name = os.path.basename(script_path)
     for proc in psutil.process_iter():
-        if proc.name().lower() == 'python.exe':
-            cmdline = proc.as_dict()['cmdline'][1]
-            if cmdline and script_name in cmdline:
-                return True
+        try:
+            if proc.name().lower() == 'python.exe':
+                cmdlines = proc.as_dict()['cmdline']
+                for cmdline in cmdlines:
+                    if script_name in cmdline:
+                        return True
+        except Exception as e:
+            if 'process no longer exists' in str(e).lower():
+                continue
+            print('Erro ao verificar se servico esta em execução...')
     return False
 
 def run_script(script_path):
@@ -37,7 +43,7 @@ def setup_schedules():
         {'path': scripts_directory / 'thread_xml_contador.py', 'interval': 600},  # 10 minutos
         {'path': scripts_directory / 'thread_zap_automato.py', 'interval': 60},  # 1 minuto
         {'path': scripts_directory / 'thread_bloqueio.py', 'interval': 5},  # 5 segundos
-        {'path': scripts_directory / 'thread_replicador.py', 'interval': 10} # 10 segundos
+        # {'path': scripts_directory / 'thread_replicador.py', 'interval': 10} # 10 segundos
     ]
 
     for script in scripts:
