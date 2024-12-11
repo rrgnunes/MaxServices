@@ -782,16 +782,8 @@ def pode_executar(nome_script:str) -> bool:
                 return False
             else:
                 print_log("Mais de 5 minutos se passaram, permitido executar.", nome_script)
-                executar = True
-                # # Verifica se o script ja esta em execução
-                # for proc in ps.process_iter():
-                #     if proc.as_dict()['name'] == 'python.exe':
-                #         if nome_script in proc.as_dict()['cmdline'][1]:
-                #             executar = False
-                #             print_log('Script ja esta em execução, não pode ser executado novamente', nome_script + '.txt')
-                #             break
-                return executar
-
+                return True
+            
         except ValueError:
             print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...", nome_script + '.txt')
             return True

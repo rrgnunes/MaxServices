@@ -48,30 +48,38 @@ def atualiza_banco():
 
                     fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
 
-                    conexao_origem = fdb.connect(dsn=dsn_origem, user='sysdba', password='masterkey')
-                    conexao_destino = fdb.connect(dsn=dsn_destino, user=user_destino, password=password_destino)
+                    try:
+                        conexao_origem = fdb.connect(dsn=dsn_origem, user='sysdba', password='masterkey')
+                        conexao_destino = fdb.connect(dsn=dsn_destino, user=user_destino, password=password_destino)
 
-                    metadados_origem = extrair_metadados(conexao_origem)
-                    metadados_destino = extrair_metadados(conexao_destino)
-                    
-                    scripts_sql = gerar_scripts_diferencas(metadados_origem, metadados_destino)
+                        metadados_origem = extrair_metadados(conexao_origem)
+                        metadados_destino = extrair_metadados(conexao_destino)
+                        
+                        scripts_sql = gerar_scripts_diferencas(metadados_origem, metadados_destino)
 
-                    erros = executar_scripts_sql(conexao_destino, scripts_sql, nome_servico)
+                        erros = executar_scripts_sql(conexao_destino, scripts_sql, nome_servico)
 
-                    if erros:
-                        print_log("Erros encontrados durante a execução dos scripts:", nome_servico)
-                        for erro in erros:
-                            print_log(f"    Script: {erro['script']}\nErro: {erro['erro']}\n", nome_servico)
-                    else:
-                        print_log('Todos os scripts foram executados com sucesso.', nome_servico)
+                        if erros:
+                            print_log("Erros encontrados durante a execução dos scripts:", nome_servico)
+                            for erro in erros:
+                                print_log(f"    Script: {erro['script']}\nErro: {erro['erro']}\n", nome_servico)
+                        else:
+                            print_log('Todos os scripts foram executados com sucesso.', nome_servico)
 
-                    config['manutencao']['atualizabanco'] = '0'
+                        config['manutencao']['atualizabanco'] = '0'
 
-                    # Salva as mudanças de volta no arquivo INI
-                    with open(SCRIPT_PATH + '/banco.ini', 'w') as configfile:
-                        config.write(configfile)
+                        # Salva as mudanças de volta no arquivo INI
+                        with open(SCRIPT_PATH + '/banco.ini', 'w') as configfile:
+                            config.write(configfile)
 
-                    print_log('Tabela atualizada', nome_servico)
+                        print_log('Tabela atualizada', nome_servico)
+                    finally:
+                        if not conexao_origem.closed:
+                            conexao_origem.close()
+                        
+                        if not conexao_destino.closed:
+                            conexao_destino.close()
+                            
     except Exception as e:
         print_log(f"Erro na atualização do banco: {e}", nome_servico)
 
