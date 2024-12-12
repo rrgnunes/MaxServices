@@ -4,6 +4,9 @@ import subprocess
 import schedule
 import pathlib
 import psutil
+from funcoes import *
+
+name_script = os.path.basename(sys.argv[0]).replace('.py', '')
 
 def is_running(script_path):
     script_name = os.path.basename(script_path)
@@ -17,18 +20,18 @@ def is_running(script_path):
         except Exception as e:
             if 'process no longer exists' in str(e).lower():
                 continue
-            print('Erro ao verificar se servico esta em execução...')
+            print_log('Erro ao verificar se servico esta em execução...', name_script)
     return False
 
 def run_script(script_path):
     if not is_running(script_path):
         try:
             subprocess.Popen(f'python {script_path}', shell=True)
-            print(f"Executando {script_path}")
+            print_log(f"Executando {script_path}", name_script)
         except Exception as e:
-            print(f"Erro ao executar {script_path}: {e}")
+            print_log(f"Erro ao executar {script_path}: {e}", name_script)
     else:
-        print(f"{script_path} já está em execução.")
+        print_log(f"{script_path} já está em execução.", name_script)
 
 def setup_schedules():
     scripts_directory = pathlib.Path(__file__).parent
@@ -49,12 +52,12 @@ def setup_schedules():
     for script in scripts:
         if script['interval'] > 0:
             schedule.every(script['interval']).seconds.do(run_script, script['path'])
+            print_log(f'Agendando o script: {script["path"]}', name_script)
         else:
             run_script(script['path'])  # Executa uma vez imediatamente
 
 if __name__ == "__main__":
     setup_schedules()
-    
     while True:
         schedule.run_pending()
         time.sleep(1)

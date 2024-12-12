@@ -317,7 +317,7 @@ def buscar_alteracoes_replicador_mysql(empresas: list) -> list:
         print_log(f"Verificar alteracao: {e}", nome_servico)
 
 
-def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str, codigo_global: int = 0) -> dict | None:
+def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global: int = 0) -> dict | None:
     try:
         
         cursor = connection_mysql.cursor(dictionary=True)
@@ -652,6 +652,10 @@ if __name__ == '__main__':
             if connection_mysql.is_connected():
                 connection_mysql.close()
                 parametros.MYSQL_CONNECTION_REPLICADOR.close()
+                
+            if parametros.MYSQL_CONNECTION.is_connected():
+                parametros.MYSQL_CONNECTION.close()
+                
         except Exception as e:
             print_log(f'Ocorreu um erro ao executar: {e}', nome_script)
         finally:

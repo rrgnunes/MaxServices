@@ -6,7 +6,7 @@ import mysql.connector
 
 # Credenciais MySQL
 # Plataforma
-HOSTMYSQL = "177.153.69.3"
+HOSTMYSQL = "maxsuportsistemas.com"
 USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
 BASEMYSQL = "maxservices"
