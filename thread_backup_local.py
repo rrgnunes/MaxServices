@@ -17,7 +17,7 @@ def backup():
     try:
         
         carregar_configuracoes()
-
+        
         print_log("Efetua conexão remota" , nome_servico)
         conn = parametros.MYSQL_CONNECTION
 

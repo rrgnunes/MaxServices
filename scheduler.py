@@ -12,7 +12,8 @@ def is_running(script_path):
     script_name = os.path.basename(script_path)
     for proc in psutil.process_iter():
         try:
-            if proc.name().lower() == 'python.exe':
+            process = proc.name().lower()
+            if process == 'python.exe':
                 cmdlines = proc.as_dict()['cmdline']
                 for cmdline in cmdlines:
                     if script_name in cmdline:
@@ -60,4 +61,4 @@ if __name__ == "__main__":
     setup_schedules()
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(5)

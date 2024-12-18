@@ -56,7 +56,8 @@ def inicializa_conexao_mysql():
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
                 database=parametros.BASEMYSQL,
-                auth_plugin='mysql_native_password'  # Força o uso do plugin correto
+                auth_plugin='mysql_native_password',  # Força o uso do plugin correto
+                connection_timeout=15
             )
         print_log("Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:

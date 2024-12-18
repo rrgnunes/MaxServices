@@ -317,7 +317,7 @@ def buscar_alteracoes_replicador_mysql(empresas: list) -> list:
         print_log(f"Verificar alteracao: {e}", nome_servico)
 
 
-def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global: int = 0) -> dict | None:
+def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None) -> dict | None:
     try:
         
         cursor = connection_mysql.cursor(dictionary=True)
@@ -564,7 +564,12 @@ def firebird_mysql():
             codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, tabela, elemento_firebird)
             existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, cnpj, elemento_firebird['CODIGO_GLOBAL'])
         else:
-            existe_elemento_mysql = buscar_elemento_mysql(tabela, valor)
+            empresas = consulta_cnpjs_local()
+            if empresas:
+                cnpj = empresas[0][1]
+                existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, cnpj)
+            else:
+                continue
 
 #       SE JÁ EXISTE ESSE ELEMENTO NO MYSQL
         if existe_elemento_mysql:
