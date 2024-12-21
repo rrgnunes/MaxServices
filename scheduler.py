@@ -10,24 +10,26 @@ name_script = os.path.basename(sys.argv[0]).replace('.py', '')
 
 def is_running(script_path):
     script_name = os.path.basename(script_path)
-    for proc in psutil.process_iter():
+    for proc in psutil.process_iter(attrs=['pid', 'name', 'cmdline']):
         try:
-            process = proc.name().lower()
-            if process == 'python.exe':
-                cmdlines = proc.as_dict()['cmdline']
-                for cmdline in cmdlines:
-                    if script_name in cmdline:
-                        return True
+            # process = proc.name().lower()
+            # if process == 'python.exe':
+            #     cmdlines = proc.as_dict()['cmdline']
+            #     for cmdline in cmdlines:
+            #         if script_name in cmdline:
+            #             return True
+            if (proc.info['name'].lower() == 'python.exe') and any(script_name in cmd for cmd in proc.info['cmdline']):
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
         except Exception as e:
-            if 'process no longer exists' in str(e).lower():
-                continue
-            print_log('Erro ao verificar se servico esta em execução...', name_script)
+            print_log(f'Erro ao verificar se servico esta em execução: {e}', name_script)
     return False
 
 def run_script(script_path):
     if not is_running(script_path):
         try:
-            subprocess.Popen(f'python {script_path}', shell=True)
+            subprocess.Popen(['python.exe', script_path])
             print_log(f"Executando {script_path}", name_script)
         except Exception as e:
             print_log(f"Erro ao executar {script_path}: {e}", name_script)
@@ -61,4 +63,4 @@ if __name__ == "__main__":
     setup_schedules()
     while True:
         schedule.run_pending()
-        time.sleep(5)
+        time.sleep(1)
