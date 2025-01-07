@@ -56,7 +56,7 @@ def inicializa_conexao_mysql():
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
                 database=parametros.BASEMYSQL,
-                auth_plugin='mysql_native_password'  # Força o uso do plugin correto
+                auth_plugin='mysql_native_password'
             )
         print_log("Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:
@@ -79,7 +79,7 @@ def inicializa_conexao_firebird(path_dll):
 
 def carregar_configuracoes():
     try:
-        with open('C:/Users/Public/config.json', 'r') as config_file:
+        with open(f'{parametros.SCRIPT_PATH}/config.json', 'r') as config_file:
             parametros.CNPJ_CONFIG = json.load(config_file)
             print_log("Configurações carregadas com sucesso.")
             atualizar_conexoes_firebird()
@@ -94,13 +94,6 @@ def atualizar_conexoes_firebird():
         parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
         parametros.PORTFB = dados['porta_firebird_maxsuport'] 
         inicializa_conexao_firebird(path_dll)
-
-def lerconfig():
-    path_config_thread = os.path.join(parametros.SCRIPT_PATH, "config.json")
-    if os.path.exists(path_config_thread):
-        with open(path_config_thread, 'r') as config_file:
-            config_thread = json.load(config_file)
-    return config_thread
 
 def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):
     try:

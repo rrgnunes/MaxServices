@@ -2,21 +2,21 @@ import parametros
 import os
 import sys
 from funcoes import print_log, os,json, datetime,inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio
-
+import parametros
 
 def salva_json():
     nome_servico = 'thread_verifica_remoto'
     try:
-        
+        parametros.BASEMYSQL = 'maxservices'
         inicializa_conexao_mysql()
         
         print_log("Efetua conexão remota" , nome_servico)
         conn = parametros.MYSQL_CONNECTION
 
         # pego dados do arquivo
-        print_log(f"Carrega arquivo {parametros.SCRIPT_PATH}\\cnpj.txt" , nome_servico)
-        if os.path.exists(f"{parametros.SCRIPT_PATH}\\cnpj.txt"):
-            with open(f"{parametros.SCRIPT_PATH}\\cnpj.txt", 'r') as config_file:
+        print_log(f"Carrega arquivo {parametros.SCRIPT_PATH}/cnpj.txt" , nome_servico)
+        if os.path.exists(f"{parametros.SCRIPT_PATH}/cnpj.txt"):
+            with open(f"{parametros.SCRIPT_PATH}/cnpj.txt", 'r') as config_file:
                 cnpj_list = config_file.read().split('\n')
         cnpj = ''
         for s in cnpj_list:
@@ -35,11 +35,9 @@ def salva_json():
         rows = cursor.fetchall()
         print_log(f"Consultou remoto cnpj's {cnpj}" , nome_servico)
 
-        datahoraagora = datetime.datetime.now(
-            datetime.timezone(datetime.timedelta(hours=-4)))
+        datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-4)))
         cursor = conn.cursor()
-        cursor.execute(
-            f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
+        cursor.execute(f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
         print_log(f"Executou update remoto" , 'verificaremoto')
         conn.commit()
         conn.close()
@@ -61,14 +59,13 @@ def salva_json():
                                             "ip": str(row['ip'])
                                             }
 
-        with open('C:/Users/Public/config.json', 'w') as configfile:
+        with open(f'{parametros.SCRIPT_PATH}/config.json', 'w') as configfile:
             json.dump(config, configfile)
 
     except Exception as a:
         print_log(a, nome_servico)
 
 if __name__ == '__main__':
-
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
 
     if pode_executar(nome_script):
