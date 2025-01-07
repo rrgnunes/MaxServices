@@ -56,7 +56,8 @@ def inicializa_conexao_mysql():
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
                 database=parametros.BASEMYSQL,
-                auth_plugin='mysql_native_password'
+                auth_plugin='mysql_native_password',  # Força o uso do plugin correto
+                connection_timeout=15
             )
         print_log("Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:
@@ -198,8 +199,8 @@ def select(sql_query, values=None):
     finally:
         if parametros.MYSQL_CONNECTION.is_connected():
             cursor.close()
-            parametros.MYSQL_CONNECTION.close()        
-
+            parametros.MYSQL_CONNECTION.close()
+        if connection.is_connected():
             connection.close()        
 
 def exibe_alerta(aviso):
@@ -221,14 +222,15 @@ def VerificaVersaoOnline(arquivo_versao):
         print_log(a)    
     return versao_online
 
-def inicializa_conexao_mysql_replicador(database):
+def inicializa_conexao_mysql_replicador():
     try:
         if parametros.MYSQL_CONNECTION_REPLICADOR == None:
             parametros.MYSQL_CONNECTION_REPLICADOR = mysql.connector.connect(
-                host=parametros.HOSTMYSQL,
+                host=parametros.HOSTMYSQL_REP,
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
-                database=database
+                database=parametros.BASEMYSQL_REP,
+                auth_plugin='mysql_native_password'
             )
         print_log(f"Conexão com MySQL estabelecida com sucesso.")
     except mysql.connector.Error as err:
@@ -412,7 +414,8 @@ def extrair_metadados(conexao):
     """)
     
     metadados = {}
-    for row in cursor.fetchall():
+    results = cursor.fetchall()
+    for row in results:
         tabela = row[0].strip()
         coluna = row[1].strip() 
         tipo = row[5]
@@ -481,8 +484,8 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
                 null = propriedades.get('null', '')
 
                 if coluna not in metadados_destino[tabela_origem]:
-                    if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP'):
-                        if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP'):
+                    if tipo in ('INTEGER', 'NUMERIC', 'DECIMAL', 'FLOAT', 'SMALLINT', 'DATE', 'TIME', 'DOUBLE', 'TIMESTAMP', 'BLOB SUB_TYPE 1', 'BLOB SUB_TYPE 0'):
+                        if tipo in ('INTEGER', 'SMALLINT', 'DATE', 'TIME', 'TIMESTAMP', 'BLOB SUB_TYPE 1', 'BLOB SUB_TYPE 0'):
                             coluna_def = f"{coluna} {tipo} {null}"
                         else:
                             coluna_def = f"{coluna} {tipo}({propriedades['precisao']},{str(propriedades['escala']).replace('-','')}) {null}"
@@ -509,13 +512,14 @@ def gerar_scripts_diferencas(metadados_origem, metadados_destino):
     
     return scripts_sql
 
-def executar_scripts_sql(conexao, scripts_sql):
+def executar_scripts_sql(conexao, scripts_sql, nome_servico):
     erros = []
     for script in scripts_sql:
         try:
             cursor = conexao.cursor()
             cursor.execute(script)
             conexao.commit()
+            print_log(f'Executado: {script}', nome_servico)
         except Exception as e:
             erros.append({'script': script, 'erro': str(e)})
     return erros   
@@ -579,6 +583,40 @@ def retorna_pessoas(conexao):
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in a]
     return resultados_em_dicionario
 
+def retorna_pessoas_mensagemdiaria(conexao, envia_mensagem_diaria, dia_mensagem, hora_mensagem, ultimo_envio):
+    pessoas_dicionario = []
+    if envia_mensagem_diaria == 1:
+        data_hoje = datetime.datetime.now()
+        dia_semana_hoje = datetime.datetime.now().isoweekday()
+        dia_semana_hoje = 0 if dia_semana_hoje == 7 else dia_semana_hoje
+        hora = data_hoje.time().replace(second=0,microsecond=0)
+        if ultimo_envio < data_hoje:
+            if dia_mensagem == dia_semana_hoje:
+                if hora_mensagem == hora:
+                    try:
+                        sql = "select codigo, fantasia, celular1 from pessoa p where p.celular1 <> '' and p.ativo = 'S'"
+                        cursor = conexao.cursor()
+                        cursor.execute(sql)
+                        colunas = [coluna[0] for coluna in cursor.description]
+                        pessoas = cursor.fetchall()
+                        pessoas_dicionario = [dict(zip(colunas, pessoa)) for pessoa in pessoas]
+                        cursor.execute('update config set ultimo_envio_diario = ?', (datetime.datetime.strftime(data_hoje, '%d.%m.%Y %H:%M:%S'),))
+                        conexao.commit()
+                    except Exception as e:
+                        conexao.rollback()
+                        print_log(f'Nao foi possivel capturar registros para mensagem diaria: {e}')
+    return pessoas_dicionario
+
+def atualiza_ano_cliente(conexao, codigo, ano):
+    cursor = conexao.cursor()
+    cursor.execute("""
+                        UPDATE PESSOA
+                        SET ANO_ENVIO_MENSAGEM_ANIVERSARIO = ?
+                        WHERE CODIGO = ?;
+                    """, (ano,codigo))
+    # Confirmando a inserção
+    conexao.commit()
+
 def retorna_pessoas_preagendadas(conexao):
     data_hoje = datetime.datetime.now().strftime('%d.%m.%Y')
     cursor = conexao.cursor()
@@ -632,15 +670,15 @@ def insere_mensagem_zap(conexao, mensagem, numero):
     data_hora_atual = datetime.datetime.now()
     data_str = data_hora_atual.strftime('%Y-%m-%d')
     hora_str = data_hora_atual.strftime('%H:%M:%S')
+    fone = numero[0:2] + numero[3:]
     status = 'PENDENTE'
-    cursor = parametros.MYSQL_CONNECTION.cursor()
+    cursor = conexao.cursor()
     cursor.execute("""
-        UPDATE zap_zap
-        SET STATUS = %s,
-            DATAHORA_ENVIADO = %s
-        WHERE CODIGO = %s;
-    """, (status,data_str + ' ' + hora_str, codigo))
-    parametros.MYSQL_CONNECTION.commit()
+        INSERT INTO MENSAGEM_ZAP
+        (CODIGO, "DATA", MENSAGEM, FONE, STATUS, HORA)
+        VALUES(?, ?, ?, ?, ?, ?);
+    """, (codigo, data_str, mensagem, fone, status, hora_str))
+    conexao.commit()
 
 def numerador(conexao, tabela, campo, filtra, where, valor):
     resultado = 0
@@ -649,11 +687,9 @@ def numerador(conexao, tabela, campo, filtra, where, valor):
         cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela}")
     elif filtra == 'S':
         cursor.execute(f"SELECT MAX({campo}) AS MAIOR FROM {tabela} WHERE {where} = {valor}")
-    # Obtém os nomes das colunas
     colunas = [coluna[0] for coluna in cursor.description]
-    # Constrói uma lista de dicionários, onde cada dicionário representa uma linha
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
-    if resultados_em_dicionario != None:
+    if resultados_em_dicionario:
         resultado = resultados_em_dicionario[0]['MAIOR'] + 1
     return resultado
 
@@ -720,14 +756,14 @@ def envia_mensagem(conexao, session):
 # Obtém o nome do arquivo do script principal (quem está chamando este código)
 script_principal = os.path.basename(sys.argv[0]).replace('.py', '')
 
-# Nome do arquivo de bloqueio com o nome do script principal
-LOCK_FILE = f'/tmp/{script_principal}.lock'
+
 # Função que verifica se o script pode ser executado
 def pode_executar(nome_script:str) -> bool:
     lock_file = nome_script + '.lock'
+    caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
     # Verificar se o arquivo de bloqueio existe
-    if os.path.exists(lock_file):
-        with open(lock_file, 'r') as f:
+    if os.path.exists(caminho_lock_file):
+        with open(caminho_lock_file, 'r') as f:
             last_run_time_str = f.read().strip()
 
         try:
@@ -736,20 +772,12 @@ def pode_executar(nome_script:str) -> bool:
 
             # Verificar se já se passaram mais de 5 minutos desde a última execução
             if datetime.datetime.now() - last_run_time < datetime.timedelta(minutes=5):
-                print_log("O script está em execução ou foi executado há menos de 5 minutos.", nome_script + '.txt')
+                print_log("O script está em execução ou foi executado há menos de 5 minutos.", nome_script)
                 return False
             else:
-                print_log("Mais de 5 minutos se passaram, verificando se script ja esta em execução", nome_script + '.txt')
-                executar = True
-                # Verifica se o script ja esta em execução
-                for proc in ps.process_iter():
-                    if proc.as_dict()['name'] == 'python.exe':
-                        if nome_script in proc.as_dict()['cmdline'][1]:
-                            executar = False
-                            print_log('Script ja esta em execução, não pode ser executado novamente', nome_script + '.txt')
-                            break
-                return executar
-
+                print_log("Mais de 5 minutos se passaram, permitido executar.", nome_script)
+                return True
+            
         except ValueError:
             print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...", nome_script + '.txt')
             return True
@@ -760,11 +788,15 @@ def pode_executar(nome_script:str) -> bool:
 # Função que cria o arquivo de bloqueio
 def criar_bloqueio(nome_script):
     lock_file = nome_script + '.lock'
-    with open(lock_file, 'w') as f:
+    caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
+    if not os.path.exists(Path(caminho_lock_file).parent):
+        os.makedirs(Path(caminho_lock_file).parent)
+    with open(caminho_lock_file, 'w') as f:
         f.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 # Função que remove o arquivo de bloqueio
 def remover_bloqueio(nome_script):
     lock_file = nome_script + '.lock'
-    if os.path.exists(lock_file):
-        os.remove(lock_file)
+    caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
+    if os.path.exists(caminho_lock_file):
+        os.remove(caminho_lock_file)

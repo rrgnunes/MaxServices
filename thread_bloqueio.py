@@ -9,8 +9,7 @@ from funcoes import print_log, exibe_alerta, inicializa_conexao_mysql, carregar_
 def verifica_dados_local():
     nome_servico = 'thread_bloqueio'
     try:
-        inicializa_conexao_mysql()
-        carregar_configuracoes()        
+        carregar_configuracoes()
         print_log("Pegando dados locais", nome_servico)
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo']

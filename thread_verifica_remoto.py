@@ -1,8 +1,8 @@
 import parametros
 import os
 import sys
-from funcoes import print_log, os,json, datetime,inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio
-import parametros
+from funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio
+
 
 def salva_json():
     nome_servico = 'thread_verifica_remoto'

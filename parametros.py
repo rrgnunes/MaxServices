@@ -12,10 +12,15 @@ HOSTMYSQL = "10.105.96.106"
 # HOSTMYSQL = "177.153.69.3"
 USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
-BASEMYSQL = "dados"
+BASEMYSQL = "maxservices"
+
+# Replicador
+HOSTMYSQL_REP = "maxsuportsistemas.com"
+BASEMYSQL_REP = "dados"
+
 
 # Credenciais Firebird
-USERFB = 'maxsuport'
+USERFB = 'maxservices'
 PASSFB = 'oC8qUsDp'
 HOSTFB = 'localhost'
 DATABASEFB = ''  # Atualizar conforme necessário

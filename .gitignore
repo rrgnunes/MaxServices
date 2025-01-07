@@ -14,9 +14,9 @@ _deps
 .__pycache__/
 .logs/
 venv/
-log/
+/log/
 .log/*
-log.log
+/log.log
 __pycache__/
 /venv/
 cnpj.txt

@@ -1,28 +1,31 @@
-from mysql.connector import Error
 import fdb
 import mysql.vendor
 import mysql.vendor.plugin
 import parametros
 import mysql.connector
 import re
-import time
 import os
 import sys
+import datetime
+from mysql.connector import Error
 from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log, pode_executar, criar_bloqueio, remover_bloqueio
 
 #===============FIREBIRD===================
-def verifica_empresa_firebird(conn, dados: dict) -> tuple[int, str]:
+def verifica_empresa_firebird(conn: fdb.Connection, tabela:str, dados: dict) -> tuple[int, str]:
     cursor = conn.cursor()
     codigo_empresa = 0
-    for coluna, valor in dados.items():
-        if 'EMPRESA' in coluna.upper():
-            if isinstance(valor, int):
-                codigo_empresa = valor
-                break
-        elif 'EMITENTE' in coluna.upper():
-            if isinstance(valor, int):
-                codigo_empresa = valor
-                break
+    if tabela == 'EMPRESA':
+        codigo_empresa = dados['CODIGO']
+    else:
+        for coluna, valor in dados.items():
+            if 'EMPRESA' in coluna.upper():
+                if isinstance(valor, int):
+                    codigo_empresa = valor
+                    break
+            elif 'EMITENTE' in coluna.upper():
+                if isinstance(valor, int):
+                    codigo_empresa = valor
+                    break
     cnpj = ''
     if codigo_empresa > 0:
         try:
@@ -33,7 +36,7 @@ def verifica_empresa_firebird(conn, dados: dict) -> tuple[int, str]:
 
     return codigo_empresa, cnpj
 
-def buscar_nome_chave_primaria(tabela):
+def buscar_nome_chave_primaria(tabela: str):
     try:
         cursor = connection_firebird.cursor()
 
@@ -71,26 +74,45 @@ def buscar_nome_chave_primaria(tabela):
         return None
 
 
-def buscar_elemento_firebird(tabela:str, codigo:int, envio:bool=True):
+def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0):
     try:
         cursor = connection_firebird.cursor()
 
-        chave_primaria = buscar_nome_chave_primaria(tabela)
-        if not chave_primaria:
-            print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
-            return None
-        
-        sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = ?"
+        if codigo_global:
+            sql_select = f'SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = {codigo_global}'
+            cursor.execute(sql_select)
+            dados = cursor.fetchone()
 
-        cursor.execute(sql_select, (codigo,))
+            if not dados:
+                chave_primaria = buscar_nome_chave_primaria(tabela)
+                if not chave_primaria:
+                    print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
+                    return None
+                
+                if not codigo:
+                    return None
 
-        dados = cursor.fetchone()
+                sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
+                cursor.execute(sql_select)
+                dados = cursor.fetchone()
+        else:
+            chave_primaria = buscar_nome_chave_primaria(tabela)
+
+            if not chave_primaria:
+                print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
+                return None
+            
+            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
+
+            cursor.execute(sql_select)
+
+            dados = cursor.fetchone()
 
         if dados:
             colunas = [desc[0] for desc in cursor.description]
             dados = dict(zip(colunas, dados))
         else:
-            print_log(f'Não há elemento Firebird com esta chave - chave: {codigo} (pode ter sido excluido ou precisa ser adicionado!)')
+            print_log(f'Não há elemento Firebird com esta chave - chave: {codigo} (pode ter sido excluido ou precisa ser adicionado!)', nome_servico)
 
         return dados
 
@@ -102,91 +124,112 @@ def buscar_elemento_firebird(tabela:str, codigo:int, envio:bool=True):
             cursor.close()
 
 
-def buscar_alteracoes_firebird():
+def buscar_alteracoes_firebird() -> list[dict | None]:
         try:
+
             cursor = connection_firebird.cursor()
-
             cursor.execute("SELECT * FROM REPLICADOR")
-
             alteracoes = cursor.fetchall()
 
-            cursor.close()
-            
-            return alteracoes
-        
-        except fdb.fbcore.DatabaseError as e:
+            if not alteracoes:
+                return []
+
+            colunas = [coluna[0] for coluna in cursor.description]
+            alteracoes_dict = [dict(zip(colunas, linha)) for linha in alteracoes]
+    
+            return alteracoes_dict
+        except Exception as e:
             print_log(f"verificar alteração:{e}", nome_servico)
             connection_firebird.rollback()
+        finally:
+            if cursor:
+                cursor.close()
 
 
 
-def update_firebird(tabela, codigo, dados):
-        #TODO: Corrigir update local
+def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int = 0):
         try:
             cursor = connection_firebird.cursor()
-
             set_clause = ', '.join([f"{coluna} = ?" for coluna in dados.keys()])
-            sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO = ?"
+            chave_primaria = buscar_nome_chave_primaria(tabela)
 
-            valores = isblob(dados)
-            valores.append(codigo)
-            
-            print_log(f'Update na tabela {tabela} -> chave: {codigo}')
+            if codigo:
+                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {chave_primaria} = ?"
+                valores = tratar_valores(dados)
+                valores.append(codigo)
+
+            elif codigo_global:
+                codigo = verifica_valor_chave_primaria(tabela, codigo_global, chave_primaria)
+                dados[chave_primaria] = codigo
+                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO_GLOBAL = ?"
+                valores = tratar_valores(dados)
+                valores.append(codigo_global)
+
+            else:
+                return
+ 
+            print_log(f'Update na tabela {tabela} -> chave: {codigo} ou codigo global: {codigo_global}', nome_servico)
             cursor.execute(sql_update, valores)
 
             connection_firebird.commit()
-    
-            cursor.close()
         except Exception as e:
             print_log(f"Erro ao atualizar dados no Firebird: {e}", nome_servico)
             connection_firebird.rollback()
+        finally:
+            if cursor:
+                cursor.close()
 
 
-def insert_firebird(tabela, dados):
-        #TODO: Corrigir insert local
+def insert_firebird(tabela: str, dados: dict):
         try:
-            cursor = connection_firebird.cursor()
 
+            cursor = connection_firebird.cursor()
             colunas = ', '.join(dados.keys())
             placeholders = ', '.join(['?'] * len(dados))
-            valores = isblob(dados)
+            valores = tratar_valores(dados)
 
             sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-            print_log(f'Insert na tabela {tabela}')
+            print_log(f'Insert na tabela {tabela}', nome_servico)
             cursor.execute(sql_insert, valores)
 
             connection_firebird.commit()
-            
-            cursor.close()
-        except fdb.fbcore.DatabaseError as e:
+        except Exception as e:
             print_log(f"Erro ao inserir dados no Firebird: {e}", nome_servico)
             connection_firebird.rollback()
+        finally:
+            if cursor:
+                cursor.close()
 
-def delete_firebird(tabela, codigo):
-    #TODO: Corrigir delete local
+def delete_firebird(tabela: str, codigo: int, codigo_global: int = 0):
     try:
+
         cursor = connection_firebird.cursor()
+        if codigo_global:
+            sql_delete = f"DELETE FROM {tabela} WHERE CODIGO_GLOBAL = {codigo_global}"
+        elif codigo:
+            chave_primaria = buscar_nome_chave_primaria(tabela)
+            sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = {codigo}"
+        else:
+            return
 
-        chave_primaria = buscar_nome_chave_primaria(tabela)
-
-        sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = ?"
-
-        print_log(f'Delete na tabela: {tabela} -> chave: {codigo}')
-        cursor.execute(sql_delete, (codigo,))
+        print_log(f'Delete na tabela: {tabela} -> chave: {codigo} ou codigo global: {codigo_global}', nome_servico)
+        cursor.execute(sql_delete)
         connection_firebird.commit()
 
-    except fdb.fbcore.DatabaseError as e:
+    except Exception as e:
         print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
         connection_firebird.rollback()
-
-
     finally:
         if cursor:
             cursor.close()
 
 
 #===============AUX=========================
+
+def verifica_valor_chave_primaria(tabela, codigo_global, chave_primaria):
+    elemento = buscar_elemento_firebird(tabela, None, codigo_global)
+    return elemento.get(chave_primaria, None)
 
 def consulta_cnpjs_local() -> list | None:
     try:
@@ -200,50 +243,59 @@ def consulta_cnpjs_local() -> list | None:
     except Exception as e:
         print_log(f'Erro ao consultar os cnpjs locais -> motivo: {e}')
 
-def isblob(dados: dict):
+def tratar_valores(dados: dict) -> list:
     valores = []
     for key, valor in dados.items():
         if isinstance(valor, fdb.fbcore.BlobReader):  # Verifica se o valor é BLOB
             blob = valor.read()
-            # str_blob = blob.decode('ISO_8859_1')
-            valores.append(blob)  # Adiciona o BLOB diretamente
+            valores.append(blob)
             valor.close()
+
+        elif isinstance(valor, datetime.timedelta): # Converte tempo de segundos para hora : minuto : segundo
+            total_de_segundos = valor.total_seconds()
+            horas = int(total_de_segundos // 3600)
+            segundos_restantes = total_de_segundos % 3600
+            minutos = int(segundos_restantes // 60)
+            segundos_restantes = segundos_restantes % 60
+            valor = datetime.time(hour=horas, minute=minutos, second=int(segundos_restantes))
+            valores.append(valor)
+
         else:
             valores.append(valor)  # Adiciona os outros valores
     return valores
 
-def delete_registro_replicador(tabela, acao, chave, firebird=True):
+def delete_registro_replicador(tabela, acao, chave, codigo_global=0, firebird=True):
 
     if firebird:
         try:
 
             sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
             cursor = connection_firebird.cursor()
-
             cursor.execute(sql_delete, (chave, tabela, acao,))
 
             connection_firebird.commit()
-
         except fdb.fbcore.DatabaseError as e:
             print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
             connection_firebird.rollback()
-            
         finally:
             if cursor:
                 cursor.close()
     else:
         try:
 
-            sql_delete = "DELETE FROM REPLICADOR WHERE CHAVE = %s AND TABELA = %s AND ACAO = %s LIMIT 1;"
-            cursor = connection_mysql.cursor()
+            if codigo_global:
+                sql_delete = "DELETE FROM REPLICADOR WHERE TABELA = %s AND ACAO = %s AND CODIGO_GLOBAL = %s LIMIT 1;"
+                valores = tabela, acao, codigo_global
+            else:
+                sql_delete = "DELETE FROM REPLICADOR WHERE CHAVE = %s AND TABELA = %s AND ACAO = %s LIMIT 1;"
+                valores = chave, tabela, acao
 
-            cursor.execute(sql_delete, (chave, tabela, acao,))
+            cursor = connection_mysql.cursor()
+            cursor.execute(sql_delete, valores)
 
             connection_mysql.commit()
-
         except Exception as e:
             print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
-
         finally:
             if cursor:
                 cursor.close()
@@ -262,52 +314,10 @@ def buscar_alteracoes_replicador_mysql(empresas: list) -> list:
             cursor_mysql.close()
         return alteracoes
     except Exception as e:
-        print_log(f"Verificar alteracao: {e}")
+        print_log(f"Verificar alteracao: {e}", nome_servico)
 
 
-def verifica_campo_chave_primaria_mysql(tabela: str):
-    try:
-        cursor = parametros.MYSQL_CONNECTION_REPLICADOR.cursor()
-        sql = f"""SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-                            WHERE TABLE_SCHEMA = 'dados'
-                            AND UPPER(TABLE_NAME) = UPPER('{tabela}') 
-                            AND  UPPER(COLUMN_NAME) = UPPER('CODIGO_GLOBAL')"""
-        cursor.execute(sql)
-        chave = cursor.fetchone()
-
-        if len(chave) <= 0:
-            sql_alt = f"""SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-                            WHERE TABLE_SCHEMA = 'dados'
-                            AND UPPER(TABLE_NAME) = UPPER('{tabela}') 
-                            AND  (UPPER(COLUMN_NAME) = UPPER('CODIGO')
-                            OR UPPER(COLUMN_NAME) = upper('CNPJ_EMPRESA'))"""
-            cursor.execute(sql_alt)
-            chave = cursor.fetchone()
-
-        if len(chave) <= 0:
-            chave = None
-
-        return chave
-
-    except Exception as e:
-        print(f'Não foi possivel buscar chave primaria da tabela: {tabela} - motivo: {e}')
-
-def buscar_valor_chave_primaria(tabela):
-    try:
-
-        tipo_campo = verifica_campo_chave_primaria_mysql(tabela)
-
-        if not tipo_campo:
-            return None
-        elif len(tipo_campo) == 1:
-            sql = f'SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = ?'
-
-    except Exception as e:
-        print_log(f'Erro ao buscar valor da chave primaria - tabela: {tabela} -> motivo: {e}')
-
-    return
-
-def buscar_elemento_mysql(tabela: str, codigo: int, codigo_global: int = 0) -> dict | None:
+def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None) -> dict | None:
     try:
         
         cursor = connection_mysql.cursor(dictionary=True)
@@ -319,9 +329,9 @@ def buscar_elemento_mysql(tabela: str, codigo: int, codigo_global: int = 0) -> d
             if not chave_primaria:
                 print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
                 return None
-        
-            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s"
-            cursor.execute(sql_select, (codigo,))
+            
+            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s AND CNPJ_EMPRESA = %s"
+            cursor.execute(sql_select, (codigo, cnpj))
 
         dados = cursor.fetchone()
 
@@ -335,10 +345,12 @@ def buscar_elemento_mysql(tabela: str, codigo: int, codigo_global: int = 0) -> d
         cursor.close()
 
         return dados
-
     except Exception as e:
         print_log(f"Erro ao buscar elemento MySQL: {e}", nome_servico)
         return None
+    finally:
+        if cursor:
+            cursor.close()
  
 #FUNÇÃO AUXILIAR DO INSERT E UPDATE_MYSQL
 def extrair_detalhes_chave_estrangeira(erro, dados):
@@ -353,37 +365,38 @@ def extrair_detalhes_chave_estrangeira(erro, dados):
 def update_mysql(tabela: str, codigo: int, dados: dict):
         try:
             cursor = connection_mysql.cursor()
+            codigo_global = dados['CODIGO_GLOBAL']
+            dados.pop('CODIGO_GLOBAL')
             set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
-            valores = isblob(dados)
-            codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, dados)
+            valores = tratar_valores(dados)
+            codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, tabela, dados)
 
             coluna_chave_primaria = buscar_nome_chave_primaria(tabela)
             if cnpj:
                 set_clause += ', CNPJ_EMPRESA = %s'
                 valores.append(cnpj)
-                if dados['CODIGO_GLOBAL']:
-                    sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO_GLOBAL = {dados['CODIGO_GLOBAL']}"
+                if codigo_global:
+                    sql_update = f"UPDATE {tabela} SET {set_clause} WHERE CODIGO_GLOBAL = {codigo_global}"
                 else:
                     sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s AND CNPJ_EMPRESA = %s"
                     valores.append(codigo)
                     valores.append(cnpj)
             else:
-                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s AND CNPJ_EMPRESA = %s"
+                sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
                 valores.append(codigo)
-                valores.append(cnpj)
             
             print_log(f'Update na tabela {tabela} -> chave: {codigo} -> cnpj:{cnpj}', nome_servico)
             cursor.execute(sql_update, valores)
 
             connection_mysql.commit()
-            
-            cursor.close()
         except Error as e:
             print_log(f"Erro ao atualizar dados no MySQL: {e}", nome_servico)
             connection_mysql.rollback()
 
             if "foreign key constraint fails" in str(e).lower():
                 tabela_referenciada, valor_chave_estrangeira = extrair_detalhes_chave_estrangeira(e, dados)
+            else:
+                return
 
             if tabela_referenciada and valor_chave_estrangeira:
             
@@ -394,14 +407,18 @@ def update_mysql(tabela: str, codigo: int, dados: dict):
 
                 #tentar update dados do começo
                 update_mysql(tabela, codigo,dados)
+        finally:
+            if cursor:
+                cursor.close()
 
 def insert_mysql(tabela: str, dados: dict):
     try:
-        cursor_mysql = connection_mysql.cursor()
-        dados.pop('CODIGO_GLOBAL')
-        valores = isblob(dados)
 
-        codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, dados)
+        cursor = connection_mysql.cursor()
+        dados.pop('CODIGO_GLOBAL')
+        valores = tratar_valores(dados)
+        codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, tabela, dados)
+
         if cnpj:
             colunas = ', '.join(dados.keys())
             colunas += ', CNPJ_EMPRESA'
@@ -414,11 +431,9 @@ def insert_mysql(tabela: str, dados: dict):
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
         print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}', nome_servico)
-        cursor_mysql.execute(sql_insert, valores)
+        cursor.execute(sql_insert, valores)
 
         connection_mysql.commit()
-        
-        cursor_mysql.close()
     except mysql.connector.Error as e:
         print_log(f"Erro ao inserir dados no MySQL: {e}", nome_servico)
         connection_mysql.rollback()
@@ -436,8 +451,11 @@ def insert_mysql(tabela: str, dados: dict):
 
                 #tentar inserir dados do começo
                 insert_mysql(tabela,dados)
+    finally:
+        if cursor:
+            cursor.close()
 
-def buscar_relacionamentos(tabela):
+def buscar_relacionamentos(tabela: str) -> list:
     try:
         cursor = connection_mysql.cursor(dictionary=True)
         
@@ -457,7 +475,6 @@ def buscar_relacionamentos(tabela):
             relacionamentos.append((tabela_origem, coluna_origem))
         
         return relacionamentos
-        
     except Error as e:
         print_log(f"Erro ao buscar relacionamentos da tabela {tabela}: {e}", nome_servico)
         return None
@@ -465,52 +482,58 @@ def buscar_relacionamentos(tabela):
         if cursor:
             cursor.close()
 
-def delete_relacionamento_mysql(tabela, codigo, chave_estrageira):
-        try:
-            cursor = connection_mysql.cursor()
+def delete_relacionamento_mysql(tabela: str, codigo: int, chave_estrageira: str):
+    try:
+        cursor = connection_mysql.cursor()
 
+        sql_delete = f"DELETE FROM {tabela} WHERE {chave_estrageira} = {codigo}"
+        cursor.execute(sql_delete)
 
-            sql_delete = f"DELETE FROM {tabela} WHERE {chave_estrageira} = {codigo}"
-            cursor.execute(sql_delete)
-
-            connection_mysql.commit()
-            
+        connection_mysql.commit()
+    except Error as e:
+        print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
+        connection_mysql.rollback()
+    finally:
+        if cursor:
             cursor.close()
-        except Error as e:
-            print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
-            connection_mysql.rollback()
 
 
 
-def delete_mysql(tabela, codigo):
-        try:
-            cursor = connection_mysql.cursor()
+def delete_mysql(tabela: str, codigo: int):
+    try:
+        cursor = connection_mysql.cursor()
+        empresas = consulta_cnpjs_local()
+        if empresas:
+            cnpj = empresas[0][1]
+        chave_primaria = buscar_nome_chave_primaria(tabela)
 
-            chave_primaria = buscar_nome_chave_primaria(tabela)
+        if not cnpj:
+            return
 
-            sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = {codigo}"
-            cursor.execute(sql_delete)
+        print_log(f"Delete na tabela {tabela} -> chave: {codigo}", nome_servico)
+        sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = {codigo} and CNPJ_EMPRESA={cnpj}"
+        cursor.execute(sql_delete)
 
-            connection_mysql.commit()
-            
+        connection_mysql.commit()
+    except Error as e:
+        print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
+        connection_mysql.rollback()
+        if "foreign key constraint fails" in str(e).lower():
+            informacao_relacionamento = buscar_relacionamentos(tabela)
+
+            tabela_relacionamento = informacao_relacionamento[0][0]
+            campo_relacionamento = informacao_relacionamento[0][1]
+
+            delete_relacionamento_mysql(tabela_relacionamento, codigo, campo_relacionamento)
+    finally:
+        if cursor:
             cursor.close()
-        except Error as e:
-            print_log(f"Erro ao deletar registro da tabela {tabela}: {e}", nome_servico)
-            connection_mysql.rollback()
-            if "foreign key constraint fails" in str(e).lower():
-                informacao_relacionamento = buscar_relacionamentos(tabela)
-
-                tabela_relacionamento = informacao_relacionamento[0][0]
-                campo_relacionamento = informacao_relacionamento[0][1]
-
-                delete_relacionamento_mysql(tabela_relacionamento, codigo, campo_relacionamento)
 
 #====================processamento da aplicação=============================
 
 def processar_alteracoes():
 
     print_log('Iniciando processamento de alteracoes...', nome_servico)
-    
     firebird_mysql()
     mysql_firebird()
 
@@ -518,23 +541,35 @@ def processar_alteracoes():
      
 def firebird_mysql():
 
-    print_log('Iniciando Envio de dados...')
+    print_log('Iniciando Envio de dados...', nome_servico)
 
     alteracoes_firebird = buscar_alteracoes_firebird()
 
 
     for alteracao in alteracoes_firebird:
+        if not alteracao:
+            continue
         
-        tabela = alteracao[0].upper()
-        acao = alteracao[1].upper()
-        valor = alteracao[2]
+        tabela = alteracao['TABELA'].upper()
+        acao = alteracao['ACAO'].upper()
+        valor = alteracao['CHAVE']
         
         elemento_firebird = buscar_elemento_firebird(tabela, valor)
-        existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, elemento_firebird['CODIGO_GLOBAL'])
 
-        if elemento_firebird is None:
+        if elemento_firebird is None and (acao != 'D'):
             delete_registro_replicador(tabela, acao, valor)
             continue
+
+        if elemento_firebird is not None:
+            codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, tabela, elemento_firebird)
+            existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, cnpj, elemento_firebird['CODIGO_GLOBAL'])
+        else:
+            empresas = consulta_cnpjs_local()
+            if empresas:
+                cnpj = empresas[0][1]
+                existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, cnpj)
+            else:
+                continue
 
 #       SE JÁ EXISTE ESSE ELEMENTO NO MYSQL
         if existe_elemento_mysql:
@@ -560,7 +595,7 @@ def firebird_mysql():
 
 def mysql_firebird():
 
-    print_log('Iniciando Recebimento de dados...')
+    print_log('Iniciando Recebimento de dados...', nome_servico)
 
     empresas = consulta_cnpjs_local()
 
@@ -571,19 +606,20 @@ def mysql_firebird():
         tabela = alteracao[0].upper()
         acao = alteracao[1].upper()
         valor = alteracao[2]
+        cnpj = alteracao[3]
         codigo_global = alteracao[4]
         
-        elemento_mysql = buscar_elemento_mysql(tabela, valor, codigo_global)
-        existe_elemento_firebird = buscar_elemento_firebird(tabela, valor, False)
+        elemento_mysql = buscar_elemento_mysql(tabela=tabela, codigo=valor, cnpj=cnpj, codigo_global=codigo_global)
+        existe_elemento_firebird = buscar_elemento_firebird(tabela, valor, codigo_global)
 
         # SE JA EXISTE ELEMENTO FIREBIRD
         if existe_elemento_firebird:
             if acao == "I":
-                update_firebird(tabela, valor, elemento_mysql)
+                update_firebird(tabela, valor, elemento_mysql, codigo_global)
             elif acao == "U":
-                update_firebird(tabela, valor, elemento_mysql)
+                update_firebird(tabela, valor, elemento_mysql, codigo_global)
             elif acao == "D":
-                delete_firebird(tabela, valor)
+                delete_firebird(tabela, codigo_global, valor)
 
         # SE NÃO EXISTE ELEMENTO FIREBIRD
         elif not existe_elemento_firebird and elemento_mysql:
@@ -592,7 +628,10 @@ def mysql_firebird():
             if acao == "U":
                 insert_firebird(tabela, elemento_mysql)
 
-        delete_registro_replicador(tabela, acao, valor, firebird=False)
+        if elemento_mysql is not None:
+            delete_registro_replicador(tabela, acao, valor, elemento_mysql['CODIGO_GLOBAL'], firebird=False)
+        else:
+            delete_registro_replicador(tabela, acao, valor, firebird=False)
 
 
 if __name__ == '__main__':
@@ -603,17 +642,25 @@ if __name__ == '__main__':
         criar_bloqueio(nome_script)
         try:
             carregar_configuracoes()
+            inicializa_conexao_mysql_replicador()
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION
-
-            inicializa_conexao_mysql_replicador('dados')
             connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
+            
+            processar_alteracoes()
 
-            while True:
-                processar_alteracoes()
-
-                print('Esperando 10 segundos....')
-                time.sleep(10)
+            print_log('Processamento finalizando', nome_script)
+            if not connection_firebird.closed:
+                connection_firebird.close()
+                parametros.FIREBIRD_CONNECTION.close()
+                
+            if connection_mysql.is_connected():
+                connection_mysql.close()
+                parametros.MYSQL_CONNECTION_REPLICADOR.close()
+                
+            if parametros.MYSQL_CONNECTION.is_connected():
+                parametros.MYSQL_CONNECTION.close()
+                
         except Exception as e:
             print_log(f'Ocorreu um erro ao executar: {e}', nome_script)
         finally:

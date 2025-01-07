@@ -12,22 +12,22 @@ def atualiza_banco_mysql():
     nome_servico = 'thread_atualiza_banco_mysql'
     try:
         print_log('Verificando se precisa atualizar banco remoto', nome_servico)
-        try:
-            conexao_consulta = mysql.connector.connect(host=parametros.HOSTMYSQL, user=parametros.USERMYSQL, password=parametros.PASSMYSQL)
-            cur_con = conexao_consulta.cursor()
-            cur_con.execute('show databases')
-            bds = cur_con.fetchall()
-            cur_con.close()
-            conexao_consulta.close()
-        except Exception as e:
-            if conexao_consulta.is_connected():
-                conexao_consulta.close()
-            print_log(f'Não foi possivel adquirir lista de banco de dados mysql: {e}', nome_servico)
-            return
+        # try:
+        #     conexao_consulta = mysql.connector.connect(host=parametros.HOSTMYSQL, user=parametros.USERMYSQL, password=parametros.PASSMYSQL)
+        #     cur_con = conexao_consulta.cursor()
+        #     cur_con.execute('show databases')
+        #     bds = cur_con.fetchall()
+        #     cur_con.close()
+        #     conexao_consulta.close()
+        # except Exception as e:
+        #     if conexao_consulta.is_connected():
+        #         conexao_consulta.close()
+        #     print_log(f'Não foi possivel adquirir lista de banco de dados mysql: {e}', nome_servico)
+        #     return
 
         try:
             fdb.load_api('/home/MaxServices/libfbclient.so.2.5.9')
-            server_origem = "10.105.96.105"
+            server_origem = "maxsuportsistemas.com"
             port_origem = 3050
             path_origem = "/home/base/dados.fdb"
             dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
@@ -38,15 +38,13 @@ def atualiza_banco_mysql():
 
         metadados_origem = extrair_metadados(conexao_origem_fb)
 
-        for bd in bds:
-            if bd[0] == 'dados':
-                inicializa_conexao_mysql_replicador(bd[0])
-                conexao_destino_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
-                metadados_destino = extrair_metadados_mysql(conexao_destino_mysql)
-                scripts = gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino)
-                erros = executar_scripts_mysql(conexao_destino_mysql, scripts, nome_servico)
-                for erro in erros:
-                    print_log(f"Em banco {bd[0]} nao foi possivel executar: {erro}")
+        inicializa_conexao_mysql_replicador()
+        conexao_destino_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
+        metadados_destino = extrair_metadados_mysql(conexao_destino_mysql)
+        scripts = gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino)
+        erros = executar_scripts_mysql(conexao_destino_mysql, scripts, nome_servico)
+        for erro in erros:
+            print_log(f"nao foi possivel executar: {erro}")
 
         parametros.MYSQL_CONNECTION_REPLICADOR.close()
     except Exception as e:
