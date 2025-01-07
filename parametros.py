@@ -5,8 +5,11 @@ import mysql
 import mysql.connector
 
 # Credenciais MySQL
-# Plataforma
-HOSTMYSQL = "maxsuportsistemas.com"
+#Contabo
+HOSTMYSQL = "10.105.96.106"
+
+#Kinghost
+# HOSTMYSQL = "177.153.69.3"
 USERMYSQL = "maxservices"
 PASSMYSQL = "oC8qUsDp"
 BASEMYSQL = "maxservices"
@@ -40,7 +43,6 @@ TOKEN_ZAP = ''
 LAST_IMAGE = ''
 
 # Conexões globais (inicialmente None)
-
 MYSQL_CONNECTION: mysql.connector.MySQLConnection = None
 MYSQL_CONNECTION_REPLICADOR: mysql.connector.MySQLConnection = None
 FIREBIRD_CONNECTION: fdb.Connection  = None
@@ -52,5 +54,12 @@ ATIVO = ''
 
 # Caminho do script atual
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
+
+# Scantech
+USUARIOSCANTECH = ''
+SENHASCANTECH = ''
+IDEMPRESASCANTECH = 0
+IDLOCALSCANTECH = 0
+URLBASESCANTECH = ''
 
 
