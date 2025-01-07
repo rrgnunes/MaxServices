@@ -203,8 +203,8 @@ def select(sql_query, values=None):
         if connection.is_connected():
             connection.close()        
 
-def exibe_alerta(aviso):
-    comando = 'start http://maxsuport.com.br/alerta.html'
+def exibe_alerta():
+    comando = 'start http://maxsuport.com/alerta'
     subprocess.run(comando, shell=True)
 
 def VerificaVersaoOnline(arquivo_versao):

@@ -22,7 +22,7 @@ def verifica_dados_local():
             if ativo == "0" and sistema_em_uso == "2":
                 print_log("Encerra Processo do GFIL", nome_servico)
                 for proc in psutil.process_iter(['name', 'exe']):
-                    if 'FIL' in proc.info['name']:
+                    if 'GerenciadorFIL' in proc.info['name']:
                         if caminho_base_dados_gfil in proc.info['exe'].replace('\\', '/'):
                             print_log(f"Encerra Processo do GFIL na proc {caminho_base_dados_gfil}, no caminho {proc.info['exe']}", nome_servico)
                             proc.kill()
