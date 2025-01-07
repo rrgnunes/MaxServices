@@ -19,4 +19,5 @@ venv/
 /log.log
 __pycache__/
 /venv/
+log/log.txt
 cnpj.txt
