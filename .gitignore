@@ -21,3 +21,4 @@ __pycache__/
 /venv/
 log/log.txt
 cnpj.txt
+temp/*.lock
