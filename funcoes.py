@@ -805,6 +805,9 @@ def remover_bloqueio(nome_script):
 def crypt(action: str, src: str) -> str:
     if not src:
         return ''
+    
+    if isinstance(src, datetime.datetime):
+        src = datetime.datetime.strftime(src, '%d/%m/%Y')
 
     key = 'XNGREXCAPHJKQWERTYUIOP98765LKJHASFGMNBVCAXZ13450'
     dest = ''
@@ -813,16 +816,16 @@ def crypt(action: str, src: str) -> str:
     range_ = 128
 
     if action.upper() == 'C':  # Encrypt
-        offset = random.randint(0, range_)
+        offset = range_
         dest = f"{offset:02X}"
 
         for char in src:
             src_asc = (ord(char) + offset) % 255
 
-            if key_pos < key_len - 1:
+            if key_pos < key_len:
                 key_pos += 1
             else:
-                key_pos = 0
+                key_pos = 1
 
             src_asc ^= ord(key[key_pos])
             dest += f"{src_asc:02X}"
@@ -835,10 +838,10 @@ def crypt(action: str, src: str) -> str:
         while src_pos < len(src):
             src_asc = int(src[src_pos:src_pos + 2], 16)
 
-            if key_pos < key_len - 1:
+            if key_pos < key_len:
                 key_pos += 1
             else:
-                key_pos = 0
+                key_pos = 1
 
             tmp_src_asc = src_asc ^ ord(key[key_pos])
 
