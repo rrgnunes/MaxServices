@@ -12,6 +12,7 @@ from pathlib import Path
 from decimal import Decimal
 import subprocess
 from funcoes_zap import *
+import random
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
     # Verifica se a pasta 'log' existe, caso contrário, cria a pasta
@@ -800,3 +801,54 @@ def remover_bloqueio(nome_script):
     caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
     if os.path.exists(caminho_lock_file):
         os.remove(caminho_lock_file)
+
+def crypt(action: str, src: str) -> str:
+    if not src:
+        return ''
+
+    key = 'XNGREXCAPHJKQWERTYUIOP98765LKJHASFGMNBVCAXZ13450'
+    dest = ''
+    key_len = len(key)
+    key_pos = 0
+    range_ = 128
+
+    if action.upper() == 'C':  # Encrypt
+        offset = random.randint(0, range_)
+        dest = f"{offset:02X}"
+
+        for char in src:
+            src_asc = (ord(char) + offset) % 255
+
+            if key_pos < key_len - 1:
+                key_pos += 1
+            else:
+                key_pos = 0
+
+            src_asc ^= ord(key[key_pos])
+            dest += f"{src_asc:02X}"
+            offset = src_asc
+
+    elif action.upper() == 'D':  # Decrypt
+        offset = int(src[:2], 16)
+        src_pos = 2
+
+        while src_pos < len(src):
+            src_asc = int(src[src_pos:src_pos + 2], 16)
+
+            if key_pos < key_len - 1:
+                key_pos += 1
+            else:
+                key_pos = 0
+
+            tmp_src_asc = src_asc ^ ord(key[key_pos])
+
+            if tmp_src_asc <= offset:
+                tmp_src_asc = 255 + tmp_src_asc - offset
+            else:
+                tmp_src_asc -= offset
+
+            dest += chr(tmp_src_asc)
+            offset = src_asc
+            src_pos += 2
+
+    return dest

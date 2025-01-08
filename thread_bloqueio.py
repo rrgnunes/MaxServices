@@ -4,7 +4,7 @@ import psutil
 import os
 import sys
 import parametros
-from funcoes import print_log, exibe_alerta, inicializa_conexao_mysql, carregar_configuracoes, pode_executar, criar_bloqueio, remover_bloqueio
+from funcoes import print_log, exibe_alerta, inicializa_conexao_mysql, carregar_configuracoes, pode_executar, criar_bloqueio, remover_bloqueio, crypt
 
 def verifica_dados_local():
     nome_servico = 'thread_bloqueio'
@@ -32,16 +32,24 @@ def verifica_dados_local():
             if sistema_em_uso == "1":
                 data_cripto = '80E854C4A6929988F97AE2'
                 if ativo == "1":
-                    data_cripto = '80E854C4A6929988F879E1'
+                    conn = parametros.MYSQL_CONNECTION
+                    # Consulta ao banco de dados
+                    cursor = conn.cursor(dictionary=True)
+                    cursor.execute(f"""select cc.validade_sistema  from cliente_cliente cc  where cnpj in ({cnpj})""")
+                    rows = cursor.fetchone()
+                    data_cripto = crypt('C', rows['validade_sistema'])
+                    cursor.close()
+                    
+                    
                 try:
                     con = parametros.FIREBIRD_CONNECTION
                     cur = con.cursor()
-                    cur.execute(f"select DATA_VALIDADE from empresa where cnpj = {cnpj} and DATA_VALIDADE = '80E854C4A6929988F879E1' ") # se houver retorno é porque esta ativo
-                    sistema_ativo = len(cur.fetchall()) > 0
-                    if sistema_ativo != (ativo == '1'):
-                        comando = 'Liberar' if ativo == "1" else 'Bloquear'
-                        print_log(f"Comando para {comando} maxsuport", nome_servico)
-                        cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
+                    # cur.execute(f"select DATA_VALIDADE from empresa where cnpj = {cnpj} and DATA_VALIDADE = '80E854C4A6929988F879E1' ") # se houver retorno é porque esta ativo
+                    # sistema_ativo = len(cur.fetchall()) > 0
+                    # if sistema_ativo != (ativo == '1'):
+                    comando = 'Liberar' if ativo == "1" else 'Bloquear'
+                    print_log(f"Comando para {comando} maxsuport", nome_servico)
+                    cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
                     con.commit()
                 except fdb.fbcore.DatabaseError as e:
                     print_log(f"Erro ao executar consulta: {e}", nome_servico)
