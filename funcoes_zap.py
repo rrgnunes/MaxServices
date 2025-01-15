@@ -111,7 +111,9 @@ def envia_mensagem_zap(session, numero, mensagem):
 
     response = requests.post(enpoint, headers=headers, data=payload)
 
-    response = retorna_json(response)    
+    response = retorna_json(response)  
+    
+    # print(response)  
 
     return response
 
