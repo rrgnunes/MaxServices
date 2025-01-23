@@ -124,16 +124,24 @@ def envia_vendas_scantech():
     cur_con.close()
 
     for venda in obj_vendas:
+        sNumeroVenda = venda['NUMERO']
         cancelado = False
         if venda['SITUACAO'] == 'C' or venda['SITUACAO'] == 'I':
             cancelado = True
+            sNumeroVenda = f'-{venda['NUMERO']}' 
+        # Supondo que 'DATA_EMISSAO' e 'HORA_EMISSAO' sejam strings
+        data_emissao = datetime.datetime.strptime(str(venda['DATA_EMISSAO']), '%Y-%m-%d')
+        hora_emissao = datetime.datetime.strptime(str(venda['HORA_EMISSAO']), '%H:%M:%S').time()
 
+        # Combina a data e a hora
+        data_hora_emissao = datetime.datetime.combine(data_emissao, hora_emissao)
+            
         # Dados principais
         dados_principais = {
-            "fecha": venda['DATA_EMISSAO'].strftime('%Y-%m-%dT%H:%M:%S.000-0300'),
+            "fecha": data_hora_emissao.strftime('%Y-%m-%dT%H:%M:%S.000-0300'),
             "pagos": [],  # Será preenchido posteriormente
             "total": venda['TOTAL'],
-            "numero": venda['NUMERO'],
+            "numero": sNumeroVenda,
             "detalles": [],  # Será preenchido posteriormente
             "cotizacion": 1.00,
             "cancelacion": cancelado,

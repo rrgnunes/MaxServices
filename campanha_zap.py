@@ -15,12 +15,14 @@ def minutos_para_horas(minutos):
     minutos_restantes = minutos % 60
     return f"{horas:02d}:{minutos_restantes:02d}"
 
-# Gerar horários aleatórios para o dia
-inicio_minutos, fim_minutos = gerar_horarios()
-horario_inicio = minutos_para_horas(inicio_minutos)
-horario_fim = minutos_para_horas(fim_minutos)
+def atualizar_horarios():
+    global inicio_minutos, fim_minutos, horario_inicio, horario_fim
+    inicio_minutos, fim_minutos = gerar_horarios()
+    horario_inicio = minutos_para_horas(inicio_minutos)
+    horario_fim = minutos_para_horas(fim_minutos)
+    print_log(f"Hoje as mensagens serão enviadas entre {horario_inicio} e {horario_fim}.")
 
-print(f"Hoje as mensagens serão enviadas entre {horario_inicio} e {horario_fim}.")
+atualizar_horarios()
 
 name_session = "70369921151"
 token = generate_token(name_session)
@@ -36,7 +38,7 @@ nome_servico = 'Campanha ZAP'
 print_log("Pega dados local", nome_servico)
 
 cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-cur_con.execute(f'''select REPLACE(SUBSTRING_INDEX(cl.telefone, ' ', 2), ' ', '') as telefone
+cur_con.execute(f'''select codigo, REPLACE(SUBSTRING_INDEX(cl.telefone, ' ', 2), ' ', '') as telefone
                     from cliente_lead cl 
                     WHERE ((cl.cnae LIKE '%4782201%') OR 
                           (cl.cnae LIKE '%4772500%') OR 
@@ -53,50 +55,60 @@ cur_con.execute(f'''select REPLACE(SUBSTRING_INDEX(cl.telefone, ' ', 2), ' ', ''
                           (cl.cnae LIKE '%4789002%') OR 
                           (cl.cnae LIKE '%4789003%') OR 
                           (cl.cnae LIKE '%4789004%'))
-                      and cl.localidade = 'RR' ''')
+                      and cl.localidade = 'AM' 
+                      and campanha_enviado is null  ''')
 obj_empresas = cur_con.fetchall()
 cur_con.close()
- 
-# Contatos teste
-# contatos_teste = [
-#     {"nome": "Marcelo", "telefone": "6697145422"},
-#     {"nome": "Gessica", "telefone": "6699564339"},
-#     {"nome": "Maxsuport", "telefone": "6696353159"},
-#     {"nome": "Rodrigo", "telefone": "6692825191"}
-# ]
- 
-if obj_empresas:
 
-    # Mostrar o total de números únicos
+if obj_empresas:
     print_log(f"Total de números únicos: {len(obj_empresas)}")
-    
     contador = 0
     for numero in obj_empresas:
-        # Verificar se está dentro do intervalo de horário permitido
-        hora_atual = datetime.now()
-        minutos_atual = hora_atual.hour * 60 + hora_atual.minute
+        try:
+            while True:
+                dia_semana = datetime.now().weekday()
+                hora_atual = datetime.now()
+                minutos_atual = hora_atual.hour * 60 + hora_atual.minute
+                
+                if dia_semana != datetime.now().weekday():
+                    atualizar_horarios()
+                
+                if dia_semana in [0, 1, 2, 3, 4] and inicio_minutos <= minutos_atual <= fim_minutos:
+                    break
+                else:
+                    print_log("Fora do horário de envio ou fim de semana. Aguardando...")
+                    time.sleep(60)
+                    
+            if not parametros.MYSQL_CONNECTION.is_connected():
+              inicializa_conexao_mysql()    
 
-        if minutos_atual < inicio_minutos or minutos_atual > fim_minutos:
-            print_log("Fora do horário de envio. Aguardando...")
-            time.sleep(60)  # Aguardar 1 minuto antes de verificar novamente
-            continue
+            mensagem_aleatoria = random.choice(mensagens)
+            print_log(f'Enviando para o número {numero["telefone"]}')
+            retorno = envia_mensagem_zap(name_session, str(numero['telefone']), mensagem_aleatoria)
+            print_log(f' O envio para o número {numero["telefone"]} foi um {retorno["status"]}')
 
-        mensagem_aleatoria = random.choice(mensagens)
-        print_log(f'Enviando para o número {numero['telefone']}')        
-        retorno = envia_mensagem_zap(name_session, str(numero['telefone']), mensagem_aleatoria)
-        print_log(f' O envio para o número {numero['telefone']} foi um {retorno['status']}')  
+            contador += 1
+            print_log(f'Enviei {contador} mensagens')
+            
+            cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
+            cur_con.execute(f'''UPDATE cliente_lead SET campanha_enviado = 1 WHERE codigo = {numero['codigo']}''')
+            cur_con.close()
+            parametros.MYSQL_CONNECTION.commit()
 
-        contador += 1
-        
-        print_log(f'Enviei {contador} mensagens')
-
-        tempo_aleatorio = random.uniform(30, 70)
-        time.sleep(tempo_aleatorio)        
-        
-        # Simular pausas humanas mais longas após cada 20 mensagens
-        if contador % 20 == 0:
-            pausa_longa = random.uniform(300, 600)  # Pausa de 5 a 10 minutos
-            print_log(f'Pausa longa de {pausa_longa / 60:.2f} minutos após {contador} mensagens.')
-            time.sleep(pausa_longa)
-          
-        print_log('Pausando o envio')
+ 
+            
+            if contador % 20 == 0:
+                pausa_longa = random.uniform(300, 600)
+                print_log(f'Pausa longa de {pausa_longa / 60:.2f} minutos após {contador} mensagens.')
+                time.sleep(pausa_longa)
+            else:
+                
+                tempo_aleatorio = random.uniform(30, 70)
+                print_log(f'Pausando o envio em {tempo_aleatorio} segundos')
+                time.sleep(tempo_aleatorio)       
+                
+                
+            
+            
+        except Exception as e:
+            print_log('Erro: ' + str(e))
