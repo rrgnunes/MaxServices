@@ -119,31 +119,39 @@ def envia_vendas_scantech():
     print_log("Localiza vendas do ultimo dia", nome_servico)
 
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 1 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
+    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 1 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C', 'I') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
     obj_vendas = cur_con.fetchall()
     cur_con.close()
 
     for venda in obj_vendas:
+        sNumeroVenda = venda['NUMERO']
         cancelado = False
-        if venda['SITUACAO'] == 'C':
+        if venda['SITUACAO'] == 'C' or venda['SITUACAO'] == 'I':
             cancelado = True
+            sNumeroVenda = f'-{venda['NUMERO']}' 
+        # Supondo que 'DATA_EMISSAO' e 'HORA_EMISSAO' sejam strings
+        data_emissao = datetime.datetime.strptime(str(venda['DATA_EMISSAO']), '%Y-%m-%d')
+        hora_emissao = datetime.datetime.strptime(str(venda['HORA_EMISSAO']), '%H:%M:%S').time()
 
+        # Combina a data e a hora
+        data_hora_emissao = datetime.datetime.combine(data_emissao, hora_emissao)
+            
         # Dados principais
         dados_principais = {
-            "fecha": venda['DATA_EMISSAO'].strftime('%Y-%m-%dT%H:%M:%S.000-0300'),
+            "fecha": data_hora_emissao.strftime('%Y-%m-%dT%H:%M:%S.000-0300'),
             "pagos": [],  # Será preenchido posteriormente
             "total": venda['TOTAL'],
-            "numero": venda['NUMERO'],
+            "numero": sNumeroVenda,
             "detalles": [],  # Será preenchido posteriormente
             "cotizacion": 1.00,
             "cancelacion": cancelado,
             "codigoMoneda": "986",
-            "recargoTotal": 0,
+            "recargoTotal": venda['OUTROS'],
             "descuentoTotal": venda['DESCONTO'],
             "codigoCanalVenta": 1,
             "descripcionCanalVenta": "VENDA NA LOJA"
         }
-
+        
         cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
         cur_con.execute(f"SELECT * FROM VENDAS_FPG VF WHERE VF.VENDAS_MASTER = {venda['FK_VENDA']} AND CNPJ_EMPRESA = '{cnpj}' ")
         obj_formas_pagamentos = cur_con.fetchall()
@@ -192,7 +200,7 @@ def envia_vendas_scantech():
                 "importe": detalhe['VALOR_ITEM'],
                 "recargo": 0,
                 "cantidad": detalhe['QTD'],
-                "descuento": detalhe['VDESCONTO'],
+                "descuento": 0, #detalhe['VDESCONTO'],
                 "codigoBarras": detalhe['COD_BARRA'],
                 "codigoArticulo": detalhe['CODIGO'],
                 "importeUnitario": detalhe['PRECO'],
@@ -221,7 +229,8 @@ def envia_vendas_scantech():
             cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
             cur_con.execute(f"UPDATE NFCE_MASTER SET ENVIADO_SCANTECH = 1 WHERE CODIGO = {venda['CODIGO']} AND CNPJ_EMPRESA = '{cnpj}' ")
             cur_con.close()
-
+            parametros.MYSQL_CONNECTION.commit()
+            
             print_log(f"Cupom {venda['NUMERO']} da empresa {cnpj} enviado com sucesso!")
         except requests.exceptions.RequestException as e:
             print_log(f"Erro enviando cupom Web Service Scanntech: {e}")
@@ -330,6 +339,7 @@ if __name__ == "__main__":
     try:
         print_log('Iniciando serviço scantech', nome_servico)
         try:
+            database = parametros.BASEMYSQL = 'dados'            
             carregar_configuracoes()
             inicializa_conexao_mysql()
 
@@ -348,15 +358,15 @@ if __name__ == "__main__":
                 parametros.URLBASESCANTECH = oEmpresa['URL_BASE_SCANTECH']
                 cnpj = oEmpresa['CNPJ']
 
-                envia_fechamento_vendas_scantech()
+                #envia_fechamento_vendas_scantech()
 
                 envia_vendas_scantech()
 
-                promocoes = consulta_promocoes_crm('ACEPTADA')
-                if 'erro' not in promocoes:
-                    salva_promocoes(promocoes, int(oEmpresa['CODIGO']))
-                else:
-                    print("Erro na consulta de promoções:", promocoes['erro'])             
+                #promocoes = consulta_promocoes_crm('ACEPTADA')
+                #if 'erro' not in promocoes:
+                #    salva_promocoes(promocoes, int(oEmpresa['CODIGO']))
+                #else:
+                #    print("Erro na consulta de promoções:", promocoes['erro'])             
 
         except Exception as e:
             if parametros.MYSQL_CONNECTION.is_connected():
