@@ -2,11 +2,13 @@ import fdb
 import parametros
 import os
 import sys
-import datetime as dt
+import json
+import datetime
 from funcoes import (
-    os,json,datetime,atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
+    atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
     salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
-    insere_mensagem_zap, carregar_configuracoes, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio
+    insere_mensagem_zap, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio,
+    inicializa_conexao_firebird, inicializa_conexao_mysql
     )
 
 
@@ -15,13 +17,14 @@ def zapautomato():
     nome_servico = 'thread_zap_automato'
     #carrega config
     print_log(f'Iniciando', nome_servico)
+    inicializa_conexao_mysql()
 
-    carregar_configuracoes()
-    if os.path.exists("C:/Users/Public/config.json"):
-        with open('C:/Users/Public/config.json', 'r') as config_file:
-            config = json.load(config_file)
+    with open(f'{parametros.SCRIPT_PATH}/config.json', 'r') as j:
+        config = json.load(j)
+    try:
         for cnpj in config['sistema']:
             try:
+
                 dados_cnpj = config['sistema'][cnpj]
                 ativo = dados_cnpj['sistema_ativo'] == '1'
                 sistema_em_uso = dados_cnpj['sistema_em_uso_id']
@@ -29,20 +32,28 @@ def zapautomato():
                 porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
                 caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
                 data_hora = datetime.datetime.now()
-                data_hora_formatada = data_hora.strftime(
-                    '%Y_%m_%d_%H_%M_%S')
-                print_log(f'Vou validar para enviar mensagem', nome_servico)
+
+                print_log(f'Vou validar para enviar mensagem em empresa cnpj: {cnpj}', nome_servico)
 
                 try:
                     con_mysql = parametros.MYSQL_CONNECTION
+
+                    parametros.DATABASEFB = caminho_base_dados_maxsuport
+                    parametros.PORTFB = porta_firebird_maxsuport
+                    inicializa_conexao_firebird(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
                     cur = parametros.FIREBIRD_CONNECTION.cursor()
+
                     cur.execute("select cnpj from empresa where codigo = 1")
                     empresas = cur.fetchall()
                     empresa = [empresa[0] for empresa in empresas]
+
                     if cnpj != empresa[0]:
+                        parametros.FIREBIRD_CONNECTION.close()
+                        parametros.FIREBIRD_CONNECTION = None
                         continue
                 except Exception as e:
                     print_log(f'Não foi possivel verificar a empresa 1: {e}', nome_servico)
+                    return
 
                 if ativo == 1 and sistema_em_uso == '1':
                     server = "localhost"
@@ -120,7 +131,7 @@ def zapautomato():
                             cod_mensagem = row_msg['CODIGO']
                             data = row_msg['DATA']
                             hora = row_msg['HORA']
-                            data_hora = dt.datetime.combine(data, hora)
+                            data_hora = datetime.datetime.combine(data, hora)
                             mensagem = row_msg['MENSAGEM']
                             fone = row_msg['FONE']
                             status = 'PENDENTE'
@@ -131,20 +142,30 @@ def zapautomato():
                                 altera_mensagem_local(con_fb, cod_mensagem, nome_servico)
 
                         print_log('Mensagens salvas em servidor remoto', nome_servico)
-                        con_fb.close()
-                        con_mysql.close()
                     except Exception as e:
                         print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
                         raise e
+                    finally:
+                        if not con_fb.closed:
+                            con_fb.close()
+                            parametros.FIREBIRD_CONNECTION = None
             except Exception as a:
                 try:
                     if con_fb:
                         con_fb.rollback()
+                        con_fb.close()
                     if con_mysql:
                         con_mysql.rollback()
+                        con_mysql.close()
                 except Exception as e:
                     pass
                 print_log(f'{a}', nome_servico)
+    finally:
+        if con_mysql.is_connected():
+            con_mysql.close()
+            parametros.MYSQL_CONNECTION = None
+
+
 
 if __name__ == '__main__':
 

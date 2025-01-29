@@ -79,18 +79,23 @@ def inicializa_conexao_firebird(path_dll):
     except fdb.fbcore.DatabaseError as err:
         print_log(f"Erro ao conectar ao Firebird: {err}")
 
+def carrega_arquivo_config():
+    with open(f'{parametros.SCRIPT_PATH}/config.json', 'r') as config_file:
+            parametros.CNPJ_CONFIG = json.load(config_file)
+
 def carregar_configuracoes():
     try:
-        with open(f'{parametros.SCRIPT_PATH}/config.json', 'r') as config_file:
-            parametros.CNPJ_CONFIG = json.load(config_file)
-            print_log("Configurações carregadas com sucesso.")
-            atualizar_conexoes_firebird()
-            inicializa_conexao_mysql()
+        carrega_arquivo_config()
+        print_log("Configurações carregadas com sucesso.")
+        inicializa_conexao_mysql()
+        atualizar_conexoes_firebird()
     except Exception as e:
         print_log(f"Erro ao carregar configurações: {e}")
 
 def atualizar_conexoes_firebird():
     for cnpj, dados in parametros.CNPJ_CONFIG['sistema'].items():
+        if dados['caminho_base_dados_maxsuport'] == None:
+            continue
         caminho_gbak_firebird_maxsuport = dados['caminho_gbak_firebird_maxsuport']
         path_dll = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
         parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
@@ -827,7 +832,7 @@ def crypt(action: str, src: str) -> str:
             else:
                 key_pos = 1
 
-            src_asc ^= ord(key[key_pos])
+            src_asc ^= ord(key[key_pos - 1])
             dest += f"{src_asc:02X}"
             offset = src_asc
 

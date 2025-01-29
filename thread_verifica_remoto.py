@@ -1,8 +1,36 @@
 import parametros
 import os
 import sys
+import fdb
 from funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio
 
+
+
+def consulta_cnpj():
+    pasta_raiz = os.path.abspath(os.sep)
+    pastas = os.listdir(pasta_raiz)
+    cnpjs = []
+
+    for pasta in pastas:
+        pasta = os.path.join(pasta_raiz, pasta)
+
+        if 'maxsuport' in pasta.lower():
+            pasta_bd = os.path.join(pasta, 'dados', 'dados.fdb')
+
+            if os.path.exists(pasta_bd):
+                try:
+                    con = fdb.connect(host='localhost', user='sysdba', password='masterkey', database=pasta_bd)
+                    cursor = con.cursor()
+                    cursor.execute('select cnpj from empresa')
+                    results = cursor.fetchall()
+                    for result in results:
+                        cnpjs.append(result[0])
+                    cursor.close()
+                except Exception as e:
+                    print_log(f'Erro ao verificar pastas -> motivo: {e}')
+                finally:
+                    con.close()
+    return cnpjs
 
 def salva_json():
     nome_servico = 'thread_verifica_remoto'
@@ -12,12 +40,9 @@ def salva_json():
         
         print_log("Efetua conexão remota" , nome_servico)
         conn = parametros.MYSQL_CONNECTION
-
-        # pego dados do arquivo
-        print_log(f"Carrega arquivo {parametros.SCRIPT_PATH}/cnpj.txt" , nome_servico)
-        if os.path.exists(f"{parametros.SCRIPT_PATH}/cnpj.txt"):
-            with open(f"{parametros.SCRIPT_PATH}/cnpj.txt", 'r') as config_file:
-                cnpj_list = config_file.read().split('\n')
+    
+        print_log(f"Consultando CNPJs....." , nome_servico)
+        cnpj_list = consulta_cnpj()
         cnpj = ''
         for s in cnpj_list:
             if (cnpj != ''):
@@ -38,7 +63,7 @@ def salva_json():
         datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-4)))
         cursor = conn.cursor()
         cursor.execute(f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
-        print_log(f"Executou update remoto" , 'verificaremoto')
+        print_log(f"Executou update remoto" , nome_servico)
         conn.commit()
         conn.close()
 

@@ -45,7 +45,7 @@ def setup_schedules():
         {'path': scripts_directory / 'thread_atualiza_banco.py', 'interval': 10},  # 10 segundos
         {'path': scripts_directory / 'thread_IBPT_NCM_CEST.py', 'interval': 1800},  # 30 minutos
         {'path': scripts_directory / 'thread_servidor_socket.py', 'interval': 0},  # Executa uma vez
-        {'path': scripts_directory / 'thread_verifica_remoto.py', 'interval': 30},  # 5 segundos
+        {'path': scripts_directory / 'thread_verifica_remoto.py', 'interval': 30},  # 30 segundos
         {'path': scripts_directory / 'thread_xml_contador.py', 'interval': 600},  # 10 minutos
         {'path': scripts_directory / 'thread_zap_automato.py', 'interval': 60},  # 1 minuto
         {'path': scripts_directory / 'thread_bloqueio.py', 'interval': 5},  # 5 segundos

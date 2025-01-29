@@ -49,8 +49,8 @@ def atualiza_banco():
                     fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
 
                     try:
-                        conexao_origem = fdb.connect(dsn=dsn_origem, user='sysdba', password='masterkey')
-                        conexao_destino = fdb.connect(dsn=dsn_destino, user=user_destino, password=password_destino)
+                        conexao_origem = fdb.connect(dsn=dsn_origem, user='sysdba', password='masterkey', charset='UTF-8')
+                        conexao_destino = fdb.connect(dsn=dsn_destino, user=user_destino, password=password_destino, charset='UTF-8')
 
                         metadados_origem = extrair_metadados(conexao_origem)
                         metadados_destino = extrair_metadados(conexao_destino)

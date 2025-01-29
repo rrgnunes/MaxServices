@@ -146,4 +146,4 @@ for model_name, model_cls in models.items():
     api.add_namespace(ns, path=f'/{model_name.lower()}')
 
 if __name__ == '__main__':
-    app.run(debug=True,host='192.168.10.207', port=5000)
+    app.run(debug=True,host='192.168.10.242', port=5000)

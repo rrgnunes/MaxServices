@@ -168,7 +168,7 @@ def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int =
             else:
                 return
  
-            print_log(f'Update na tabela {tabela} -> chave: {codigo} ou codigo global: {codigo_global}', nome_servico)
+            print_log(f'Update na tabela {tabela} -> chave: {codigo} ou codigo global: {codigo_global}\n', nome_servico)
             cursor.execute(sql_update, valores)
 
             connection_firebird.commit()
@@ -184,13 +184,20 @@ def insert_firebird(tabela: str, dados: dict):
         try:
 
             cursor = connection_firebird.cursor()
+
+            if tabela.lower() == 'vendas_detalhe':
+                codigo_master = dados['CODIGO_GLOBAL_MASTER']
+                cursor.execute(f'select codigo from vendas_master where codigo_global = {codigo_master}')
+                codigo = cursor.fetchone()[0]
+                dados['FKVENDA'] = codigo
+
             colunas = ', '.join(dados.keys())
             placeholders = ', '.join(['?'] * len(dados))
             valores = tratar_valores(dados)
 
             sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-            print_log(f'Insert na tabela {tabela}', nome_servico)
+            print_log(f'Insert na tabela {tabela}\n', nome_servico)
             cursor.execute(sql_insert, valores)
 
             connection_firebird.commit()
@@ -385,7 +392,7 @@ def update_mysql(tabela: str, codigo: int, dados: dict):
                 sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
                 valores.append(codigo)
             
-            print_log(f'Update na tabela {tabela} -> chave: {codigo} -> cnpj:{cnpj}', nome_servico)
+            print_log(f'Update na tabela {tabela} -> chave: {codigo} -> cnpj:{cnpj}\n', nome_servico)
             cursor.execute(sql_update, valores)
 
             connection_mysql.commit()
@@ -430,7 +437,7 @@ def insert_mysql(tabela: str, dados: dict):
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-        print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}', nome_servico)
+        print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}\n', nome_servico)
         cursor.execute(sql_insert, valores)
 
         connection_mysql.commit()
@@ -510,7 +517,7 @@ def delete_mysql(tabela: str, codigo: int):
         if not cnpj:
             return
 
-        print_log(f"Delete na tabela {tabela} -> chave: {codigo}", nome_servico)
+        print_log(f"Delete na tabela {tabela} -> chave: {codigo}\n", nome_servico)
         sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = {codigo} and CNPJ_EMPRESA={cnpj}"
         cursor.execute(sql_delete)
 
@@ -553,6 +560,8 @@ def firebird_mysql():
         tabela = alteracao['TABELA'].upper()
         acao = alteracao['ACAO'].upper()
         valor = alteracao['CHAVE']
+
+        print_log(f'Alteração realizada: tabela -> {tabela}, acao -> {acao}, chave -> {valor}', nome_servico)
         
         elemento_firebird = buscar_elemento_firebird(tabela, valor)
 
@@ -608,6 +617,8 @@ def mysql_firebird():
         valor = alteracao[2]
         cnpj = alteracao[3]
         codigo_global = alteracao[4]
+
+        print_log(f'Alteração realizada: tabela -> {tabela}, acao -> {acao}, chave -> {valor}, global -> {codigo_global}', nome_servico)
         
         elemento_mysql = buscar_elemento_mysql(tabela=tabela, codigo=valor, cnpj=cnpj, codigo_global=codigo_global)
         existe_elemento_firebird = buscar_elemento_firebird(tabela, valor, codigo_global)

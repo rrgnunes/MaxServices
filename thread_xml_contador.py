@@ -32,7 +32,7 @@ def xmlcontador():
                 con = parametros.FIREBIRD_CONNECTION
                 dias_busca_nota = -15
                 
-                print_log("Inicia select das notas", nome_servico)
+                print_log(f"Inicia select das notas para cnpj: {cnpj}", nome_servico)
                 if sistema_em_uso == '1':  # maxsuport
                     if pasta_compartilhada_backup and caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
 
