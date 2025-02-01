@@ -2,13 +2,14 @@ import parametros
 import os
 import sys
 import fdb
-from funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio
-
+from funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio, verifica_dll_firebird
 
 
 def consulta_cnpj():
     pasta_raiz = os.path.abspath(os.sep)
     pastas = os.listdir(pasta_raiz)
+    client_dll = verifica_dll_firebird()
+    fdb.load_api(client_dll)
     cnpjs = []
 
     for pasta in pastas:
@@ -18,16 +19,18 @@ def consulta_cnpj():
             pasta_bd = os.path.join(pasta, 'dados', 'dados.fdb')
 
             if os.path.exists(pasta_bd):
+                print_log(f'Consultando em pasta -> {pasta_bd}', nome_script)
                 try:
-                    con = fdb.connect(host='localhost', user='sysdba', password='masterkey', database=pasta_bd)
+                    con = fdb.connect(host='localhost/3050', user='sysdba', password='masterkey', database=pasta_bd)
                     cursor = con.cursor()
                     cursor.execute('select cnpj from empresa')
                     results = cursor.fetchall()
                     for result in results:
-                        cnpjs.append(result[0])
+                        if result[0] not in cnpjs:
+                            cnpjs.append(result[0])
                     cursor.close()
                 except Exception as e:
-                    print_log(f'Erro ao verificar pastas -> motivo: {e}')
+                    print_log(f'Erro ao verificar pastas -> motivo: {e}', nome_script)
                 finally:
                     con.close()
     return cnpjs

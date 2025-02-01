@@ -88,7 +88,7 @@ def zapautomato():
                     pessoas = retorna_pessoas_mensagemdiaria(conexao, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
                     for pessoa in pessoas:
                         MENSAGEM_DIARIO_FINAL = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
-                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'])
+                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
                         print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}', nome_servico)
 
                     # MENSAGEM ANIVERSARIO
@@ -97,7 +97,7 @@ def zapautomato():
                         ano_atual = datetime.datetime.now().year
                         if pessoa['ANO_ENVIO_MENSAGEM_ANIVERSARIO'] != ano_atual:
                             MENSAGEM_ANIVERSARIO_FINAL = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
-                            insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO_FINAL, pessoa['CELULAR1'])
+                            insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
                             atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
                             print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}', nome_servico)
                     
@@ -105,7 +105,7 @@ def zapautomato():
                     pessoas = retorna_pessoas_preagendadas(conexao)
                     for pessoa in pessoas:                        
                         MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
-                        insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'])
+                        insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
                         atualiza_agenda(conexao,pessoa['CODIGO'], 'pre_agendamento')
                         print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}', nome_servico)     
 
@@ -116,7 +116,7 @@ def zapautomato():
                             data_agendada = pessoa['DATA']
                             hora_agendada = data_agendada.time().replace(microsecond=0)
                             mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO']).replace('@hora', str(hora_agendada))
-                            insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'])
+                            insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
                             atualiza_agenda(conexao, pessoa['CODIGO'], 'lembrete')
                             print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
                     

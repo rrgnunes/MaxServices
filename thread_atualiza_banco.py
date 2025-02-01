@@ -1,13 +1,13 @@
 import sys
 import fdb
-from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, carregar_configuracoes, criar_bloqueio, remover_bloqueio, pode_executar
+from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config
 import parametros
 import configparser
 import os
 
 def atualiza_banco():
     nome_servico = 'thread_atualiza_banco'
-    carregar_configuracoes()
+    carrega_arquivo_config()
     try:
 
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
@@ -17,16 +17,17 @@ def atualiza_banco():
             porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
             caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
 
-            SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
-            SCRIPT_PATH = SCRIPT_PATH.lower().replace('server','')
+
+            caminho_sistema = caminho_base_dados_maxsuport.lower().replace('\\dados\\dados.fdb', '')
+            caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
             # Inicializa o parser
             config = configparser.ConfigParser()
 
             # Carrega o arquivo INI
-            config.read(SCRIPT_PATH + '/banco.ini')
+            config.read(caminho_ini)
 
             if ativo and sistema_em_uso == '1':
-                print_log('Vou checar se é para atualizar', nome_servico)
+                print_log(f'Vou checar se é para atualizar -> Pasta: {caminho_base_dados_maxsuport} - CNPJ: {cnpj}', nome_servico)
                 atualiza_banco = 0
 
                 if 'manutencao' in config and 'atualizabanco' in config['manutencao']:
@@ -69,7 +70,7 @@ def atualiza_banco():
                         config['manutencao']['atualizabanco'] = '0'
 
                         # Salva as mudanças de volta no arquivo INI
-                        with open(SCRIPT_PATH + '/banco.ini', 'w') as configfile:
+                        with open(caminho_ini, 'w') as configfile:
                             config.write(configfile)
 
                         print_log('Tabela atualizada', nome_servico)

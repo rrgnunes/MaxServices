@@ -7,8 +7,9 @@ import re
 import os
 import sys
 import datetime
+import configparser
 from mysql.connector import Error
-from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log, pode_executar, criar_bloqueio, remover_bloqueio
+from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, inicializa_conexao_firebird,print_log, pode_executar, criar_bloqueio, remover_bloqueio
 
 #===============FIREBIRD===================
 def verifica_empresa_firebird(conn: fdb.Connection, tabela:str, dados: dict) -> tuple[int, str]:
@@ -648,11 +649,17 @@ def mysql_firebird():
 if __name__ == '__main__':
 
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+    caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
+    caminho_sistema = caminho_sistema.lower().replace('server','')
+    caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
+    config = configparser.ConfigParser()
+    config.read(caminho_ini)
+    parametros.DATABASEFB = config.get('BD', 'path')
 
     if pode_executar(nome_script):
         criar_bloqueio(nome_script)
         try:
-            carregar_configuracoes()
+            inicializa_conexao_firebird(os.path.join(caminho_sistema, 'fbclient.dll'))
             inicializa_conexao_mysql_replicador()
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION
@@ -663,14 +670,9 @@ if __name__ == '__main__':
             print_log('Processamento finalizando', nome_script)
             if not connection_firebird.closed:
                 connection_firebird.close()
-                parametros.FIREBIRD_CONNECTION.close()
                 
             if connection_mysql.is_connected():
                 connection_mysql.close()
-                parametros.MYSQL_CONNECTION_REPLICADOR.close()
-                
-            if parametros.MYSQL_CONNECTION.is_connected():
-                parametros.MYSQL_CONNECTION.close()
                 
         except Exception as e:
             print_log(f'Ocorreu um erro ao executar: {e}', nome_script)

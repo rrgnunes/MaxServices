@@ -46,7 +46,7 @@ def backup():
             if ativo:
                 if sistema_em_uso == '1':  # maxsuport
                     if pasta_compartilhada_backup and caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
-                        path = f'{pasta_compartilhada_backup}\\maxsuport\\{cnpj}'
+                        path = os.path.join(pasta_compartilhada_backup, 'maxsuport', cnpj)
                     
                         if parametros.FIREBIRD_CONNECTION:
                             if not parametros.FIREBIRD_CONNECTION.closed:
@@ -63,7 +63,6 @@ def backup():
                         cursor_fb = conn_fb.cursor()
 
                         caminho_arquivo_backup = path
-                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fdb'
                         comando = f'copy "{caminho_base_dados_maxsuport}" "{caminho_arquivo_backup}"'.replace('/', '\\')
 
                         cursor_fb.execute('select cnpj from empresa')
@@ -80,7 +79,7 @@ def backup():
 
                 elif sistema_em_uso == '2':  # gfil
                     if pasta_compartilhada_backup and caminho_base_dados_gfil and caminho_gbak_firebird_gfil:
-                        path = f'{pasta_compartilhada_backup}\\gfil\\{cnpj}'
+                        path = os.path.join(pasta_compartilhada_backup, 'gfil', cnpj)
 
                         parametros.USERFB = 'GFILMASTER'
                         parametros.PASSFB = 'b32@m451'
@@ -92,7 +91,6 @@ def backup():
                         cursor_fb = conn_fb.cursor()
 
                         caminho_arquivo_backup = path
-                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_gfil.fdb'
                         comando = f'copy "{caminho_base_dados_gfil}" "{caminho_arquivo_backup}"'.replace('/', '\\')
 
                         cursor_fb.execute(f'select filial, cnpj  from diversos where cnpj = {cnpj} and filial = 1')
@@ -107,14 +105,50 @@ def backup():
                 subprocess.call(comando, shell=True)
                 print_log(f"Executou comando {comando}", nome_servico)
 
-                arquivo_backup = f"{caminho_arquivo_backup}\\dados.fdb" if sistema_em_uso == '1' else f"{caminho_arquivo_backup}\\infolivre.fdb"
+                arquivo_backup = os.path.join(caminho_arquivo_backup, 'dados.fdb') if sistema_em_uso == '1' else os.path.join(caminho_arquivo_backup, 'infolivre.fdb')
+
+                try:
+                    arquivo_bck_existe = False
+                    if sistema_em_uso == '1':
+                        client_dll = verifica_dll_firebird()
+                        fdb.load_api(client_dll)
+
+                        conn_fbk = fdb.services.connect(host='localhost/3050', user='sysdba', password='masterkey')
+                        arquivo_destino = os.path.join(caminho_arquivo_backup, 'dados.fbk')
+                        conn_fbk.backup(arquivo_backup, arquivo_destino, collect_garbage=True)
+                        conn_fbk.wait()
+
+                        count = 0
+                        while not (os.path.exists(arquivo_destino)) and (count <= 3):
+                            time.sleep(3)
+                            count += 1
+
+                        if os.path.exists(arquivo_destino):
+                            arquivo_bd = arquivo_backup
+                            arquivo_backup = arquivo_destino
+                        else:
+                            raise FileNotFoundError
+
+                        conn_fbk.close()
+                        print_log(f'Gerado arquivo de backup: {arquivo_backup}', nome_servico)
+                        arquivo_bck_existe = True
+                except Exception as e:
+                    print_log(f'{e}', nome_servico)
+
+                if sistema_em_uso == '1':
+                    if arquivo_bck_existe:
+                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fbk'
+                    else:
+                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fdb'
+                else:
+                    nome_arquivo_compactado = f'backup_{data_hora_formatada}_gfil.fdb'
 
                 # Compacta arquivo
                 with open(arquivo_backup, 'rb') as arquivo_in:
                     nome_arquivo_compactado = f'{nome_arquivo_compactado}.xz'
                     with lzma.open(f'{caminho_arquivo_backup}\\{nome_arquivo_compactado}', 'wb', preset=9) as arquivo_out:
                         arquivo_out.writelines(arquivo_in)
-                os.remove(arquivo_backup)
+
                 print_log(f"Criou arquivo compactado {nome_arquivo_compactado}", nome_servico)
 
                 datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3)))
@@ -123,6 +157,10 @@ def backup():
                 print_log("Executou update remoto", nome_servico)
                 conn.commit()
                 conn.close()
+
+                os.remove(arquivo_backup)
+                if arquivo_bck_existe:
+                    os.remove(arquivo_bd)
 
                 # Envia arquivo para Dropbox
                 pasta_sistema = 'maxsuport' if sistema_em_uso == '1' else 'gfil'
@@ -173,7 +211,7 @@ def backup():
                     print_log(f'Finalizado {data_hora_formatada}', nome_servico)
                     obj_dropbox.close()
     except Exception as e:
-        print_log(f'Erro ao gerar bakcup {e}', nome_servico)
+        print_log(f'Erro ao gerar backup {e}', nome_servico)
 
 
 if __name__ == '__main__':
