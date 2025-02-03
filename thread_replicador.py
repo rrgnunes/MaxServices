@@ -182,32 +182,49 @@ def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int =
 
 
 def insert_firebird(tabela: str, dados: dict):
+    try:
+
+        cursor = connection_firebird.cursor()
+
+        if tabela.lower() == 'vendas_detalhe':
+            codigo_master = dados['CODIGO_GLOBAL_MASTER']
+            cursor.execute(f'select codigo from vendas_master where codigo_global = {codigo_master}')
+            codigo = cursor.fetchone()[0]
+            dados['FKVENDA'] = codigo
+
+        colunas = ', '.join(dados.keys())
+        placeholders = ', '.join(['?'] * len(dados))
+        valores = tratar_valores(dados)
+        campo_chave_primaria = buscar_nome_chave_primaria(tabela)
+
+        sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders}) RETURNING {campo_chave_primaria}"
+
+        print_log(f'Insert na tabela {tabela}', nome_servico)
+        cursor.execute(sql_insert, valores)
+        valor_chave_primaria = cursor.fetchone()[0]
+        connection_firebird.commit()
+
+        # tratamento para retorno do valor da chave primaria gerada em banco firebird local
+        codigo_global = dados['CODIGO_GLOBAL']
         try:
-
-            cursor = connection_firebird.cursor()
-
-            if tabela.lower() == 'vendas_detalhe':
-                codigo_master = dados['CODIGO_GLOBAL_MASTER']
-                cursor.execute(f'select codigo from vendas_master where codigo_global = {codigo_master}')
-                codigo = cursor.fetchone()[0]
-                dados['FKVENDA'] = codigo
-
-            colunas = ', '.join(dados.keys())
-            placeholders = ', '.join(['?'] * len(dados))
-            valores = tratar_valores(dados)
-
-            sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
-
-            print_log(f'Insert na tabela {tabela}\n', nome_servico)
-            cursor.execute(sql_insert, valores)
-
-            connection_firebird.commit()
+            cursor_mysql = connection_mysql.cursor()
+            sql_update_retorno = f'UPDATE {tabela} SET {campo_chave_primaria} = {valor_chave_primaria} WHERE CODIGO_GLOBAL = {codigo_global}'
+            cursor_mysql.execute(sql_update_retorno)
+            connection_mysql.commit()
+            print_log(f'Valor de chave primaria retornado: {valor_chave_primaria} \n', nome_servico)
         except Exception as e:
-            print_log(f"Erro ao inserir dados no Firebird: {e}", nome_servico)
-            connection_firebird.rollback()
+            print_log(f'Erro ao retornar valor de chave primaria: {e} \n', nome_servico)
+            connection_mysql.rollback()
         finally:
-            if cursor:
-                cursor.close()
+            if cursor_mysql:
+                cursor_mysql.close()
+
+    except Exception as e:
+        print_log(f"Erro ao inserir dados no Firebird: {e}", nome_servico)
+        connection_firebird.rollback()
+    finally:
+        if cursor:
+            cursor.close()
 
 def delete_firebird(tabela: str, codigo: int, codigo_global: int = 0):
     try:
@@ -419,7 +436,7 @@ def update_mysql(tabela: str, codigo: int, dados: dict):
             if cursor:
                 cursor.close()
 
-def insert_mysql(tabela: str, dados: dict):
+def insert_mysql(tabela: str, dados: dict, valor: str):
     try:
 
         cursor = connection_mysql.cursor()
@@ -438,10 +455,26 @@ def insert_mysql(tabela: str, dados: dict):
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-        print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}\n', nome_servico)
+        print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}', nome_servico)
         cursor.execute(sql_insert, valores)
-
+        codigo_global = cursor._last_insert_id
         connection_mysql.commit()
+
+        # tratamento para retornar o código global gerado no banco mysql
+        try:
+            campo_chave_primaria = buscar_nome_chave_primaria(tabela)
+            cur_fb = connection_firebird.cursor()
+            sql_update_retorno = f'UPDATE {tabela} SET CODIGO_GLOBAL = {codigo_global} WHERE {campo_chave_primaria} = {valor}'
+            cur_fb.execute(sql_update_retorno)
+            connection_firebird.commit()
+            print_log(f'Retornou codigo global: {codigo_global}\n', nome_servico)
+        except Exception as e:
+            print_log(f'Nao foi possivel retornar codigo global -> motivo: {e}\n', nome_servico)
+            connection_firebird.rollback()
+        finally:
+            if cur_fb:
+                cur_fb.close()
+
     except mysql.connector.Error as e:
         print_log(f"Erro ao inserir dados no MySQL: {e}", nome_servico)
         connection_mysql.rollback()
@@ -596,10 +629,10 @@ def firebird_mysql():
 #       SE NÃO EXISTE ESSE ELEMENTO NO MYSQL
         elif not existe_elemento_mysql and elemento_firebird:
             if acao == "I":
-                insert_mysql(tabela, elemento_firebird)
+                insert_mysql(tabela, elemento_firebird, valor)
 
             elif acao == "U":
-                insert_mysql(tabela, elemento_firebird)
+                insert_mysql(tabela, elemento_firebird, valor)
                  
         delete_registro_replicador(tabela, acao, valor)
 
