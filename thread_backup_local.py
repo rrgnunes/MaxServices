@@ -16,12 +16,14 @@ def backup():
     print_log("Carrega configurações da thread",nome_servico)
     try:
         
-        carregar_configuracoes()
+        carrega_arquivo_config()
+        inicializa_conexao_mysql()
         
         print_log("Efetua conexão remota" , nome_servico)
         conn = parametros.MYSQL_CONNECTION
 
         print_log("Pega dados local", nome_servico)
+        bases_backupedas = []
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
 
             # Verifica se conexao esta ativa, se não estiver, conecta novamente
@@ -41,32 +43,54 @@ def backup():
             data_hora_formatada = data_hora.strftime('%Y_%m_%d_%H_%M_%S')
             timer_minutos_backup = dados_cnpj['timer_minutos_backup']
 
-            conn_fb = parametros.FIREBIRD_CONNECTION
-            cursor_fb = conn_fb.cursor()
-
             if ativo:
                 if sistema_em_uso == '1':  # maxsuport
                     if pasta_compartilhada_backup and caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
-                        path = f'{pasta_compartilhada_backup}\\maxsuport\\{cnpj}'
-                        os.makedirs(path, exist_ok=True)
+                        path = os.path.join(pasta_compartilhada_backup, 'maxsuport', cnpj)
+                    
+                        if parametros.FIREBIRD_CONNECTION:
+                            if not parametros.FIREBIRD_CONNECTION.closed:
+                                parametros.FIREBIRD_CONNECTION.close()
+                            parametros.FIREBIRD_CONNECTION = None
+                        
+                        parametros.USERFB = 'maxsuport'
+                        parametros.PASSFB = 'oC8qUsDp'
+                        parametros.DATABASEFB = caminho_base_dados_maxsuport
+                        parametros.PORTFB = 3050
+
+                        inicializa_conexao_firebird(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
+                        conn_fb = parametros.FIREBIRD_CONNECTION
+                        cursor_fb = conn_fb.cursor()
 
                         caminho_arquivo_backup = path
-                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fdb'
                         comando = f'copy "{caminho_base_dados_maxsuport}" "{caminho_arquivo_backup}"'.replace('/', '\\')
 
-                        cursor_fb.execute(f'select codigo, cnpj from empresa where cnpj = {cnpj} and codigo = 1')
-                        result = cursor_fb.fetchall()
-                        if len(result) < 1:
+                        cursor_fb.execute('select cnpj from empresa')
+                        results = cursor_fb.fetchall()
+                        result = [result[0] for result in results]
+                        if cnpj in result:
+                            if caminho_base_dados_maxsuport.lower() in bases_backupedas:
+                                continue
+                            bases_backupedas.append(caminho_base_dados_maxsuport.lower())
+                            print_log("Inicia backup", nome_servico)
+                            os.makedirs(path, exist_ok=True)
+                        else:
                             continue
-                        print_log("Inicia backup", nome_servico)
 
                 elif sistema_em_uso == '2':  # gfil
                     if pasta_compartilhada_backup and caminho_base_dados_gfil and caminho_gbak_firebird_gfil:
-                        path = f'{pasta_compartilhada_backup}\\gfil\\{cnpj}'
-                        os.makedirs(path, exist_ok=True)
+                        path = os.path.join(pasta_compartilhada_backup, 'gfil', cnpj)
+
+                        parametros.USERFB = 'GFILMASTER'
+                        parametros.PASSFB = 'b32@m451'
+                        parametros.DATABASEFB = caminho_base_dados_gfil
+                        parametros.PORTFB = 3050
+
+                        inicializa_conexao_firebird(f'{caminho_gbak_firebird_gfil}/fbclient.dll')
+                        conn_fb = parametros.FIREBIRD_CONNECTION
+                        cursor_fb = conn_fb.cursor()
 
                         caminho_arquivo_backup = path
-                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_gfil.fdb'
                         comando = f'copy "{caminho_base_dados_gfil}" "{caminho_arquivo_backup}"'.replace('/', '\\')
 
                         cursor_fb.execute(f'select filial, cnpj  from diversos where cnpj = {cnpj} and filial = 1')
@@ -74,18 +98,57 @@ def backup():
                         if len(result) < 1:
                             continue
                         print_log("Inicia backup", nome_servico)
+                        os.makedirs(path, exist_ok=True)
                 
                 cursor_fb.close()
                 conn_fb.close()
                 subprocess.call(comando, shell=True)
                 print_log(f"Executou comando {comando}", nome_servico)
 
+                arquivo_backup = os.path.join(caminho_arquivo_backup, 'dados.fdb') if sistema_em_uso == '1' else os.path.join(caminho_arquivo_backup, 'infolivre.fdb')
+
+                try:
+                    arquivo_bck_existe = False
+                    if sistema_em_uso == '1':
+                        client_dll = verifica_dll_firebird()
+                        fdb.load_api(client_dll)
+
+                        conn_fbk = fdb.services.connect(host='localhost/3050', user='sysdba', password='masterkey')
+                        arquivo_destino = os.path.join(caminho_arquivo_backup, 'dados.fbk')
+                        conn_fbk.backup(arquivo_backup, arquivo_destino, collect_garbage=True)
+                        conn_fbk.wait()
+
+                        count = 0
+                        while not (os.path.exists(arquivo_destino)) and (count <= 3):
+                            time.sleep(3)
+                            count += 1
+
+                        if os.path.exists(arquivo_destino):
+                            arquivo_bd = arquivo_backup
+                            arquivo_backup = arquivo_destino
+                        else:
+                            raise FileNotFoundError
+
+                        conn_fbk.close()
+                        print_log(f'Gerado arquivo de backup: {arquivo_backup}', nome_servico)
+                        arquivo_bck_existe = True
+                except Exception as e:
+                    print_log(f'{e}', nome_servico)
+
+                if sistema_em_uso == '1':
+                    if arquivo_bck_existe:
+                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fbk'
+                    else:
+                        nome_arquivo_compactado = f'backup_{data_hora_formatada}_maxsuport.fdb'
+                else:
+                    nome_arquivo_compactado = f'backup_{data_hora_formatada}_gfil.fdb'
+
                 # Compacta arquivo
-                with open(f'{caminho_arquivo_backup}\\dados.fdb', 'rb') as arquivo_in:
+                with open(arquivo_backup, 'rb') as arquivo_in:
                     nome_arquivo_compactado = f'{nome_arquivo_compactado}.xz'
                     with lzma.open(f'{caminho_arquivo_backup}\\{nome_arquivo_compactado}', 'wb', preset=9) as arquivo_out:
                         arquivo_out.writelines(arquivo_in)
-                os.remove(f'{caminho_arquivo_backup}\\dados.fdb')
+
                 print_log(f"Criou arquivo compactado {nome_arquivo_compactado}", nome_servico)
 
                 datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3)))
@@ -94,6 +157,10 @@ def backup():
                 print_log("Executou update remoto", nome_servico)
                 conn.commit()
                 conn.close()
+
+                os.remove(arquivo_backup)
+                if arquivo_bck_existe:
+                    os.remove(arquivo_bd)
 
                 # Envia arquivo para Dropbox
                 pasta_sistema = 'maxsuport' if sistema_em_uso == '1' else 'gfil'
@@ -126,27 +193,6 @@ def backup():
                     print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto}", nome_servico)
 
                     num_arquivos_a_manter = int(timer_minutos_backup)
-                    # try:
-                    #     result = obj_dropbox.files_list_folder(diretorio_remoto)
-                    #     arquivos_na_pasta = result.entries
-                    #     print_log(f'Quantidade de arquivos no DropBox: {len(arquivos_na_pasta)}', nome_servico)
-                    # except dropbox.exceptions.ApiError as e:
-                    #     print_log(f"Erro ao listar arquivos na pasta remota: {e}", nome_servico)
-                    #     arquivos_na_pasta = []
-
-                    # if len(arquivos_na_pasta) > num_arquivos_a_manter:
-                    #     arquivos_na_pasta.sort(key=lambda entry: entry.server_modified)
-                    #     qtd_arquivos_excesso = len(arquivos_na_pasta) - num_arquivos_a_manter
-                    #     arquivos_em_excesso = arquivos_na_pasta[:qtd_arquivos_excesso]
-                    #     try:
-                    #         for arquivo in arquivos_em_excesso:
-                    #             obj_dropbox.files_delete_v2(arquivo.path_display)
-                    #             print_log(f"Arquivo excluído remoto: {arquivo.path_display}.", nome_servico)
-                    #         # obj_dropbox.files_delete_v2(arquivos_na_pasta[0].path_display)
-                    #         # print_log(f"Arquivo mais antigo {arquivos_na_pasta[0].path_display} excluído.","backuplocal")
-                    #     except dropbox.exceptions.ApiError as e:
-                    #         print_log(f"Erro ao excluir o arquivo mais antigo: {e}", nome_servico)
-
                     extensao = '.xz'
                     arquivos = glob.glob(os.path.join(caminho_arquivo_backup, '*' + extensao))
                     arquivos.sort(key=lambda arquivo: os.path.getmtime(arquivo))
@@ -165,7 +211,7 @@ def backup():
                     print_log(f'Finalizado {data_hora_formatada}', nome_servico)
                     obj_dropbox.close()
     except Exception as e:
-        print_log(e, nome_servico)
+        print_log(f'Erro ao gerar backup {e}', nome_servico)
 
 
 if __name__ == '__main__':

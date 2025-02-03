@@ -32,7 +32,6 @@ def xmlcontador():
                 con = parametros.FIREBIRD_CONNECTION
                 dias_busca_nota = -15
                 
-                print_log("Inicia select das notas", nome_servico)
                 if sistema_em_uso == '1':  # maxsuport
                     if pasta_compartilhada_backup and caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
 
@@ -67,22 +66,14 @@ def xmlcontador():
 
                                 cnpj_empresa = row['CNPJEMPRESA']
 
-                                # Salva contador
-                                # print_log("Inicia select contador - xmlcontador")
-                                # if not rowsPlat:
-                                #     nome = row['NOME']
-                                #     cpf_cnpj = condicao
-                                #     curPlataform.execute(f'insert into notafiscal_contador(nome,cpf_cnpj,cnpj_empresa) values("{nome}","{cpf_cnpj}","{cnpj_empresa}")')
-
-                                # curPlataform.execute(f'select * from notafiscal_contador where cpf_cnpj = "{condicao}"')
-                                # rowsPlat = curPlataform.fetchall()
-                                # rows_dict_plat = [dict(zip([column[0] for column in curPlataform.description], rowPlat)) for rowPlat in rowsPlat]
                                 try:
                                     contador = rows_dict_plat[0]['id']  # get id contador    
                                 except Exception as e:
                                     if 'list index out of range' in str(e).lower():
                                         continue
                                     raise
+
+                                print_log(f"Inicia select das notas para cnpj: {cnpj}", nome_servico)
 
                                 # Vamos pegar todas as notas dessa empresa e salvar na plataforma - PRESTENÇÃO, É MDFE
                                 print_log("Inicia select MDFE", nome_servico)

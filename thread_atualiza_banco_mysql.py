@@ -12,19 +12,6 @@ def atualiza_banco_mysql():
     nome_servico = 'thread_atualiza_banco_mysql'
     try:
         print_log('Verificando se precisa atualizar banco remoto', nome_servico)
-        # try:
-        #     conexao_consulta = mysql.connector.connect(host=parametros.HOSTMYSQL, user=parametros.USERMYSQL, password=parametros.PASSMYSQL)
-        #     cur_con = conexao_consulta.cursor()
-        #     cur_con.execute('show databases')
-        #     bds = cur_con.fetchall()
-        #     cur_con.close()
-        #     conexao_consulta.close()
-        # except Exception as e:
-        #     if conexao_consulta.is_connected():
-        #         conexao_consulta.close()
-        #     print_log(f'Não foi possivel adquirir lista de banco de dados mysql: {e}', nome_servico)
-        #     return
-
         try:
             fdb.load_api('/home/MaxServices/libfbclient.so.2.5.9')
             server_origem = "maxsuportsistemas.com"

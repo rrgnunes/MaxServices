@@ -7,8 +7,9 @@ import re
 import os
 import sys
 import datetime
+import configparser
 from mysql.connector import Error
-from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, print_log, pode_executar, criar_bloqueio, remover_bloqueio
+from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, inicializa_conexao_firebird,print_log, pode_executar, criar_bloqueio, remover_bloqueio
 
 #===============FIREBIRD===================
 def verifica_empresa_firebird(conn: fdb.Connection, tabela:str, dados: dict) -> tuple[int, str]:
@@ -168,7 +169,7 @@ def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int =
             else:
                 return
  
-            print_log(f'Update na tabela {tabela} -> chave: {codigo} ou codigo global: {codigo_global}', nome_servico)
+            print_log(f'Update na tabela {tabela} -> chave: {codigo} ou codigo global: {codigo_global}\n', nome_servico)
             cursor.execute(sql_update, valores)
 
             connection_firebird.commit()
@@ -184,13 +185,20 @@ def insert_firebird(tabela: str, dados: dict):
         try:
 
             cursor = connection_firebird.cursor()
+
+            if tabela.lower() == 'vendas_detalhe':
+                codigo_master = dados['CODIGO_GLOBAL_MASTER']
+                cursor.execute(f'select codigo from vendas_master where codigo_global = {codigo_master}')
+                codigo = cursor.fetchone()[0]
+                dados['FKVENDA'] = codigo
+
             colunas = ', '.join(dados.keys())
             placeholders = ', '.join(['?'] * len(dados))
             valores = tratar_valores(dados)
 
             sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-            print_log(f'Insert na tabela {tabela}', nome_servico)
+            print_log(f'Insert na tabela {tabela}\n', nome_servico)
             cursor.execute(sql_insert, valores)
 
             connection_firebird.commit()
@@ -385,7 +393,7 @@ def update_mysql(tabela: str, codigo: int, dados: dict):
                 sql_update = f"UPDATE {tabela} SET {set_clause} WHERE {coluna_chave_primaria} = %s"
                 valores.append(codigo)
             
-            print_log(f'Update na tabela {tabela} -> chave: {codigo} -> cnpj:{cnpj}', nome_servico)
+            print_log(f'Update na tabela {tabela} -> chave: {codigo} -> cnpj:{cnpj}\n', nome_servico)
             cursor.execute(sql_update, valores)
 
             connection_mysql.commit()
@@ -430,7 +438,7 @@ def insert_mysql(tabela: str, dados: dict):
 
         sql_insert = f"INSERT INTO {tabela} ({colunas}) VALUES ({placeholders})"
 
-        print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}', nome_servico)
+        print_log(f'Insert na tabela {tabela} -> CNPJ: {cnpj}\n', nome_servico)
         cursor.execute(sql_insert, valores)
 
         connection_mysql.commit()
@@ -510,7 +518,7 @@ def delete_mysql(tabela: str, codigo: int):
         if not cnpj:
             return
 
-        print_log(f"Delete na tabela {tabela} -> chave: {codigo}", nome_servico)
+        print_log(f"Delete na tabela {tabela} -> chave: {codigo}\n", nome_servico)
         sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = {codigo} and CNPJ_EMPRESA={cnpj}"
         cursor.execute(sql_delete)
 
@@ -553,6 +561,8 @@ def firebird_mysql():
         tabela = alteracao['TABELA'].upper()
         acao = alteracao['ACAO'].upper()
         valor = alteracao['CHAVE']
+
+        print_log(f'Alteração realizada: tabela -> {tabela}, acao -> {acao}, chave -> {valor}', nome_servico)
         
         elemento_firebird = buscar_elemento_firebird(tabela, valor)
 
@@ -608,6 +618,8 @@ def mysql_firebird():
         valor = alteracao[2]
         cnpj = alteracao[3]
         codigo_global = alteracao[4]
+
+        print_log(f'Alteração realizada: tabela -> {tabela}, acao -> {acao}, chave -> {valor}, global -> {codigo_global}', nome_servico)
         
         elemento_mysql = buscar_elemento_mysql(tabela=tabela, codigo=valor, cnpj=cnpj, codigo_global=codigo_global)
         existe_elemento_firebird = buscar_elemento_firebird(tabela, valor, codigo_global)
@@ -637,11 +649,17 @@ def mysql_firebird():
 if __name__ == '__main__':
 
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
+    caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
+    caminho_sistema = caminho_sistema.lower().replace('server','')
+    caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
+    config = configparser.ConfigParser()
+    config.read(caminho_ini)
+    parametros.DATABASEFB = config.get('BD', 'path')
 
     if pode_executar(nome_script):
         criar_bloqueio(nome_script)
         try:
-            carregar_configuracoes()
+            inicializa_conexao_firebird(os.path.join(caminho_sistema, 'fbclient.dll'))
             inicializa_conexao_mysql_replicador()
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION
@@ -652,14 +670,9 @@ if __name__ == '__main__':
             print_log('Processamento finalizando', nome_script)
             if not connection_firebird.closed:
                 connection_firebird.close()
-                parametros.FIREBIRD_CONNECTION.close()
                 
             if connection_mysql.is_connected():
                 connection_mysql.close()
-                parametros.MYSQL_CONNECTION_REPLICADOR.close()
-                
-            if parametros.MYSQL_CONNECTION.is_connected():
-                parametros.MYSQL_CONNECTION.close()
                 
         except Exception as e:
             print_log(f'Ocorreu um erro ao executar: {e}', nome_script)

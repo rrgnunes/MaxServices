@@ -14,12 +14,12 @@ def verifica_dados_local():
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo']
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-            caminho_base_dados_gfil = dados_cnpj['caminho_base_dados_gfil'].replace('\\', '/')
-            caminho_base_dados_gfil = caminho_base_dados_gfil.split('/')[0] + '/' + caminho_base_dados_gfil.split('/')[1]
 
             print_log(f"Local valor {ativo} do CNPJ {cnpj}", nome_servico)
 
             if ativo == "0" and sistema_em_uso == "2":
+                caminho_base_dados_gfil = dados_cnpj['caminho_base_dados_gfil'].replace('\\', '/')
+                caminho_base_dados_gfil = caminho_base_dados_gfil.split('/')[0] + '/' + caminho_base_dados_gfil.split('/')[1]
                 print_log("Encerra Processo do GFIL", nome_servico)
                 for proc in psutil.process_iter(['name', 'exe']):
                     if 'GerenciadorFIL' in proc.info['name']:
@@ -38,15 +38,12 @@ def verifica_dados_local():
                     cursor.execute(f"""select cc.validade_sistema  from cliente_cliente cc  where cnpj in ({cnpj})""")
                     rows = cursor.fetchone()
                     data_cripto = crypt('C', rows['validade_sistema'])
+                    if not data_cripto:
+                        data_cripto = '80E854C4A6929988F879E1'
                     cursor.close()
-                    
-                    
                 try:
                     con = parametros.FIREBIRD_CONNECTION
                     cur = con.cursor()
-                    # cur.execute(f"select DATA_VALIDADE from empresa where cnpj = {cnpj} and DATA_VALIDADE = '80E854C4A6929988F879E1' ") # se houver retorno é porque esta ativo
-                    # sistema_ativo = len(cur.fetchall()) > 0
-                    # if sistema_ativo != (ativo == '1'):
                     comando = 'Liberar' if ativo == "1" else 'Bloquear'
                     print_log(f"Comando para {comando} maxsuport", nome_servico)
                     cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
