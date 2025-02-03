@@ -4,33 +4,11 @@ import mysql.connector
 import base64
 import parametros
 import os
+import socket
+from funcoes import verifica_dll_firebird, caminho_bd
 from functools import wraps
 
 app = Flask(__name__)
-
-# Geração de chave fixa de 128 bits (16 bytes)
-API_KEY = 'ozYFbdg1WMemus2QRVOEoJugOJzKU8bmxmsCMvH/GB09sTto79au3h+kwltqXNY1PRG2WP/OXPtlz1AMhhWSV/gGaio3b4k9hnaZHu67asT08mE+ybXuMPS1zIp2f0mP'
-db_type = 'mysql'
-
-# Configurações do banco Firebird
-porta_firebird_maxsuport = 3050
-caminho_base_dados_maxsuport = r"c:\\maxsuport_rian\\dados\\dados.fdb"
-if db_type == 'firebird':
-    fdb.load_api('c:\\maxsuport\\fbclient64.dll')
-
-FIREBIRD_CONFIG = {
-    'dsn': f'192.168.10.242:{caminho_base_dados_maxsuport}',
-    'user': parametros.USERFB,
-    'password': parametros.PASSFB,
-}
-
-# Configurações do banco MySQL
-MYSQL_CONFIG = {
-    'host': '10.105.96.106',
-    'user': parametros.USERMYSQL,
-    'password': parametros.PASSMYSQL,
-    'database': 'dados'
-}
 
 def get_db_connection():
     if db_type == 'mysql':
@@ -203,4 +181,31 @@ def delete_from_table(table_name, id):
     return jsonify({'message': 'Registro deletado com sucesso'})
 
 if __name__ == '__main__':
-    app.run(host='10.105.96.102', port=5000, debug=True)
+    ip = socket.gethostbyname(socket.gethostname())
+    
+    # Geração de chave fixa de 128 bits (16 bytes)
+    API_KEY = 'ozYFbdg1WMemus2QRVOEoJugOJzKU8bmxmsCMvH/GB09sTto79au3h+kwltqXNY1PRG2WP/OXPtlz1AMhhWSV/gGaio3b4k9hnaZHu67asT08mE+ybXuMPS1zIp2f0mP'
+    db_type = 'firebird'
+
+    # Configurações do banco Firebird
+    porta_firebird_maxsuport = 3050
+    caminho_base_dados_maxsuport = caminho_bd()
+    if db_type == 'firebird':
+        client_dll = verifica_dll_firebird()
+        fdb.load_api(client_dll)
+
+    FIREBIRD_CONFIG = {
+        'dsn': f'{ip}:{caminho_base_dados_maxsuport}',
+        'user': parametros.USERFB,
+        'password': parametros.PASSFB,
+    }
+
+    # Configurações do banco MySQL
+    MYSQL_CONFIG = {
+        'host': '10.105.96.106',
+        'user': parametros.USERMYSQL,
+        'password': parametros.PASSMYSQL,
+        'database': 'dados'
+    }
+
+    app.run(host=ip, port=5000, debug=True)

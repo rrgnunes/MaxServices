@@ -9,7 +9,7 @@ import sys
 import datetime
 import configparser
 from mysql.connector import Error
-from funcoes import carregar_configuracoes, inicializa_conexao_mysql_replicador, inicializa_conexao_firebird,print_log, pode_executar, criar_bloqueio, remover_bloqueio
+from funcoes import inicializa_conexao_mysql_replicador, inicializa_conexao_firebird,print_log, pode_executar, criar_bloqueio, remover_bloqueio, caminho_bd
 
 #===============FIREBIRD===================
 def verifica_empresa_firebird(conn: fdb.Connection, tabela:str, dados: dict) -> tuple[int, str]:
@@ -684,10 +684,8 @@ if __name__ == '__main__':
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
     caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
     caminho_sistema = caminho_sistema.lower().replace('server','')
-    caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
-    config = configparser.ConfigParser()
-    config.read(caminho_ini)
-    parametros.DATABASEFB = config.get('BD', 'path')
+
+    parametros.DATABASEFB = caminho_bd()
 
     if pode_executar(nome_script):
         criar_bloqueio(nome_script)
