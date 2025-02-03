@@ -24,7 +24,7 @@ def atualizar_horarios():
 
 atualizar_horarios()
 
-name_session = "70369921151"
+name_session = "00000000000000"
 token = generate_token(name_session)
 parametros.TOKEN_ZAP = token['token']
 retorno = start_session(name_session)
@@ -98,12 +98,12 @@ if obj_empresas:
  
             
             if contador % 20 == 0:
-                pausa_longa = random.uniform(300, 600)
+                pausa_longa = random.uniform(400, 700)
                 print_log(f'Pausa longa de {pausa_longa / 60:.2f} minutos após {contador} mensagens.')
                 time.sleep(pausa_longa)
             else:
                 
-                tempo_aleatorio = random.uniform(30, 70)
+                tempo_aleatorio = random.uniform(120, 240)
                 print_log(f'Pausando o envio em {tempo_aleatorio} segundos')
                 time.sleep(tempo_aleatorio)       
                 

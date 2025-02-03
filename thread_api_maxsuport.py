@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 import fdb
+import mysql.connector
 import base64
 import parametros
 import os
@@ -9,42 +10,46 @@ app = Flask(__name__)
 
 # Geração de chave fixa de 128 bits (16 bytes)
 API_KEY = 'ozYFbdg1WMemus2QRVOEoJugOJzKU8bmxmsCMvH/GB09sTto79au3h+kwltqXNY1PRG2WP/OXPtlz1AMhhWSV/gGaio3b4k9hnaZHu67asT08mE+ybXuMPS1zIp2f0mP'
-# print(f"Sua chave de API é: {API_KEY}")  # Salve essa chave em algum lugar seguro
+db_type = 'mysql'
 
 # Configurações do banco Firebird
 porta_firebird_maxsuport = 3050
 caminho_base_dados_maxsuport = r"c:\\maxsuport_rian\\dados\\dados.fdb"
-fdb.load_api('c:\\maxsuport\\fbclient64.dll')
+if db_type == 'firebird':
+    fdb.load_api('c:\\maxsuport\\fbclient64.dll')
 
-DB_CONFIG = {
+FIREBIRD_CONFIG = {
     'dsn': f'192.168.10.242:{caminho_base_dados_maxsuport}',
     'user': parametros.USERFB,
     'password': parametros.PASSFB,
 }
 
-# Função para criar conexão com o banco
+# Configurações do banco MySQL
+MYSQL_CONFIG = {
+    'host': '10.105.96.106',
+    'user': parametros.USERMYSQL,
+    'password': parametros.PASSMYSQL,
+    'database': 'dados'
+}
+
 def get_db_connection():
-    return fdb.connect(**DB_CONFIG)
+    if db_type == 'mysql':
+        return mysql.connector.connect(**MYSQL_CONFIG)
+    else:
+        return fdb.connect(**FIREBIRD_CONFIG)
 
 # Função para listar tabelas do banco
 def get_table_names():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT rdb$relation_name FROM rdb$relations WHERE rdb$view_blr IS NULL AND rdb$system_flag = 0")
-    tables = [row[0].strip().lower() for row in cur.fetchall()]
+    if db_type == 'mysql':
+        cur.execute("SHOW TABLES")
+        tables = [row[0] for row in cur.fetchall()]
+    else:
+        cur.execute("SELECT rdb$relation_name FROM rdb$relations WHERE rdb$view_blr IS NULL AND rdb$system_flag = 0")
+        tables = [row[0].strip().lower() for row in cur.fetchall()]
     conn.close()
     return tables
-
-# Função para converter blobs em base64
-def convert_blob_to_base64(row, columns):
-    data = {}
-    for i, col in enumerate(columns):
-        if isinstance(row[i], fdb.fbcore.BlobReader):
-            blob_data = row[i].read()
-            data[col] = base64.b64encode(blob_data).decode('utf-8')
-        else:
-            data[col] = row[i]
-    return data
 
 # Middleware para validar a chave da API
 def require_api_key(f):
@@ -57,7 +62,20 @@ def require_api_key(f):
             return jsonify({'error': 'Chave de API inválida ou ausente'}), 403
     return decorated_function
 
-# Endpoints
+# Função para converter blobs em base64
+def convert_blob_to_base64(row, columns):
+    data = {}
+    for i, col in enumerate(columns):
+        if isinstance(row[i], (bytes, bytearray)):
+            data[col] = base64.b64encode(row[i]).decode('utf-8')
+        else:
+            data[col] = row[i]
+    return data
+
+@app.route('/<db_type>/tables', methods=['GET'])
+@require_api_key
+def list_tables(db_type):
+    return jsonify(get_table_names(db_type))
 
 @app.route('/<table_name>', methods=['GET'])
 @require_api_key
@@ -77,7 +95,7 @@ def get_all(table_name):
 @app.route('/produto/codigo_barra/<codigo>', methods=['GET'])
 @require_api_key
 def get_by_barcode(codigo):
-    table_name = 'produto'  # Substitua pelo nome correto da tabela
+    table_name = 'PRODUTO'  # Substitua pelo nome correto da tabela
 
     if table_name not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
@@ -86,15 +104,24 @@ def get_by_barcode(codigo):
     cur = conn.cursor()
 
     try:
-        cur.execute(f"SELECT * FROM {table_name} WHERE CODBARRA = ?", (codigo,))
+        if db_type == 'mysql':
+            cur.execute(f"""SELECT PR.*, 
+                            (SELECT PI.IMAGEM 
+                                FROM PRODUTO_IMAGEM PI 
+                                WHERE PI.PRODUTO = PR.CODIGO 
+                                LIMIT 1) AS foto
+                        FROM PRODUTO PR
+                        WHERE PR.CODBARRA = %s""", (codigo,))
+        else:
+            cur.execute(f"SELECT * FROM {table_name} WHERE CODBARRA = ?", (codigo,))
         columns = [desc[0].strip().lower() for desc in cur.description]
         row = cur.fetchone()
 
         if row:
             result = convert_blob_to_base64(row, columns)
-            return jsonify(result)
+            return jsonify([result])  # Retorna sempre como uma lista
         else:
-            return jsonify({'error': 'Produto não encontrado'}), 404
+            return jsonify([])  # Retorna lista vazia se não encontrar
 
     except Exception as e:
         return jsonify({'error': f'Erro na consulta: {str(e)}'}), 500
@@ -176,4 +203,4 @@ def delete_from_table(table_name, id):
     return jsonify({'message': 'Registro deletado com sucesso'})
 
 if __name__ == '__main__':
-    app.run(host='192.168.10.115', port=5000, debug=True)
+    app.run(host='10.105.96.102', port=5000, debug=True)

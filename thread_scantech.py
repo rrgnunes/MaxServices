@@ -119,7 +119,7 @@ def envia_vendas_scantech():
     print_log("Localiza vendas do ultimo dia", nome_servico)
 
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 1 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C', 'I') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
+    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 2 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C', 'I') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
     obj_vendas = cur_con.fetchall()
     cur_con.close()
 
@@ -212,11 +212,15 @@ def envia_vendas_scantech():
         url = f"http://br.homo.apipdv.scanntech.com/api-minoristas/api/v2/minoristas/{parametros.IDEMPRESASCANTECH}/locales/{parametros.IDLOCALSCANTECH}/cajas/{venda['FK_CAIXA']}/movimientos"
 
         autorizacao = converte_base_64()
+        backEndVersion = "1.8.0.0"
+        pdvVersion = "1.8.0.0"
         if autorizacao != "Erro":
             headers = {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "Authorization": autorizacao
+                "Authorization": autorizacao,        
+                "backend-version": backEndVersion,  # Substitua pela variável correspondente
+                "pdv-version": pdvVersion  # Substitua pela variável correspondente
             }
 
         try:
