@@ -11,6 +11,7 @@ import psutil as ps
 from pathlib import Path
 from decimal import Decimal
 import subprocess
+import configparser
 from funcoes_zap import *
 import random
 
@@ -94,7 +95,7 @@ def carregar_configuracoes():
 
 def atualizar_conexoes_firebird():
     for cnpj, dados in parametros.CNPJ_CONFIG['sistema'].items():
-        if dados['caminho_base_dados_maxsuport'] == None:
+        if (dados['caminho_base_dados_maxsuport'] == None) or (dados['caminho_base_dados_maxsuport'] == 'None'):
             continue
         caminho_gbak_firebird_maxsuport = dados['caminho_gbak_firebird_maxsuport']
         path_dll = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
@@ -871,3 +872,15 @@ def verifica_dll_firebird():
     
     else:
         return ''
+    
+def caminho_bd():
+    try:
+        caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
+        caminho_sistema = caminho_sistema.lower().replace('server','')
+        caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
+        config = configparser.ConfigParser()
+        config.read(caminho_ini)
+        caminho_banco_dados = config.get('BD', 'path')
+    except:
+        return ''
+    return caminho_banco_dados
