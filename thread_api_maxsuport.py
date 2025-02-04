@@ -83,15 +83,25 @@ def get_by_barcode(codigo):
 
     try:
         if db_type == 'mysql':
-            cur.execute(f"""SELECT PR.*, 
+            cur.execute(f"""SELECT PR.CODIGO, PR.DESCRICAO, PR.PR_VENDA, PR.PR_CUSTO , PE.ESTOQUE_ATUAL ,
                             (SELECT PI.IMAGEM 
                                 FROM PRODUTO_IMAGEM PI 
                                 WHERE PI.PRODUTO = PR.CODIGO 
-                                LIMIT 1) AS foto
+                                LIMIT 1) AS FOTO
                         FROM PRODUTO PR
+                        left outer join PRODUTO_ESTOQUE PE
+                          on PR.CODIGO = PE.PRODUTO
                         WHERE PR.CODBARRA = %s""", (codigo,))
         else:
-            cur.execute(f"SELECT * FROM {table_name} WHERE CODBARRA = ?", (codigo,))
+            cur.execute(f""""SELECT PR.CODIGO, PR.DESCRICAO, PR.PR_VENDA, PR.PR_CUSTO , PE.ESTOQUE_ATUAL ,
+                            (SELECT FIRST 1 PI.IMAGEM 
+                                FROM PRODUTO_IMAGEM PI 
+                                WHERE PI.PRODUTO = PR.CODIGO 
+                                ) AS FOTO
+                        FROM PRODUTO PR
+                        left outer join PRODUTO_ESTOQUE PE
+                          on PR.CODIGO = PE.PRODUTO
+                        WHERE CODBARRA = ?""", (codigo,))
         columns = [desc[0].strip().lower() for desc in cur.description]
         row = cur.fetchone()
 
@@ -140,8 +150,9 @@ def insert_into_table(table_name):
     columns = ', '.join(data.keys())
     placeholders = ', '.join(['?' for _ in data])
     values = tuple(data.values())
-
+        
     cur.execute(f'INSERT INTO {table_name} ({columns}) VALUES ({placeholders})', values)
+    
     conn.commit()
     conn.close()
     
@@ -154,17 +165,35 @@ def update_table(table_name, id):
         return jsonify({'error': 'Tabela não encontrada'}), 404
 
     data = request.json
+    if not data:
+        return jsonify({'error': 'Nenhum dado enviado'}), 400  # Verifica se há dados para atualizar
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    update_clause = ', '.join([f"{key} = ?" for key in data.keys()])
+
+    # Define os placeholders corretos para cada tipo de banco de dados
+    if db_type == 'mysql':
+        update_clause = ', '.join([f"{key} = %s" for key in data.keys()])
+        sql = f'UPDATE {table_name} SET {update_clause} WHERE codigo = %s'
+    else:  # SQLite
+        update_clause = ', '.join([f"{key} = ?" for key in data.keys()])
+        sql = f'UPDATE {table_name} SET {update_clause} WHERE codigo = ?'
+
     values = tuple(data.values()) + (id,)
 
-    cur.execute(f'UPDATE {table_name} SET {update_clause} WHERE codigo = ?', values)
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'message': 'Registro atualizado com sucesso'})
+    try:
+        cur.execute(sql, values)
+        conn.commit()
+        return jsonify({'message': 'Registro atualizado com sucesso'})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
 
 @app.route('/<table_name>/<int:id>', methods=['DELETE'])
 @require_api_key
