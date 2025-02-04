@@ -881,6 +881,7 @@ def caminho_bd():
         config = configparser.ConfigParser()
         config.read(caminho_ini)
         caminho_banco_dados = config.get('BD', 'path')
+        ip_banco_dados = config.get('BD', 'ip')        
     except:
         return ''
-    return caminho_banco_dados
+    return caminho_banco_dados, ip_banco_dados 

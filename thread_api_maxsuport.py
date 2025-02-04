@@ -73,7 +73,7 @@ def get_all(table_name):
 @app.route('/produto/codigo_barra/<codigo>', methods=['GET'])
 @require_api_key
 def get_by_barcode(codigo):
-    table_name = 'PRODUTO'  # Substitua pelo nome correto da tabela
+    table_name = 'produto'  # Substitua pelo nome correto da tabela
 
     if table_name not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
@@ -180,16 +180,16 @@ def delete_from_table(table_name, id):
 
     return jsonify({'message': 'Registro deletado com sucesso'})
 
-if __name__ == '__main__':
-    ip = socket.gethostbyname(socket.gethostname())
-    
+if __name__ == '__main__':   
     # Geração de chave fixa de 128 bits (16 bytes)
     API_KEY = 'ozYFbdg1WMemus2QRVOEoJugOJzKU8bmxmsCMvH/GB09sTto79au3h+kwltqXNY1PRG2WP/OXPtlz1AMhhWSV/gGaio3b4k9hnaZHu67asT08mE+ybXuMPS1zIp2f0mP'
     db_type = 'firebird'
 
     # Configurações do banco Firebird
     porta_firebird_maxsuport = 3050
-    caminho_base_dados_maxsuport = caminho_bd()
+    caminho_base_dados_maxsuport = caminho_bd()[0]
+    ip = caminho_bd()[1]
+
     if db_type == 'firebird':
         client_dll = verifica_dll_firebird()
         fdb.load_api(client_dll)
@@ -202,10 +202,10 @@ if __name__ == '__main__':
 
     # Configurações do banco MySQL
     MYSQL_CONFIG = {
-        'host': '10.105.96.106',
+        'host': 'localhost',
         'user': parametros.USERMYSQL,
         'password': parametros.PASSMYSQL,
         'database': 'dados'
     }
 
-    app.run(host=ip, port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
