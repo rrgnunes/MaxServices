@@ -58,7 +58,7 @@ def list_tables(db_type):
 @app.route('/<table_name>', methods=['GET'])
 @require_api_key
 def get_all(table_name):
-    if table_name not in get_table_names():
+    if table_name.lower() not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
 
     conn = get_db_connection()
@@ -73,25 +73,39 @@ def get_all(table_name):
 @app.route('/produto/codigo_barra/<codigo>', methods=['GET'])
 @require_api_key
 def get_by_barcode(codigo):
-    table_name = 'PRODUTO'  # Substitua pelo nome correto da tabela
+    table_name = 'produto'  # Substitua pelo nome correto da tabela
 
-    if table_name not in get_table_names():
+    if table_name.lower() not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
 
     conn = get_db_connection()
     cur = conn.cursor()
 
     try:
+        sql = ''
         if db_type == 'mysql':
-            cur.execute(f"""SELECT PR.*, 
+            sql = """SELECT PR.CODIGO, PR.DESCRICAO, PR.PR_VENDA, PR.PR_CUSTO, 
+                            COALESCE(PE.ESTOQUE_ATUAL, 0) AS ESTOQUE_ATUAL, PR.CODBARRA,
                             (SELECT PI.IMAGEM 
-                                FROM PRODUTO_IMAGEM PI 
-                                WHERE PI.PRODUTO = PR.CODIGO 
-                                LIMIT 1) AS foto
-                        FROM PRODUTO PR
-                        WHERE PR.CODBARRA = %s""", (codigo,))
+                            FROM PRODUTO_IMAGEM PI 
+                            WHERE PI.PRODUTO = PR.CODIGO 
+                            LIMIT 1) AS FOTO
+                    FROM PRODUTO PR
+                    LEFT JOIN PRODUTO_ESTOQUE PE
+                    ON PR.CODIGO = PE.PRODUTO AND PE.EMPRESA = 1
+                    WHERE PR.EMPRESA = 1 AND PR.CODBARRA = %s"""
         else:
-            cur.execute(f"SELECT * FROM {table_name} WHERE CODBARRA = ?", (codigo,))
+            sql = """SELECT PR.CODIGO, PR.DESCRICAO, PR.PR_VENDA, PR.PR_CUSTO, 
+                            COALESCE(PE.ESTOQUE_ATUAL, 0) AS ESTOQUE_ATUAL, PR.CODBARRA,
+                            (SELECT FIRST 1 PI.IMAGEM 
+                            FROM PRODUTO_IMAGEM PI 
+                            WHERE PI.PRODUTO = PR.CODIGO) AS FOTO
+                    FROM PRODUTO PR
+                    LEFT JOIN PRODUTO_ESTOQUE PE
+                    ON PR.CODIGO = PE.PRODUTO AND PE.EMPRESA = 1
+                    WHERE PR.EMPRESA = 1 AND PR.CODBARRA = ?"""
+            
+        cur.execute(sql, (codigo,))
         columns = [desc[0].strip().lower() for desc in cur.description]
         row = cur.fetchone()
 
@@ -110,7 +124,7 @@ def get_by_barcode(codigo):
 @app.route('/<table_name>/<int:id>', methods=['GET'])
 @require_api_key
 def get_by_id(table_name, id):
-    if table_name not in get_table_names():
+    if table_name.lower() not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
 
     conn = get_db_connection()
@@ -130,46 +144,95 @@ def get_by_id(table_name, id):
 @app.route('/<table_name>', methods=['POST'])
 @require_api_key
 def insert_into_table(table_name):
-    if table_name not in get_table_names():
-        return jsonify({'error': 'Tabela não encontrada'}), 404
-
     data = request.json
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    columns = ', '.join(data.keys())
-    placeholders = ', '.join(['?' for _ in data])
-    values = tuple(data.values())
 
-    cur.execute(f'INSERT INTO {table_name} ({columns}) VALUES ({placeholders})', values)
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'message': 'Registro inserido com sucesso'}), 201
+    try:
+        # Inserindo o produto na tabela PRODUTO
+        columns = ', '.join(data.keys())
+        placeholders = ', '.join(['?' for _ in data])
+        values = tuple(data.values())
+
+        cur.execute(f'INSERT INTO PRODUTO ({columns}) VALUES ({placeholders}) RETURNING CODIGO', values)
+        produto_id = cur.fetchone()[0]  # Obtém o código do produto inserido
+        conn.commit()
+
+        # Inserindo na tabela PRODUTO_ESTOQUE
+        estoque_data = (
+            produto_id,
+            data.get('empresa', 1),  # Empresa fornecida ou padrão 1
+            data.get('qtd_atual', 0)
+        )
+
+        cur.execute(
+            'INSERT INTO PRODUTO_ESTOQUE (PRODUTO, EMPRESA, ESTOQUE_ATUAL) VALUES (?, ?, ?)',
+            estoque_data
+        )
+        conn.commit()
+
+        return jsonify({'message': 'Produto e estoque inseridos com sucesso', 'codigo': produto_id}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': 'Erro ao inserir registro', 'details': str(e)}), 500
+    finally:
+        conn.close()
+
 
 @app.route('/<table_name>/<int:id>', methods=['PUT'])
 @require_api_key
 def update_table(table_name, id):
-    if table_name not in get_table_names():
+    if table_name.lower() not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
 
     data = request.json
+    if not data:
+        return jsonify({'error': 'Nenhum dado enviado'}), 400  # Verifica se há dados para atualizar
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    update_clause = ', '.join([f"{key} = ?" for key in data.keys()])
+
+    # Define os placeholders corretos para cada tipo de banco de dados
+    if db_type == 'mysql':
+        update_clause = ', '.join([f"{key} = %s" for key in data.keys()])
+        sql = f'UPDATE {table_name} SET {update_clause} WHERE codigo = %s  AND EMPRESA  = 1'
+    else:  # Firebird
+        update_clause = ', '.join([f"{key} = ?" for key in data.keys()])
+        sql = f'UPDATE {table_name} SET {update_clause} WHERE codigo = ? AND EMPRESA  = 1'
+
     values = tuple(data.values()) + (id,)
 
-    cur.execute(f'UPDATE {table_name} SET {update_clause} WHERE codigo = ?', values)
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'message': 'Registro atualizado com sucesso'})
+    try:
+        cur.execute(sql, values)
+        conn.commit()
+
+        # Atualizado na tabela PRODUTO_ESTOQUE
+        estoque_data = (
+            data.get('qtd_atual', 0),
+            id
+        )
+
+        cur.execute(
+            'UPDATE PRODUTO_ESTOQUE SET ESTOQUE_ATUAL = ? WHERE PRODUTO = ?',
+            estoque_data
+        )
+        conn.commit()
+
+        return jsonify({'message': 'Registro atualizado com sucesso'})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
 
 @app.route('/<table_name>/<int:id>', methods=['DELETE'])
 @require_api_key
 def delete_from_table(table_name, id):
-    if table_name not in get_table_names():
+    if table_name.lower() not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
 
     conn = get_db_connection()
@@ -180,16 +243,16 @@ def delete_from_table(table_name, id):
 
     return jsonify({'message': 'Registro deletado com sucesso'})
 
-if __name__ == '__main__':
-    ip = socket.gethostbyname(socket.gethostname())
-    
+if __name__ == '__main__':   
     # Geração de chave fixa de 128 bits (16 bytes)
     API_KEY = 'ozYFbdg1WMemus2QRVOEoJugOJzKU8bmxmsCMvH/GB09sTto79au3h+kwltqXNY1PRG2WP/OXPtlz1AMhhWSV/gGaio3b4k9hnaZHu67asT08mE+ybXuMPS1zIp2f0mP'
     db_type = 'firebird'
 
     # Configurações do banco Firebird
     porta_firebird_maxsuport = 3050
-    caminho_base_dados_maxsuport = caminho_bd()
+    caminho_base_dados_maxsuport = caminho_bd()[0]
+    ip = caminho_bd()[1]
+
     if db_type == 'firebird':
         client_dll = verifica_dll_firebird()
         fdb.load_api(client_dll)
@@ -202,10 +265,10 @@ if __name__ == '__main__':
 
     # Configurações do banco MySQL
     MYSQL_CONFIG = {
-        'host': '10.105.96.106',
+        'host': 'localhost',
         'user': parametros.USERMYSQL,
         'password': parametros.PASSMYSQL,
         'database': 'dados'
     }
 
-    app.run(host=ip, port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
