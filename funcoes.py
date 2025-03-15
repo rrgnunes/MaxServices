@@ -808,13 +808,12 @@ def remover_bloqueio(nome_script):
     if os.path.exists(caminho_lock_file):
         os.remove(caminho_lock_file)
 
-def crypt(action: str, src: str, cnpj:str) -> str:
+def crypt(action: str, src: str) -> str:
     if not src:
         return ''
     
     if isinstance(src, datetime.datetime):
         src = datetime.datetime.strftime(src, '%d/%m/%Y')
-        src = cnpj + '-' + src
 
     key = 'XNGREXCAPHJKQWERTYUIOP98765LKJHASFGMNBVCAXZ13450'
     dest = ''

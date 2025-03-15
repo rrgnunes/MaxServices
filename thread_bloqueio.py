@@ -39,7 +39,7 @@ def verifica_dados_local():
                         cursor = conn.cursor(dictionary=True)
                         cursor.execute(f"""select cc.validade_sistema  from cliente_cliente cc  where cnpj in ({cnpj})""")
                         rows = cursor.fetchall()[0]
-                        data_cripto = crypt('C', rows['validade_sistema'], cnpj)
+                        data_cripto = crypt('C', rows['validade_sistema'])
                         if not data_cripto:
                             data_cripto = '80E854C4A6929988F879E1'
                     finally:
@@ -58,6 +58,9 @@ def verifica_dados_local():
                     print_log(f"Comando para {comando} maxsuport", nome_servico)
                     cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
                     con.commit()
+                    cur.close()
+                    con.close()
+                    parametros.FIREBIRD_CONNECTION = None
                 except fdb.fbcore.DatabaseError as e:
                     print_log(f"Erro ao executar consulta: {e}", nome_servico)
     except Exception as e:
