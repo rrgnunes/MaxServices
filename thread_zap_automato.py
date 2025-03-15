@@ -39,6 +39,9 @@ def zapautomato():
                     con_mysql = parametros.MYSQL_CONNECTION
 
                     parametros.DATABASEFB = caminho_base_dados_maxsuport
+                    if (parametros.DATABASEFB == None) or (parametros.DATABASEFB == "None"):
+                        continue
+                    
                     parametros.PORTFB = porta_firebird_maxsuport
                     inicializa_conexao_firebird(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
                     cur = parametros.FIREBIRD_CONNECTION.cursor()

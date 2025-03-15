@@ -808,12 +808,13 @@ def remover_bloqueio(nome_script):
     if os.path.exists(caminho_lock_file):
         os.remove(caminho_lock_file)
 
-def crypt(action: str, src: str) -> str:
+def crypt(action: str, src: str, cnpj:str) -> str:
     if not src:
         return ''
     
     if isinstance(src, datetime.datetime):
         src = datetime.datetime.strftime(src, '%d/%m/%Y')
+        src = cnpj + '-' + src
 
     key = 'XNGREXCAPHJKQWERTYUIOP98765LKJHASFGMNBVCAXZ13450'
     dest = ''
@@ -865,7 +866,7 @@ def crypt(action: str, src: str) -> str:
 def verifica_dll_firebird():
 
     if os.path.exists('C:/Program Files/Firebird/Firebird_2_5/bin'):
-        return f'{parametros.SCRIPT_PATH}/fbclient64.dll'
+        return f'{parametros.SCRIPT_PATH}\\fbclient64.dll'
     
     elif os.path.exists('C:/Program Files (x86)/Firebird/Firebird_2_5/bin/'):
         return f'{parametros.SCRIPT_PATH}/fbclient32.dll'

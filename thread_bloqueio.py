@@ -39,7 +39,7 @@ def verifica_dados_local():
                         cursor = conn.cursor(dictionary=True)
                         cursor.execute(f"""select cc.validade_sistema  from cliente_cliente cc  where cnpj in ({cnpj})""")
                         rows = cursor.fetchall()[0]
-                        data_cripto = crypt('C', rows['validade_sistema'])
+                        data_cripto = crypt('C', rows['validade_sistema'], cnpj)
                         if not data_cripto:
                             data_cripto = '80E854C4A6929988F879E1'
                     finally:
