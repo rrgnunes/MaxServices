@@ -9,6 +9,7 @@ def consulta_cnpj():
     pasta_raiz = os.path.abspath(os.sep)
     pastas = os.listdir(pasta_raiz)
     client_dll = verifica_dll_firebird()
+    print(client_dll)
     fdb.load_api(client_dll)
     cnpjs = []
 

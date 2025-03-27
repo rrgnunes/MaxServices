@@ -58,6 +58,9 @@ def verifica_dados_local():
                     print_log(f"Comando para {comando} maxsuport", nome_servico)
                     cur.execute(f"UPDATE EMPRESA SET DATA_VALIDADE = '{data_cripto}' WHERE CNPJ = '{cnpj}'")
                     con.commit()
+                    cur.close()
+                    con.close()
+                    parametros.FIREBIRD_CONNECTION = None
                 except fdb.fbcore.DatabaseError as e:
                     print_log(f"Erro ao executar consulta: {e}", nome_servico)
     except Exception as e:

@@ -58,6 +58,9 @@ def backup():
                         parametros.DATABASEFB = caminho_base_dados_maxsuport
                         parametros.PORTFB = 3050
 
+                        if parametros.DATABASEFB == 'None':
+                            continue
+
                         inicializa_conexao_firebird(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
                         conn_fb = parametros.FIREBIRD_CONNECTION
                         cursor_fb = conn_fb.cursor()

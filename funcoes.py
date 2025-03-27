@@ -895,7 +895,7 @@ def crypt(action: str, src: str) -> str:
 def verifica_dll_firebird():
 
     if os.path.exists('C:/Program Files/Firebird/Firebird_2_5/bin'):
-        return f'{parametros.SCRIPT_PATH}/fbclient64.dll'
+        return f'{parametros.SCRIPT_PATH}\\fbclient64.dll'
     
     elif os.path.exists('C:/Program Files (x86)/Firebird/Firebird_2_5/bin/'):
         return f'{parametros.SCRIPT_PATH}/fbclient32.dll'

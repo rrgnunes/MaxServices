@@ -9,7 +9,7 @@ import sys
 import datetime
 import configparser
 from mysql.connector import Error
-from funcoes import inicializa_conexao_mysql_replicador, inicializa_conexao_firebird,print_log, pode_executar, criar_bloqueio, remover_bloqueio, caminho_bd
+from funcoes import inicializa_conexao_mysql_replicador, inicializa_conexao_firebird,print_log, pode_executar, criar_bloqueio, remover_bloqueio, caminho_bd, verifica_dll_firebird
 
 #===============FIREBIRD===================
 def verifica_empresa_firebird(conn: fdb.Connection, tabela:str, dados: dict) -> tuple[int, str]:
@@ -682,15 +682,16 @@ def mysql_firebird():
 if __name__ == '__main__':
 
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
-    caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
-    caminho_sistema = caminho_sistema.lower().replace('server','')
+    # caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
+    # caminho_sistema = caminho_sistema.lower().replace('server','')
+    client_dll = verifica_dll_firebird()
 
     parametros.DATABASEFB = caminho_bd()
 
     if pode_executar(nome_script):
         criar_bloqueio(nome_script)
         try:
-            inicializa_conexao_firebird(os.path.join(caminho_sistema, 'fbclient.dll'))
+            inicializa_conexao_firebird(client_dll)
             inicializa_conexao_mysql_replicador()
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION

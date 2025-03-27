@@ -17,6 +17,8 @@ def atualiza_banco():
             porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
             caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
 
+            if caminho_base_dados_maxsuport == 'None':
+                continue
 
             caminho_sistema = caminho_base_dados_maxsuport.lower().replace('\\dados\\dados.fdb', '')
             caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
