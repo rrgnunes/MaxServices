@@ -22,3 +22,5 @@ __pycache__/
 log/log.txt
 cnpj.txt
 temp/*.lock
+*.mp3
+*.wav
