@@ -686,7 +686,7 @@ if __name__ == '__main__':
     # caminho_sistema = caminho_sistema.lower().replace('server','')
     client_dll = verifica_dll_firebird()
 
-    parametros.DATABASEFB = caminho_bd()
+    parametros.DATABASEFB = caminho_bd()[0]
 
     if pode_executar(nome_script):
         criar_bloqueio(nome_script)

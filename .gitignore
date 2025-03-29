@@ -21,4 +21,6 @@ __pycache__/
 /venv/
 log/log.txt
 cnpj.txt
+banco.ini
+config.json
 temp/*.lock
