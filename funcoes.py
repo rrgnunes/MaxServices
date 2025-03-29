@@ -15,6 +15,7 @@ import configparser
 from funcoes_zap import *
 import random
 
+
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
     # Verifica se a pasta 'log' existe, caso contrário, cria a pasta
     pasta_log = os.path.join(parametros.SCRIPT_PATH, 'log')
@@ -49,6 +50,32 @@ def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
 
     for arquivo in arquivos_old[:-5]:
         os.remove(arquivo)
+        
+def envia_audio_texto_api_comando(tipo, dados, cnpj_empresa):
+    
+    if tipo == 'texto':
+        url = "http://10.105.96.102:8000/processar_texto/"
+
+        # Exemplo de payload
+        payload = {
+            "cnpj_empresa": cnpj_empresa,
+            "texto": dados
+        }
+
+        # Envia os dados como JSON
+        response = requests.post(url, json=payload)
+    else:
+        
+        url = "http://10.105.96.102:8000/processar_audio/"
+        
+        with open(dados, "rb") as f:
+            files = {"arquivo": ("audio.wav", f, "audio/wav")}
+            data = {"cnpj_empresa": cnpj_empresa}  # Adiciona o CNPJ no envio
+            response = requests.post(url, files=files, data=data)
+
+        print("📨 Resposta da API:", response.text)
+    
+    return response.text    
 
 def inicializa_conexao_mysql():
     try:
@@ -102,6 +129,9 @@ def atualizar_conexoes_firebird():
         parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
         parametros.PORTFB = dados['porta_firebird_maxsuport'] 
         inicializa_conexao_firebird(path_dll)
+
+      
+        
 
 def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):
     try:

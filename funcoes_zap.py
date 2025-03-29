@@ -6,6 +6,9 @@ import base64
 from PIL import Image, ImageOps
 from io import BytesIO
 import os
+import uuid
+import subprocess
+
 
 secret_key = 'THISISMYSECURETOKEN'
 url = f"https://zap.maxsuportsistemas.com"
@@ -117,8 +120,46 @@ def envia_mensagem_zap(session, numero, mensagem):
 
     return response
 
+def baixar_audio(session, id):
+    enpoint = f'{url}/api/{session}/get-media-by-message/{id}'
+
+    headers = {
+        "Authorization": f"Bearer {parametros.TOKEN_ZAP}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.get(enpoint, headers=headers)
+    response = retorna_json(response)       
+    
+    # Criar pasta se não existir
+    audio_dir = "audio_zap"
+    os.makedirs(audio_dir, exist_ok=True)    
+    
+    # Gerar GUID para o nome do arquivo
+    audio_guid = str(uuid.uuid4())    
+    
+    # Criar caminhos dos arquivos
+    ogg_path = os.path.join(audio_dir, f"audio_{audio_guid}.ogg")
+    wav_path = os.path.join(audio_dir, f"audio_{audio_guid}.wav")  
+    
+    # Decodificar e salvar o arquivo OGG
+    audio_data = base64.b64decode(response['base64'])
+    with open(ogg_path, "wb") as audio_file:
+        audio_file.write(audio_data)
+        
+    print(f"Áudio OGG salvo em: {ogg_path}")
+
+    # Converter OGG para WAV usando ffmpeg
+    subprocess.run(["ffmpeg", "-i", ogg_path, wav_path, "-y"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    print(f"Áudio convertido para WAV: {wav_path}")       
+    
+    os.remove(ogg_path) 
+    
+    return wav_path 
+
 def receber_mensagem(session):
-    enpoint = f'{url}/api/{session}/all-chats'
+    enpoint = f'{url}/api/{session}/all-unread-messages'
 
     headers = {
         "Authorization": f"Bearer {parametros.TOKEN_ZAP}",

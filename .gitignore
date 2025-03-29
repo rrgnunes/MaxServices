@@ -24,3 +24,5 @@ cnpj.txt
 banco.ini
 config.json
 temp/*.lock
+*.mp3
+*.wav

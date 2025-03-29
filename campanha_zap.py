@@ -1,9 +1,10 @@
+from campanha_mensagens import cumprimento
 from funcoes_zap import * 
 import time
 import random
 from datetime import datetime
 from funcoes import carregar_configuracoes, inicializa_conexao_mysql, print_log
-from campanha_mensagens import mensagens
+import threading
 
 def gerar_horarios():
     inicio = random.randint(7 * 60, 8 * 60)  # Gera minutos entre 7h e 8h
@@ -55,8 +56,13 @@ cur_con.execute(f'''select codigo, REPLACE(SUBSTRING_INDEX(cl.telefone, ' ', 2),
                           (cl.cnae LIKE '%4789002%') OR 
                           (cl.cnae LIKE '%4789003%') OR 
                           (cl.cnae LIKE '%4789004%'))
-                      and cl.localidade = 'AM' 
-                      and campanha_enviado is null  ''')
+                      and cl.localidade = 'AM' ''') 
+
+# cur_con.execute(f'''select codigo, REPLACE(SUBSTRING_INDEX(cl.telefone, ' ', 2), ' ', '') as telefone
+#                     from cliente_lead cl 
+#                     WHERE cl.localidade = 'MX' 
+#                       and campanha_enviado is null  ''')#
+
 obj_empresas = cur_con.fetchall()
 cur_con.close()
 
@@ -82,7 +88,7 @@ if obj_empresas:
             if not parametros.MYSQL_CONNECTION.is_connected():
               inicializa_conexao_mysql()    
 
-            mensagem_aleatoria = random.choice(mensagens)
+            mensagem_aleatoria = cumprimento()
             print_log(f'Enviando para o número {numero["telefone"]}')
             retorno = envia_mensagem_zap(name_session, str(numero['telefone']), mensagem_aleatoria)
             print_log(f' O envio para o número {numero["telefone"]} foi um {retorno["status"]}')
@@ -103,7 +109,7 @@ if obj_empresas:
                 time.sleep(pausa_longa)
             else:
                 
-                tempo_aleatorio = random.uniform(120, 240)
+                tempo_aleatorio = random.uniform(600, 900)
                 print_log(f'Pausando o envio em {tempo_aleatorio} segundos')
                 time.sleep(tempo_aleatorio)       
                 
