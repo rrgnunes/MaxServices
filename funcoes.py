@@ -918,7 +918,7 @@ def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
                 trim(rr.rdb$relation_name) as tabela,
                 trim(rrf.rdb$field_name) as campo,
                 case
-                    when rf.rdb$computed_source is not null then 'COMPUTED BY '|| cast(rf.rdb$computed_source as varchar(255))
+                    when rf.rdb$computed_source is not null then 'COMPUTED BY '|| cast(rf.rdb$computed_source as varchar(500))
                     when rf.rdb$field_type = 7 then
                         case 
                             when (coalesce(rf.rdb$field_scale, 0) < 0) then
@@ -968,8 +968,8 @@ def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
                     when 1 then 'NOT NULL'
                     else null
                 end as NULO,
-                trim(replace(upper(cast(rrf.rdb$default_source as varchar(255))), 'DEFAULT', '')) as valor_padrao,
-                cast(rrf.rdb$description as varchar(255)) as descricao_campo,
+                trim(replace(upper(cast(rrf.rdb$default_source as varchar(500))), 'DEFAULT', '')) as valor_padrao,
+                cast(rrf.rdb$description as varchar(500)) as descricao_campo,
                 trim(ch.rdb$character_set_name) as charset,
                 trim(rc.rdb$collation_name) as collation
             from
