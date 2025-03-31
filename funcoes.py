@@ -3,17 +3,13 @@ import os
 import mysql.connector
 from mysql.connector import Error
 import inspect
-import xml.etree.ElementTree as ET
 import sys
 import fdb
 import parametros
-import psutil as ps
 from pathlib import Path
-from decimal import Decimal
 import subprocess
 import configparser
 from funcoes_zap import *
-import random
 
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
@@ -915,3 +911,301 @@ def caminho_bd():
     except:
         return ''
     return caminho_banco_dados, ip_banco_dados 
+
+
+def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
+    sql = """ select
+                trim(rr.rdb$relation_name) as tabela,
+                trim(rrf.rdb$field_name) as campo,
+                case
+                    when rf.rdb$computed_source is not null then 'COMPUTED BY '|| cast(rf.rdb$computed_source as varchar(255))
+                    when rf.rdb$field_type = 7 then
+                        case 
+                            when (coalesce(rf.rdb$field_scale, 0) < 0) then
+                                case rf.rdb$field_sub_type
+                                    when 1 then 'NUMERIC(' || coalesce(rf.rdb$field_precision, 0) || ',' || abs(rf.rdb$field_scale) || ')'
+                                    when 2 then 'DECIMAL(' || coalesce(rf.rdb$field_precision, 0) || ',' || abs(rf.rdb$field_scale) || ')'
+                                    else 'UNKNOWN ' || rf.rdb$field_sub_type
+                                end
+                            else 'SMALLINT'
+                        end
+                    when rf.rdb$field_type = 8 then
+                        case 
+                            when (coalesce(rf.rdb$field_scale, 0) < 0) then
+                                case rf.rdb$field_sub_type
+                                    when 1 then 'NUMERIC(' || coalesce(rf.rdb$field_precision, 0) || ',' || abs(rf.rdb$field_scale) || ')'
+                                    when 2 then 'DECIMAL(' || coalesce(rf.rdb$field_precision, 0) || ',' || abs(rf.rdb$field_scale) || ')'
+                                    else 'UNKNOWN ' || rf.rdb$field_sub_type
+                                end
+                            else 'INTEGER'
+                        end
+                    when rf.rdb$field_type = 10 then 'FLOAT'
+                    when rf.rdb$field_type = 12 then 'DATE'
+                    when rf.rdb$field_type = 13 then 'TIME'
+                    when rf.rdb$field_type = 14 then 'CHAR(' || rf.rdb$field_length || ')'
+                    when rf.rdb$field_type = 16 then
+                        case 
+                            when (coalesce(rf.rdb$field_scale, 0) < 0) then
+                                case rf.rdb$field_sub_type
+                                    when 1 then 'NUMERIC(' || coalesce(rf.rdb$field_precision, 0) || ',' || abs(rf.rdb$field_scale) || ')'
+                                    when 2 then 'DECIMAL(' || coalesce(rf.rdb$field_precision, 0) || ',' || abs(rf.rdb$field_scale) || ')'
+                                    else 'UNKNOWN ' || rf.rdb$field_sub_type
+                                end
+                            else 'BIGINT'
+                        end
+                    when rf.rdb$field_type = 27 then 'DOUBLE PRECISION'
+                    when rf.rdb$field_type = 35 then 'TIMESTAMP'
+                    when rf.rdb$field_type = 37 then 'VARCHAR(' ||cast((rf.rdb$field_length / COALESCE(ch.rdb$bytes_per_character, 1)) as integer)||')'
+                    when rf.rdb$field_type = 261 then
+                        case rf.rdb$field_sub_type
+                            when 0 then 'BLOB SUB_TYPE 0'
+                            when 1 then 'BLOB SUB_TYPE 1'
+                            else 'BLOB'
+                        end
+                    else 'UNKNOWN'
+                end as tipo_campo,
+                case rrf.rdb$null_flag
+                    when 1 then 'NOT NULL'
+                    else null
+                end as NULO,
+                trim(replace(upper(cast(rrf.rdb$default_source as varchar(255))), 'DEFAULT', '')) as valor_padrao,
+                cast(rrf.rdb$description as varchar(255)) as descricao_campo,
+                trim(ch.rdb$character_set_name) as charset,
+                trim(rc.rdb$collation_name) as collation
+            from
+                rdb$relations rr
+            left outer join
+                rdb$relation_fields rrf on rrf.rdb$relation_name = rr.rdb$relation_name
+            left outer join 
+                rdb$fields rf on rf.rdb$field_name = rrf.rdb$field_source
+            left outer join
+                rdb$character_sets ch on ch.rdb$character_set_id = rf.rdb$character_set_id
+            left outer join
+                rdb$collations rc ON rc.rdb$collation_id = rf.rdb$collation_id AND rc.rdb$character_set_id = rf.rdb$character_set_id
+            where
+                rr.rdb$system_flag = 0
+            order by
+                rr.rdb$relation_name,
+                rrf.rdb$field_position """
+    
+    metadados = {}
+    try:
+        cursor: fdb.Cursor = conexao.cursor()
+        cursor.execute(sql)
+        resultados = cursor.fetchall()
+        for linha in resultados:
+            tabela = linha[0]
+            campo = linha[1]
+            tipo_campo = linha[2]
+            nulo = linha[3]
+            valor_padrao = linha[4]
+            descricao_campo = linha[5]
+            charset = linha[6]
+            collation = linha[7]
+
+            if not tabela in metadados:
+                metadados[tabela] = {}
+            metadados[tabela][campo] = {
+                                        'TIPO': tipo_campo,
+                                        'NULO': nulo,
+                                        'VALOR_PADRAO': valor_padrao,
+                                        'DESCRICAO': descricao_campo,
+                                        'CHARSET': charset,
+                                        'COLLATION': collation
+                                        }
+    except Exception as e:
+        print_log(f'Nao foi possível extrair metadados do banco -> motivo: {e}')
+    finally:
+        cursor.close()
+
+    return metadados
+
+def extrair_metadados_chaves_primarias_firebird(conexao: fdb.Connection) -> dict:
+    select_sql = ''' SELECT 
+                    trim(RC.RDB$RELATION_NAME) AS TABELA,
+                    trim(IDX.RDB$INDEX_NAME) AS INDICE,
+                    trim(SEG.RDB$FIELD_NAME) AS COLUNA
+                FROM RDB$RELATION_CONSTRAINTS RC
+                JOIN RDB$INDEX_SEGMENTS SEG ON RC.RDB$INDEX_NAME = SEG.RDB$INDEX_NAME
+                JOIN RDB$INDICES IDX ON RC.RDB$INDEX_NAME = IDX.RDB$INDEX_NAME
+                WHERE RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
+                ORDER BY RC.RDB$RELATION_NAME'''
+    metadados = {}
+    try:
+        cusor: fdb.Cursor = conexao.cursor()
+        cusor.execute(select_sql)
+        resultados = cusor.fetchall()
+
+        for linha in resultados:
+            tabela = linha[0]
+            indice = linha[1]
+            campo = linha[2]
+
+            if tabela not in metadados:
+                metadados[tabela] = {}
+            
+            if indice not in metadados[tabela]:
+                metadados[tabela][indice] = []
+            
+            metadados[tabela][indice].append(campo)
+
+    except Exception as e:
+        print_log(f'Nao foi possivel extrair metadados das chaves -> motivo: {e}')
+    finally:
+        if cusor:
+            cusor.close()
+    
+    return metadados
+
+def extrair_metadados_chaves_estrangeiras(conexao: fdb.Connection) -> dict:
+    select_sql = ''' SELECT
+                        trim(rc.RDB$RELATION_NAME) AS tabela,
+                        trim(ixs.RDB$FIELD_NAME) AS campo,
+                        trim(rc.rdb$constraint_name) as chave_estrangeira,
+                        CASE
+                            WHEN (
+                                SELECT FIRST 1 rel.RDB$RELATION_NAME
+                                FROM RDB$RELATION_CONSTRAINTS rel
+                                WHERE rel.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
+                                AND rel.RDB$INDEX_NAME = refc.RDB$CONST_NAME_UQ
+                            ) IS NULL
+                            THEN (
+                                SELECT trim(rel.RDB$RELATION_NAME)
+                                FROM RDB$RELATION_CONSTRAINTS rel
+                                WHERE rel.RDB$CONSTRAINT_NAME = refc.RDB$CONST_NAME_UQ
+                            )
+                            ELSE (
+                                SELECT FIRST 1 trim(rel.RDB$RELATION_NAME)
+                                FROM RDB$RELATION_CONSTRAINTS rel
+                                WHERE rel.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
+                                AND rel.RDB$INDEX_NAME = refc.RDB$CONST_NAME_UQ
+                            )
+                        END AS tabela_referenciada,
+                        CASE
+                            WHEN (
+                                SELECT FIRST 1 trim(ixs2.RDB$FIELD_NAME)
+                                FROM RDB$INDEX_SEGMENTS ixs2
+                                WHERE ixs2.RDB$INDEX_NAME = refc.RDB$CONST_NAME_UQ
+                            ) IS NULL
+                            THEN (
+                                SELECT FIRST 1 trim(ix2.RDB$FIELD_NAME)
+                                FROM RDB$INDEX_SEGMENTS ix2
+                                WHERE ix2.RDB$INDEX_NAME = (
+                                    SELECT rrc2.RDB$INDEX_NAME
+                                    FROM RDB$RELATION_CONSTRAINTS rrc2
+                                    WHERE rrc2.RDB$CONSTRAINT_NAME = refc.RDB$CONST_NAME_UQ
+                                )
+                            )
+                            ELSE (
+                                SELECT FIRST 1 trim(ixs2.RDB$FIELD_NAME)
+                                FROM RDB$INDEX_SEGMENTS ixs2
+                                WHERE ixs2.RDB$INDEX_NAME = refc.RDB$CONST_NAME_UQ
+                            )
+                        END AS campo_referenciado,
+                        trim(refc.RDB$UPDATE_RULE) AS regra_update,
+                        trim(refc.RDB$DELETE_RULE) AS regra_delete
+                    FROM RDB$RELATION_CONSTRAINTS rc
+                    JOIN RDB$REF_CONSTRAINTS refc ON rc.RDB$CONSTRAINT_NAME = refc.RDB$CONSTRAINT_NAME
+                    JOIN RDB$INDEX_SEGMENTS ixs ON rc.RDB$INDEX_NAME = ixs.RDB$INDEX_NAME
+                    WHERE rc.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY'
+                    ORDER BY rc.RDB$RELATION_NAME, rc.RDB$CONSTRAINT_NAME'''
+    
+    metadados = {}
+    try:
+        cusor: fdb.Cursor = conexao.cursor()
+        cusor.execute(select_sql)
+        resultados = cusor.fetchall()
+        
+        for resultado in resultados:
+            tabela = resultado[0]
+            campo = resultado[1]
+            nome_chave = resultado[2]
+            tabela_referenciada = resultado[3]
+            campo_referenciado = resultado[4]
+            regra_update = resultado[5]
+            regra_delete = resultado[6]
+
+            if tabela not in metadados:
+                metadados[tabela] = {}
+
+            metadados[tabela][nome_chave] = {
+                'CAMPO': campo,
+                'TABELA_REFERENCIADA': tabela_referenciada,
+                'CAMPO_REFERENCIADO': campo_referenciado,
+                'REGRA_UPDATE': regra_update,
+                'REGRA_DELETE': regra_delete
+            }
+    except Exception as e:
+        print_log(f'Nao foi possivel extrair informacoes das chaves estrangeiras -> motivo: {e}')
+    finally:
+        if cusor:
+            cusor.close()
+    
+    return metadados
+
+def extrair_metadados_procedures(conexao: fdb.Connection) -> dict:
+    select_sql = ''' select
+                        trim(rp.rdb$procedure_name) as nome_procedure,
+                        cast(rp.rdb$procedure_source as varchar(20000)) as procedimento
+                    from
+                        rdb$procedures rp
+                    where
+                        rp.rdb$system_flag = 0'''
+    metadados = {}
+    try:
+        cursor: fdb.Cursor = conexao.cursor()
+        cursor.execute(select_sql)
+        resultados = cursor.fetchall()
+
+        for resultado in resultados:
+            procedure = resultado[0]
+            conteudo_procedure = resultado[1]
+            metadados[procedure] = {'PROCEDIMENTO': conteudo_procedure}
+
+    except Exception as e:
+        print_log(f'Nao foi possivel extrair informacoes das procedures -> motivo: {e}')
+    finally:
+        if cursor:
+            cursor.close()
+    
+    return metadados
+
+def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
+    select_sql = ''' select
+                        trim(rt.rdb$relation_name) as tabela,
+                        trim(rt.rdb$trigger_name) as nome_trigger,
+                        cast(rt.rdb$trigger_source as varchar(20000)) as conteudo,
+                        trim(rt.rdb$trigger_inactive) as trigger_inativa
+                    from
+                        rdb$triggers rt
+                    where
+                        rt.rdb$system_flag = 0
+                    order by
+                        rt.rdb$relation_name, rt.rdb$trigger_sequence'''
+    metadados = {}
+    try:
+        cursor: fdb.Cursor = conexao.cursor()
+        cursor.execute(select_sql)
+        resultados = cursor.fetchall()
+
+        for resultado in resultados:
+            tabela = resultado[0]
+            nome_trigger = resultado[1]
+            conteudo_trigger = resultado[2]
+            trigger_inativa = resultado[3]
+
+            if tabela not in metadados:
+                metadados[tabela] = {}
+
+            metadados[tabela][nome_trigger] = {
+                'CONTEUDO': conteudo_trigger,
+                'INATIVA': trigger_inativa
+            }
+
+    except Exception as e:
+        print_log(f'Nao foi possivel extrair informacoes das triggers -> motivo: {e}')
+    finally:
+        if cursor:
+            cursor.close()
+    
+    return metadados

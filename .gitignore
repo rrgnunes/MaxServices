@@ -26,3 +26,4 @@ config.json
 temp/*.lock
 *.mp3
 *.wav
+/metadados/
