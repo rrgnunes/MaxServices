@@ -3,17 +3,18 @@ import parametros
 from funcoes import *
 
 def salvar_json():
-    pasta_metadados = os.path.join(parametros.SCRIPT_PATH, 'metadados')
+    pasta_metadados = os.path.join('/home', 'banco_json')
     if not os.path.exists(pasta_metadados):
         os.makedirs(pasta_metadados)
         
     try:
         print_log('Iniciando extracao de metadados.', 'salva_metadados_json')
-        carrega_arquivo_config()
-        fbclient_dll = verifica_dll_firebird()
 
-        parametros.DATABASEFB = caminho_bd()[0]
-        inicializa_conexao_firebird(fbclient_dll)
+        parametros.HOSTFB = 'maxsuportsistemas.com'
+        parametros.DATABASEFB = '/home/base/dados.fdb'
+        parametros.USERFB = 'SYSDBA'
+        parametros.PASSFB = 'masterkey'
+        inicializa_conexao_firebird('/home/MaxServices/libfbclient.so.2.5.9')
 
         with parametros.FIREBIRD_CONNECTION as con:
 
