@@ -88,9 +88,9 @@ def inicializa_conexao_mysql():
     except mysql.connector.Error as err:
         print_log(f"Erro ao conectar ao MySQL: {err}")
 
-def inicializa_conexao_firebird(path_dll):
+def inicializa_conexao_firebird():
     try:
-        fdb.load_api(path_dll)
+        fdb.load_api(parametros.PATHDLL)
         if parametros.FIREBIRD_CONNECTION is None:
             parametros.FIREBIRD_CONNECTION = fdb.connect(
                 host=parametros.HOSTFB,
@@ -121,10 +121,10 @@ def atualizar_conexoes_firebird():
         if (dados['caminho_base_dados_maxsuport'] == None) or (dados['caminho_base_dados_maxsuport'] == 'None'):
             continue
         caminho_gbak_firebird_maxsuport = dados['caminho_gbak_firebird_maxsuport']
-        path_dll = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
+        parametros.PATHDLL = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
         parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
         parametros.PORTFB = dados['porta_firebird_maxsuport'] 
-        inicializa_conexao_firebird(path_dll)
+        inicializa_conexao_firebird()
 
       
         
@@ -235,6 +235,75 @@ def select(sql_query, values=None):
             parametros.MYSQL_CONNECTION.close()
         if connection.is_connected():
             connection.close()        
+
+def insertfb(sql_query, values):
+    try:
+        if parametros.FIREBIRD_CONNECTION.closed:
+            inicializa_conexao_firebird()   
+        connection = parametros.FIREBIRD_CONNECTION
+        cursor = connection.cursor()
+        cursor.execute(sql_query, values)
+        connection.commit()
+        print_log("Inserção bem-sucedida!")
+    except Exception as e:
+        print_log(f"Erro durante a inserção: {e}")
+    finally:
+        if not parametros.FIREBIRD_CONNECTION.closed:
+            parametros.FIREBIRD_CONNECTION.close()      
+
+def deletefb(sql_query, values):
+    try:
+        if parametros.FIREBIRD_CONNECTION.closed:
+            inicializa_conexao_firebird()
+        connection = parametros.FIREBIRD_CONNECTION
+        cursor = connection.cursor()
+        cursor.execute(sql_query, values)
+        connection.commit()
+        print_log("Exclusão bem-sucedida!")
+    except Exception as e:
+        print_log(f"Erro durante a exclusão: {e}")
+    finally:
+        if not parametros.FIREBIRD_CONNECTION.closed:
+            parametros.FIREBIRD_CONNECTION.close()      
+
+def updatefb(sql_query, values):
+    try:
+        if parametros.FIREBIRD_CONNECTION.closed:
+            inicializa_conexao_firebird()
+
+        connection = parametros.FIREBIRD_CONNECTION
+        cursor = connection.cursor()
+        cursor.execute(sql_query, values)
+        connection.commit()
+        print_log("Atualização bem-sucedida!")
+    except Exception as e:
+        print_log(f"Erro durante a atualização: {e}")
+    finally:
+        if not parametros.FIREBIRD_CONNECTION.closed:
+            parametros.FIREBIRD_CONNECTION.close()      
+
+def selectfb(sql_query, values=None):
+    try:
+        if parametros.FIREBIRD_CONNECTION.closed:
+            inicializa_conexao_firebird()
+        connection = parametros.FIREBIRD_CONNECTION
+        cursor = connection.cursor()
+        if values:
+            cursor.execute(sql_query, values)
+        else:
+            cursor.execute(sql_query)
+        result = cursor.fetchall()
+        if result:
+            return result
+        else:
+            print_log("Nenhum resultado encontrado.")
+            return []
+    except Exception as e:
+        print_log(f"Erro durante a consulta: {e}")
+        return []
+    finally:
+        if not parametros.FIREBIRD_CONNECTION.closed:
+            parametros.FIREBIRD_CONNECTION.close()              
 
 def exibe_alerta():
     comando = 'start http://maxsuport.com/alerta'
@@ -1209,3 +1278,21 @@ def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
             cursor.close()
     
     return metadados
+
+def obter_nome_terminal():
+    import socket
+    return socket.gethostname()
+
+def configurar_pos_printer(modulo):
+    nome_terminal = obter_nome_terminal()
+
+    resultado_impressora = selectfb(f"""
+        SELECT I.PORTA_IMPRESSORA
+        FROM IMPRESSORAS_PADROES IP
+        LEFT JOIN IMPRESSORA I ON IP.CODIGO_IMPRESSORA = I.CODIGO
+        WHERE MODULO = '{modulo}' AND IP.NOME_TERMINAL = '{nome_terminal}'
+    """)
+
+    row = resultado_impressora[0]
+
+    return row[0]

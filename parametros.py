@@ -25,6 +25,7 @@ PASSFB = 'oC8qUsDp'
 HOSTFB = 'localhost'
 DATABASEFB = ''  # Atualizar conforme necessário
 PORTFB = 3050  # Atualizar conforme necessário
+PATHDLL = ''  # Atualizar conforme necessário
 
 # Credenciais Dropbox
 APP_KEY_DROP_BOX = ''
