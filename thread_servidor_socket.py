@@ -1,4 +1,4 @@
-from funcoes import print_log,carregar_configuracoes,exibe_alerta
+from funcoes import print_log,carregar_configuracoes,exibe_alerta, configurar_pos_printer
 import socket
 import threading
 import json
@@ -72,6 +72,9 @@ def servidor_socket():
     port = 50001           
     try:
         print_log("Pega dados local", "servidor_socket")
+
+        parametros.HOSTFB = '192.168.10.242'
+
         carregar_configuracoes()
 
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
@@ -320,11 +323,10 @@ def verifica_impressora():
 def imprime_documento(texto):
     import win32print
 
-    impressoras = [printer[2] for printer in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS)]
-
     # Configurações da impressora
     # printer_name = '\\\\192.168.10.93\\MP-4200 TH'
-    printer_name = verifica_impressora()
+    printer_name = configurar_pos_printer('PDV')
+    print_log(f'Imprimindo na impressora {printer_name}', "servidor_socket")
 
     # Adicionar linhas em branco antes do comando de corte
     linhas_em_branco = "\n\n\n\n\n\n"
@@ -333,6 +335,8 @@ def imprime_documento(texto):
     # Comando ESC/POS para corte total: '\x1d\x56\x00'
     # Comando ESC/POS para corte parcial: '\x1d\x56\x01'
     corte = '\x1d\x56\x00'
+
+    printer_name = printer_name.replace("RAW:", "")
 
     # Conectar e iniciar o trabalho de impressão
     printer_handle = win32print.OpenPrinter(printer_name)

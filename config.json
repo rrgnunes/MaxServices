@@ -1,1 +1,18 @@
-{"sistema": {"00000000000000": {"sistema_ativo": "1", "alerta_bloqueio": "1", "sistema_em_uso_id": "1", "pasta_compartilhada_backup": "None", "caminho_base_dados_maxsuport": "None", "caminho_gbak_firebird_maxsuport": "None", "porta_firebird_maxsuport": "None", "caminho_base_dados_gfil": "None", "caminho_gbak_firebird_gfil": "None", "porta_firebird_gfil": "None", "timer_minutos_backup": "30", "ip": "None"}, "11031518000109": {"sistema_ativo": "1", "alerta_bloqueio": "0", "sistema_em_uso_id": "1", "pasta_compartilhada_backup": "C:\\BackupMaxSuport\\", "caminho_base_dados_maxsuport": "C:\\MaxSuport_Italiano\\Dados\\Dados.fdb", "caminho_gbak_firebird_maxsuport": "C:\\Program Files\\Firebird\\Firebird_2_5\\bin", "porta_firebird_maxsuport": "3050", "caminho_base_dados_gfil": "C:\\SistemaGFIL_FB4.0\\Dados\\Infolivre.fdb", "caminho_gbak_firebird_gfil": "C:\\Program Files\\Firebird\\Firebird_2_0\\bin", "porta_firebird_gfil": "3050", "timer_minutos_backup": "30", "ip": ""}, "19775656000104": {"sistema_ativo": "1", "alerta_bloqueio": "1", "sistema_em_uso_id": "1", "pasta_compartilhada_backup": "C:\\BackupMaxSuport", "caminho_base_dados_maxsuport": "C:\\MaxSuport_Rian\\Dados\\DADOS.fdb", "caminho_gbak_firebird_maxsuport": "C:\\Program Files\\Firebird\\Firebird_2_5\\bin", "porta_firebird_maxsuport": "3050", "caminho_base_dados_gfil": "C:\\SistemaGFIL_FB4.0\\Dados\\InfoLivre.fdb", "caminho_gbak_firebird_gfil": "C:\\Program Files\\Firebird\\Firebird_2_5\\bin", "porta_firebird_gfil": "3050", "timer_minutos_backup": "30", "ip": ""}, "32198146000180": {"sistema_ativo": "1", "alerta_bloqueio": "0", "sistema_em_uso_id": "1", "pasta_compartilhada_backup": "C:\\BackupMaxSuport", "caminho_base_dados_maxsuport": "C:\\MaxSuport\\Dados\\Dados.fdb", "caminho_gbak_firebird_maxsuport": "C:\\Program Files\\Firebird\\Firebird_2_5\\bin", "porta_firebird_maxsuport": "3050", "caminho_base_dados_gfil": "C:\\MaxSuport\\Dados\\Dados.fdb", "caminho_gbak_firebird_gfil": "C:\\Program Files\\Firebird\\Firebird_2_5\\bin", "porta_firebird_gfil": "3050", "timer_minutos_backup": "30", "ip": ""}, "41183867000107": {"sistema_ativo": "1", "alerta_bloqueio": "0", "sistema_em_uso_id": "1", "pasta_compartilhada_backup": "C:\\BackupMaxSuport", "caminho_base_dados_maxsuport": "C:\\MaxSuport\\Dados\\Dados.fdb", "caminho_gbak_firebird_maxsuport": "C:\\Program Files\\Firebird\\Firebird_2_5\\bin", "porta_firebird_maxsuport": "3050", "caminho_base_dados_gfil": "", "caminho_gbak_firebird_gfil": "", "porta_firebird_gfil": "0", "timer_minutos_backup": "30", "ip": ""}}}
+{
+    "sistema":{
+       "19775656000104":{
+          "sistema_ativo":"1",
+          "alerta_bloqueio":"1",
+          "sistema_em_uso_id":"1",
+          "pasta_compartilhada_backup":"C:\\BackupMaxSuport",
+          "caminho_base_dados_maxsuport":"C:\\MaxSuport_rian\\Dados\\DADOS.fdb",
+          "caminho_gbak_firebird_maxsuport":"C:\\Program Files\\Firebird\\Firebird_2_5\\bin",
+          "porta_firebird_maxsuport":"3050",
+          "caminho_base_dados_gfil":"C:\\SistemaGFIL_FB4.0\\Dados\\InfoLivre.fdb",
+          "caminho_gbak_firebird_gfil":"C:\\Program Files\\Firebird\\Firebird_2_5\\bin",
+          "porta_firebird_gfil":"3050",
+          "timer_minutos_backup":"30",
+          "ip":""
+       }
+    }
+ }
