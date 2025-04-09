@@ -26,4 +26,5 @@ config.json
 temp/*.lock
 *.mp3
 *.wav
-/metadados/
+/metadados_remoto/
+/metadados_local/
