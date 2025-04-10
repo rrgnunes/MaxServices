@@ -1,4 +1,4 @@
-from funcoes import print_log,carregar_configuracoes,exibe_alerta, configurar_pos_printer
+from funcoes import print_log,carregar_configuracoes,exibe_alerta, configurar_pos_printer,inicializa_conexao_firebird
 import socket
 import threading
 import json
@@ -166,6 +166,8 @@ def mostrar_alerta(mensagem):
 def efetua_impressao_comanda(mesa, empresa):
     impressao = ''
     try:
+        if parametros.FIREBIRD_CONNECTION.closed:
+            inicializa_conexao_firebird();        
         cursor = parametros.FIREBIRD_CONNECTION.cursor()
 
         cursor.execute(f"""select ci.codigo as codigounico, cm.codigo, cm.data_hora, me.nome, PR.CODIGO as codigoproduto, pr.descricao, ci.qtd,ci.observacao,ci.PRECO ,ci.TOTAL, em.FANTASIA  
@@ -243,6 +245,7 @@ def efetua_impressao_comanda(mesa, empresa):
 def efetua_impressao_resumo_mesa(mesa, empresa):
     impressao = ''
     try:
+           
         cursor = parametros.FIREBIRD_CONNECTION.cursor()
 
         cursor.execute(f"""select cm.codigo, cm.data_hora, me.nome, PR.CODIGO as codigoproduto, pr.descricao, ci.qtd,ci.observacao,ci.PRECO ,ci.TOTAL, em.FANTASIA  

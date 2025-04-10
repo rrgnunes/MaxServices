@@ -248,8 +248,7 @@ def insertfb(sql_query, values):
     except Exception as e:
         print_log(f"Erro durante a inserção: {e}")
     finally:
-        if not parametros.FIREBIRD_CONNECTION.closed:
-            parametros.FIREBIRD_CONNECTION.close()      
+        print_log("Comando OK")                
 
 def deletefb(sql_query, values):
     try:
@@ -263,8 +262,7 @@ def deletefb(sql_query, values):
     except Exception as e:
         print_log(f"Erro durante a exclusão: {e}")
     finally:
-        if not parametros.FIREBIRD_CONNECTION.closed:
-            parametros.FIREBIRD_CONNECTION.close()      
+        print_log("Comando OK")             
 
 def updatefb(sql_query, values):
     try:
@@ -279,8 +277,7 @@ def updatefb(sql_query, values):
     except Exception as e:
         print_log(f"Erro durante a atualização: {e}")
     finally:
-        if not parametros.FIREBIRD_CONNECTION.closed:
-            parametros.FIREBIRD_CONNECTION.close()      
+        print_log("Comando OK")           
 
 def selectfb(sql_query, values=None):
     try:
@@ -302,8 +299,7 @@ def selectfb(sql_query, values=None):
         print_log(f"Erro durante a consulta: {e}")
         return []
     finally:
-        if not parametros.FIREBIRD_CONNECTION.closed:
-            parametros.FIREBIRD_CONNECTION.close()              
+        print_log("Comando OK")          
 
 def exibe_alerta():
     comando = 'start http://maxsuport.com/alerta'
