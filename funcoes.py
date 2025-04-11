@@ -236,6 +236,28 @@ def select(sql_query, values=None):
         if connection.is_connected():
             connection.close()        
 
+def selectfb(sql_query, values=None):
+    try:
+        if parametros.FIREBIRD_CONNECTION.closed:
+            inicializa_conexao_firebird()   
+        connection = parametros.FIREBIRD_CONNECTION
+        cursor = connection.cursor()
+        if values:
+            cursor.execute(sql_query, values)
+        else:
+            cursor.execute(sql_query)
+        result = cursor.fetchall()
+        if result:
+            return result
+        else:
+            print_log("Nenhum resultado encontrado.")
+            return []
+    except Exception as e:
+        print_log(f"Erro durante a consulta: {e}")
+        return []
+    finally:
+        print_log("Comando OK")          
+
 def insertfb(sql_query, values):
     try:
         if parametros.FIREBIRD_CONNECTION.closed:
