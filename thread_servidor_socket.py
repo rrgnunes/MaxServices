@@ -73,8 +73,6 @@ def servidor_socket():
     try:
         print_log("Pega dados local", "servidor_socket")
 
-        parametros.HOSTFB = '192.168.10.242'
-
         carregar_configuracoes()
 
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():

@@ -1281,6 +1281,8 @@ def obter_nome_terminal():
 
 def configurar_pos_printer(modulo):
     nome_terminal = obter_nome_terminal()
+    nome_terminal = nome_terminal.upper()
+
 
     resultado_impressora = selectfb(f"""
         SELECT I.PORTA_IMPRESSORA
