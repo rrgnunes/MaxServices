@@ -682,8 +682,6 @@ def mysql_firebird():
 if __name__ == '__main__':
 
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
-    # caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
-    # caminho_sistema = caminho_sistema.lower().replace('server','')
     client_dll = verifica_dll_firebird()
 
     parametros.DATABASEFB = caminho_bd()[0]
@@ -696,7 +694,7 @@ if __name__ == '__main__':
             nome_servico = 'thread_replicador'
             connection_firebird = parametros.FIREBIRD_CONNECTION
             connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
-            
+
             processar_alteracoes()
 
             print_log('Processamento finalizando', nome_script)

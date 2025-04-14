@@ -119,7 +119,7 @@ def consulta_completa(comando_sql):
         if isinstance(obj, (datetime, date)):
             return obj.strftime("%d/%m/%Y %H:%M:%S") if isinstance(obj, datetime) else obj.strftime("%d/%m/%Y")
         elif isinstance(obj, Decimal):
-            return str(obj).replace('.', ',')   
+            return str(obj).replace('.', ',')
         elif isinstance(obj, fdb.fbcore.BlobReader):
             return base64.b64encode(obj.read()).decode('utf-8')
         elif isinstance(obj, bytes):
@@ -262,7 +262,12 @@ def imprimir_comanda_formatada(itens):
             texto += f"{negrito_on}OBS: {item['OBSERVACAO'].decode('utf-8')}{negrito_off}\n"
         texto += "----------------------------------\n"
 
-    texto += f"Data: {data_atual}\n\n\n"
+    texto += f"Data: {data_atual}\n"
+    texto += "----------------------------------\n"
+    texto += "----------------------------------\n"
+    texto += "----------------------------------\n"
+    texto += "----------------------------------\n"
+    texto += "----------------------------------\n"
 
     imprime_documento(texto, porta_impressora)
 
