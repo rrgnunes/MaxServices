@@ -1,14 +1,14 @@
 import datetime
 import os
 import mysql.connector
-from mysql.connector import Error
 import inspect
 import sys
 import fdb
 import parametros
-from pathlib import Path
 import subprocess
 import configparser
+from pathlib import Path
+from mysql.connector import Error
 from funcoes_zap import *
 
 
@@ -1316,3 +1316,227 @@ def configurar_pos_printer(modulo):
     row = resultado_impressora[0]
 
     return row[0]
+
+
+#====================================== funcoes replicador ====================================
+
+def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None, nome_servico:str = 'replicador') -> dict | None:
+    try:
+        
+        cursor = parametros.MYSQL_CONNECTION_REPLICADOR.cursor(dictionary=True)
+        if codigo_global:
+            sql_select = f"SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = %s"
+            cursor.execute(sql_select, (codigo_global,))
+        else:
+            chave_primaria = buscar_nome_chave_primaria(tabela)
+            if not chave_primaria:
+                print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
+                return None
+            
+            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s AND CNPJ_EMPRESA = %s"
+            cursor.execute(sql_select, (codigo, cnpj))
+
+        dados = cursor.fetchone()
+
+        if dados == None:
+            print_log(f'Não há elemento que possua esta chave no Mysql - chave: {codigo} ou este código global: {codigo_global}', nome_servico)
+            return None
+        
+        dados = dict(dados)
+        dados.pop('CNPJ_EMPRESA')
+
+        cursor.close()
+
+        return dados
+    except Exception as e:
+        print_log(f"Erro ao buscar elemento MySQL: {e}", nome_servico)
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+
+def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nome_servico:str = 'replicador') -> dict|None:
+    try:
+        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+
+        if codigo_global:
+            sql_select = f'SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = {codigo_global}'
+            cursor.execute(sql_select)
+            dados = cursor.fetchone()
+
+            if not dados:
+                chave_primaria = buscar_nome_chave_primaria(tabela)
+                if not chave_primaria:
+                    print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
+                    return None
+                
+                if not codigo:
+                    return None
+
+                sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
+                cursor.execute(sql_select)
+                dados = cursor.fetchone()
+        else:
+            chave_primaria = buscar_nome_chave_primaria(tabela)
+
+            if not chave_primaria:
+                print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
+                return None
+            
+            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
+
+            cursor.execute(sql_select)
+
+            dados = cursor.fetchone()
+
+        if dados:
+            colunas = [desc[0] for desc in cursor.description]
+            dados = dict(zip(colunas, dados))
+        else:
+            print_log(f'Não há elemento Firebird com esta chave - chave: {codigo} (pode ter sido excluido ou precisa ser adicionado!)', nome_servico)
+
+        return dados
+
+    except Exception as e:
+        print_log(f"Erro ao buscar elemento no Firebird: {e}", nome_servico)
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+
+def verifica_empresa_firebird(tabela:str, dados: dict, nome_servico:str = 'replicador') -> tuple[int, str]:
+    cursor = parametros.FIREBIRD_CONNECTION.cursor()
+    codigo_empresa = 0
+    if tabela == 'EMPRESA':
+        codigo_empresa = dados['CODIGO']
+    else:
+        for coluna, valor in dados.items():
+            if 'EMPRESA' in coluna.upper():
+                if isinstance(valor, int):
+                    codigo_empresa = valor
+                    break
+            elif 'EMITENTE' in coluna.upper():
+                if isinstance(valor, int):
+                    codigo_empresa = valor
+                    break
+    cnpj = ''
+    if codigo_empresa > 0:
+        try:
+            cursor.execute(f'SELECT CNPJ FROM EMPRESA WHERE CODIGO = {codigo_empresa}')
+            cnpj = cursor.fetchall()[0][0]
+        except Exception as e:
+            print_log(f'Nao foi possivel consultar empresa: {e}', nome_servico)
+
+    return codigo_empresa, cnpj
+
+def buscar_nome_chave_primaria(tabela: str, nome_servico:str = 'replicador') -> str|None:
+    try:
+        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+
+        query_codigo = f"""
+        SELECT TRIM(RDB$FIELD_NAME)
+        FROM RDB$RELATION_FIELDS
+        WHERE RDB$RELATION_NAME = '{tabela}' AND UPPER(RDB$FIELD_NAME) = 'CODIGO'
+        """
+        cursor.execute(query_codigo)
+        row_codigo = cursor.fetchone()
+        
+        if row_codigo:
+            return 'CODIGO' 
+        
+        # Verificar se há uma chave primária
+        query = f"""
+        SELECT TRIM(segments.RDB$FIELD_NAME)
+        FROM RDB$RELATION_CONSTRAINTS constraints
+        JOIN RDB$INDEX_SEGMENTS segments ON constraints.RDB$INDEX_NAME = segments.RDB$INDEX_NAME
+        WHERE constraints.RDB$RELATION_NAME = '{tabela}'
+          AND constraints.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
+        """
+        cursor.execute(query)
+        row = cursor.fetchone()
+        
+        if row:
+            return row[0]  # Retorna o nome da coluna da chave primária
+         
+        
+        # Se não encontrar chave primária nem campo 'codigo', retornar None
+        return None
+        
+    except Exception as e:
+        print_log(f"Erro ao buscar nome da chave primária no Firebird: {e}", nome_servico)
+        return None
+
+
+def verifica_valor_chave_primaria(tabela:str, codigo_global:str, chave_primaria:str) -> str | None:
+    elemento = buscar_elemento_firebird(tabela, None, codigo_global)
+    return elemento.get(chave_primaria, None)
+
+
+def consulta_cnpjs_local() -> list | None:
+    try:
+        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        cursor.execute('SELECT CODIGO, CNPJ FROM EMPRESA')
+        empresas = cursor.fetchall()
+        cursor.close()
+        if not empresas:
+            return None
+        return empresas
+    except Exception as e:
+        print_log(f'Erro ao consultar os cnpjs locais -> motivo: {e}')
+
+def tratar_valores(dados: dict) -> list:
+    valores = []
+    for key, valor in dados.items():
+        if isinstance(valor, fdb.fbcore.BlobReader):  # Verifica se o valor é BLOB
+            blob = valor.read()
+            valores.append(blob)
+            valor.close()
+
+        elif isinstance(valor, datetime.timedelta): # Converte tempo de segundos para hora : minuto : segundo
+            total_de_segundos = valor.total_seconds()
+            horas = int(total_de_segundos // 3600)
+            segundos_restantes = total_de_segundos % 3600
+            minutos = int(segundos_restantes // 60)
+            segundos_restantes = segundos_restantes % 60
+            valor = datetime.time(hour=horas, minute=minutos, second=int(segundos_restantes))
+            valores.append(valor)
+
+        else:
+            valores.append(valor)  # Adiciona os outros valores
+    return valores
+
+def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:str = 0, firebird:bool=True, nome_servico:str='replicador') -> None:
+
+    if firebird:
+        try:
+            connection = parametros.FIREBIRD_CONNECTION
+            sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
+            cursor = connection.cursor()
+            cursor.execute(sql_delete, (chave, tabela, acao,))
+
+            connection.commit()
+        except fdb.fbcore.DatabaseError as e:
+            print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
+            connection.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+    else:
+        try:
+            connection = parametros.MYSQL_CONNECTION_REPLICADOR
+            if codigo_global:
+                sql_delete = "DELETE FROM REPLICADOR WHERE TABELA = %s AND ACAO = %s AND CODIGO_GLOBAL = %s LIMIT 1;"
+                valores = tabela, acao, codigo_global
+            else:
+                sql_delete = "DELETE FROM REPLICADOR WHERE CHAVE = %s AND TABELA = %s AND ACAO = %s LIMIT 1;"
+                valores = chave, tabela, acao
+
+            cursor = connection.cursor()
+            cursor.execute(sql_delete, valores)
+
+            connection.commit()
+        except Exception as e:
+            print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
+        finally:
+            if cursor:
+                cursor.close()

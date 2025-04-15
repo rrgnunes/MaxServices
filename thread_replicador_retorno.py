@@ -1,149 +1,46 @@
-import fdb
 import parametros
-import mysql.connector
-import re
 import os
 import sys
-import datetime
-from funcoes import inicializa_conexao_mysql_replicador, inicializa_conexao_firebird,print_log, pode_executar, criar_bloqueio, remover_bloqueio, caminho_bd, verifica_dll_firebird
+from funcoes import (
+    inicializa_conexao_mysql_replicador,
+    inicializa_conexao_firebird,print_log,
+    pode_executar,
+    criar_bloqueio,
+    remover_bloqueio,
+    caminho_bd,
+    verifica_dll_firebird,
+    consulta_cnpjs_local,
+    buscar_nome_chave_primaria,
+    tratar_valores,
+    verifica_valor_chave_primaria,
+    buscar_elemento_mysql,
+    buscar_elemento_firebird,
+    delete_registro_replicador
+    )
 
-def verifica_empresa_firebird(conn: fdb.Connection, tabela:str, dados: dict) -> tuple[int, str]:
-    cursor = conn.cursor()
-    codigo_empresa = 0
-    if tabela == 'EMPRESA':
-        codigo_empresa = dados['CODIGO']
-    else:
-        for coluna, valor in dados.items():
-            if 'EMPRESA' in coluna.upper():
-                if isinstance(valor, int):
-                    codigo_empresa = valor
-                    break
-            elif 'EMITENTE' in coluna.upper():
-                if isinstance(valor, int):
-                    codigo_empresa = valor
-                    break
-    cnpj = ''
-    if codigo_empresa > 0:
-        try:
-            cursor.execute(f'SELECT CNPJ FROM EMPRESA WHERE CODIGO = {codigo_empresa}')
-            cnpj = cursor.fetchall()[0][0]
-        except Exception as e:
-            print_log(f'Nao foi possivel consultar empresa: {e}', nome_servico)
 
-    return codigo_empresa, cnpj
-
-def buscar_nome_chave_primaria(tabela: str) -> str|None:
+def buscar_alteracoes_replicador_mysql(empresas: list) -> list:
+    """
+    Função responsavel por buscar as alterações feitas no banco de dados remoto, considerando a tabela replicador,
+    e filtrando somente os dados pertencentes aos cnpjs passados para a função
+    """
     try:
-        cursor = connection_firebird.cursor()
-
-        query_codigo = f"""
-        SELECT TRIM(RDB$FIELD_NAME)
-        FROM RDB$RELATION_FIELDS
-        WHERE RDB$RELATION_NAME = '{tabela}' AND UPPER(RDB$FIELD_NAME) = 'CODIGO'
-        """
-        cursor.execute(query_codigo)
-        row_codigo = cursor.fetchone()
-        
-        if row_codigo:
-            return 'CODIGO' 
-        
-        # Verificar se há uma chave primária
-        query = f"""
-        SELECT TRIM(segments.RDB$FIELD_NAME)
-        FROM RDB$RELATION_CONSTRAINTS constraints
-        JOIN RDB$INDEX_SEGMENTS segments ON constraints.RDB$INDEX_NAME = segments.RDB$INDEX_NAME
-        WHERE constraints.RDB$RELATION_NAME = '{tabela}'
-          AND constraints.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
-        """
-        cursor.execute(query)
-        row = cursor.fetchone()
-        
-        if row:
-            return row[0]  # Retorna o nome da coluna da chave primária
-         
-        
-        # Se não encontrar chave primária nem campo 'codigo', retornar None
-        return None
-        
+        alteracoes = []
+        if empresas != None:
+            cursor_mysql = connection_mysql.cursor()
+            for codigo, cnpj in empresas:
+                cursor_mysql.execute(f'SELECT * FROM REPLICADOR WHERE CNPJ_EMPRESA = {cnpj}')
+                result = cursor_mysql.fetchall()
+                alteracoes += result
+            cursor_mysql.close()
+        return alteracoes
     except Exception as e:
-        print_log(f"Erro ao buscar nome da chave primária no Firebird: {e}", nome_servico)
-        return None
-
-
-def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0) -> dict|None:
-    try:
-        cursor = connection_firebird.cursor()
-
-        if codigo_global:
-            sql_select = f'SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = {codigo_global}'
-            cursor.execute(sql_select)
-            dados = cursor.fetchone()
-
-            if not dados:
-                chave_primaria = buscar_nome_chave_primaria(tabela)
-                if not chave_primaria:
-                    print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
-                    return None
-                
-                if not codigo:
-                    return None
-
-                sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
-                cursor.execute(sql_select)
-                dados = cursor.fetchone()
-        else:
-            chave_primaria = buscar_nome_chave_primaria(tabela)
-
-            if not chave_primaria:
-                print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
-                return None
-            
-            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
-
-            cursor.execute(sql_select)
-
-            dados = cursor.fetchone()
-
-        if dados:
-            colunas = [desc[0] for desc in cursor.description]
-            dados = dict(zip(colunas, dados))
-        else:
-            print_log(f'Não há elemento Firebird com esta chave - chave: {codigo} (pode ter sido excluido ou precisa ser adicionado!)', nome_servico)
-
-        return dados
-
-    except Exception as e:
-        print_log(f"Erro ao buscar elemento no Firebird: {e}", nome_servico)
-        return None
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def buscar_alteracoes_firebird() -> list[dict | None]:
-    try:
-
-        cursor = connection_firebird.cursor()
-        cursor.execute("SELECT * FROM REPLICADOR")
-        alteracoes = cursor.fetchall()
-
-        if not alteracoes:
-            return []
-
-        colunas = [coluna[0] for coluna in cursor.description]
-        alteracoes_dict = [dict(zip(colunas, linha)) for linha in alteracoes]
-
-        return alteracoes_dict
-    except Exception as e:
-        print_log(f"verificar alteração:{e}", nome_servico)
-        connection_firebird.rollback()
-    finally:
-        if cursor:
-            cursor.close()
-
-
+        print_log(f"Verificar alteracao: {e}", nome_servico)
 
 def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int = 0) -> None:
+    """
+    Atualiza o registro no banco local na tabela informada de acordo com o registro do banco remoto
+    """
     try:
         cursor = connection_firebird.cursor()
         set_clause = ', '.join([f"{coluna} = ?" for coluna in dados.keys()])
@@ -177,8 +74,10 @@ def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int =
 
 
 def insert_firebird(tabela: str, dados: dict) -> None:
+    """
+    Insere o registro no banco local de acordo com o registro criado no banco remoto
+    """
     try:
-
         cursor = connection_firebird.cursor()
 
         if tabela.lower() == 'vendas_detalhe':
@@ -222,6 +121,9 @@ def insert_firebird(tabela: str, dados: dict) -> None:
             cursor.close()
 
 def delete_firebird(tabela: str, codigo: int, codigo_global: int = 0) -> None:
+    """
+    Deleta o registro local de acordo com o registro remoto deletado
+    """
     try:
 
         cursor = connection_firebird.cursor()
@@ -244,58 +146,78 @@ def delete_firebird(tabela: str, codigo: int, codigo_global: int = 0) -> None:
         if cursor:
             cursor.close()
 
-def firebird_mysql() -> None:
 
-    print_log('Iniciando Envio de dados...', nome_servico)
+def mysql_firebird():
+    """
+    Loop principal sobre os registros capturados do banco remoto
+    """
 
-    alteracoes_firebird = buscar_alteracoes_firebird()
+    print_log('Iniciando Recebimento de dados...', nome_servico)
 
+    empresas = consulta_cnpjs_local()
 
-    for alteracao in alteracoes_firebird:
-        if not alteracao:
-            continue
+    alteracoes_mysql = buscar_alteracoes_replicador_mysql(empresas)
+
+    for alteracao in alteracoes_mysql:
         
-        tabela = alteracao['TABELA'].upper()
-        acao = alteracao['ACAO'].upper()
-        valor = alteracao['CHAVE']
+        tabela = alteracao[0].upper()
+        acao = alteracao[1].upper()
+        valor = alteracao[2]
+        cnpj = alteracao[3]
+        codigo_global = alteracao[4]
 
-        print_log(f'Alteração realizada: tabela -> {tabela}, acao -> {acao}, chave -> {valor}', nome_servico)
+        print_log(f'Alteração realizada: tabela -> {tabela}, acao -> {acao}, chave -> {valor}, global -> {codigo_global}', nome_servico)
         
-        elemento_firebird = buscar_elemento_firebird(tabela, valor)
+        elemento_mysql = buscar_elemento_mysql(tabela=tabela, codigo=valor, cnpj=cnpj, codigo_global=codigo_global)
+        existe_elemento_firebird = buscar_elemento_firebird(tabela, valor, codigo_global)
 
-        if elemento_firebird is None and (acao != 'D'):
-            delete_registro_replicador(tabela, acao, valor)
-            continue
-
-        if elemento_firebird is not None:
-            codigo_empresa, cnpj = verifica_empresa_firebird(connection_firebird, tabela, elemento_firebird)
-            existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, cnpj, elemento_firebird['CODIGO_GLOBAL'])
-        else:
-            empresas = consulta_cnpjs_local()
-            if empresas:
-                cnpj = empresas[0][1]
-                existe_elemento_mysql = buscar_elemento_mysql(tabela, valor, cnpj)
-            else:
-                continue
-
-#       SE JÁ EXISTE ESSE ELEMENTO NO MYSQL
-        if existe_elemento_mysql:
+        # SE JA EXISTE ELEMENTO FIREBIRD
+        if existe_elemento_firebird:
             if acao == "I":
-                update_mysql(tabela, valor, elemento_firebird)
-
+                update_firebird(tabela, valor, elemento_mysql, codigo_global)
             elif acao == "U":
-                update_mysql(tabela, valor, elemento_firebird)
-
+                update_firebird(tabela, valor, elemento_mysql, codigo_global)
             elif acao == "D":
-                delete_mysql(tabela, valor)
+                delete_firebird(tabela, codigo_global, valor)
 
-
-#       SE NÃO EXISTE ESSE ELEMENTO NO MYSQL
-        elif not existe_elemento_mysql and elemento_firebird:
+        # SE NÃO EXISTE ELEMENTO FIREBIRD
+        elif not existe_elemento_firebird and elemento_mysql:
             if acao == "I":
-                insert_mysql(tabela, elemento_firebird, valor)
+                insert_firebird(tabela, elemento_mysql)
+            if acao == "U":
+                insert_firebird(tabela, elemento_mysql)
 
-            elif acao == "U":
-                insert_mysql(tabela, elemento_firebird, valor)
-                 
-        delete_registro_replicador(tabela, acao, valor)
+        if elemento_mysql is not None:
+            delete_registro_replicador(tabela, acao, valor, elemento_mysql['CODIGO_GLOBAL'], firebird=False)
+        else:
+            delete_registro_replicador(tabela, acao, valor, firebird=False)
+
+if __name__ == '__main__':
+
+    nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
+
+    if pode_executar(nome_servico):
+        criar_bloqueio(nome_servico)
+        try:
+            parametros.PATHDLL = verifica_dll_firebird()
+            parametros.DATABASEFB = caminho_bd()[0]
+            inicializa_conexao_firebird()
+            inicializa_conexao_mysql_replicador()
+
+            connection_firebird = parametros.FIREBIRD_CONNECTION
+            connection_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
+
+            try:
+                mysql_firebird()
+            finally:
+                if not connection_firebird.closed:
+                    connection_firebird.close()
+                
+                if connection_mysql.is_connected:
+                    connection_mysql.close()
+
+            print_log('Finalizado o retorno de dados.')
+        except Exception as e:
+            print_log(f'Não foi possível executar serviço -> motivo: {e}', nome_servico)
+        finally:
+            remover_bloqueio(nome_servico)
