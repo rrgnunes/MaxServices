@@ -8,9 +8,9 @@ from funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode
 def consulta_cnpj():
     pasta_raiz = os.path.abspath(os.sep)
     pastas = os.listdir(pasta_raiz)
-    client_dll = verifica_dll_firebird()
-    print(client_dll)
-    fdb.load_api(client_dll)
+    parametros.PATHDLL = verifica_dll_firebird()
+    print(parametros.PATHDLL)
+    fdb.load_api(parametros.PATHDLL)
     cnpjs = []
 
     for pasta in pastas:

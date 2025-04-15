@@ -43,7 +43,8 @@ def zapautomato():
                         continue
                     
                     parametros.PORTFB = porta_firebird_maxsuport
-                    inicializa_conexao_firebird(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
+                    parametros.PATHDLL = f'{caminho_gbak_firebird_maxsuport}/fbclient.dll'
+                    inicializa_conexao_firebird()
                     cur = parametros.FIREBIRD_CONNECTION.cursor()
 
                     cur.execute("select cnpj from empresa where codigo = 1")
@@ -106,7 +107,7 @@ def zapautomato():
                     
                     # MENSAGEM DE PRE AGENDAMENTO
                     pessoas = retorna_pessoas_preagendadas(conexao)
-                    for pessoa in pessoas:                        
+                    for pessoa in pessoas:
                         MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
                         insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
                         atualiza_agenda(conexao,pessoa['CODIGO'], 'pre_agendamento')
