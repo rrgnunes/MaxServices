@@ -10,6 +10,7 @@ import configparser
 from pathlib import Path
 from mysql.connector import Error
 from funcoes_zap import *
+from typing import Optional, Tuple
 
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
@@ -1320,7 +1321,7 @@ def configurar_pos_printer(modulo):
 
 #====================================== funcoes replicador ====================================
 
-def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None, nome_servico:str = 'replicador') -> dict | None:
+def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None, nome_servico:str = 'replicador') -> Optional[dict]:
     try:
         
         cursor = parametros.MYSQL_CONNECTION_REPLICADOR.cursor(dictionary=True)
@@ -1355,7 +1356,7 @@ def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global
         if cursor:
             cursor.close()
 
-def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nome_servico:str = 'replicador') -> dict|None:
+def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nome_servico:str = 'replicador') -> Optional[dict]:
     try:
         cursor = parametros.FIREBIRD_CONNECTION.cursor()
 
@@ -1404,7 +1405,7 @@ def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nom
         if cursor:
             cursor.close()
 
-def verifica_empresa_firebird(tabela:str, dados: dict, nome_servico:str = 'replicador') -> tuple[int, str]:
+def verifica_empresa_firebird(tabela:str, dados: dict, nome_servico:str = 'replicador') -> Optional[tuple[int, str]]:
     cursor = parametros.FIREBIRD_CONNECTION.cursor()
     codigo_empresa = 0
     if tabela == 'EMPRESA':

@@ -1,4 +1,4 @@
-from funcoes import print_log,carregar_configuracoes,exibe_alerta, configurar_pos_printer,inicializa_conexao_firebird, selectfb
+from funcoes import print_log,carregar_configuracoes,exibe_alerta, configurar_pos_printer,inicializa_conexao_firebird, selectfb, updatefb,obter_nome_terminal
 import socket
 import threading
 import json
@@ -7,6 +7,10 @@ from datetime import datetime, date
 from decimal import Decimal
 import parametros
 import base64
+from pathlib import Path
+import time
+import win32print
+import win32ui
 
 lImprimeGrupo = False
 
@@ -58,11 +62,14 @@ def handle_client_connection(client_socket):
                     sTipoImpressao = sTipoImpressao.split(';')[0]
                     if sTipoImpressao == 'ResumoPedido':
                         if lImprimeGrupo:
-                            efetua_impressao_por_grupo(sMesa, sEmpresa)
+                            # efetua_impressao_por_grupo(sMesa, sEmpresa)
+                            imp_pedido_grupo(sMesa, sEmpresa)
                         else:
-                            efetua_impressao_comanda(sMesa, sEmpresa)
+                            # efetua_impressao_comanda(sMesa, sEmpresa)
+                            imprime_consumo_mesa(sMesa, sEmpresa)
                     elif sTipoImpressao == 'ResumoMesa':
-                        efetua_impressao_resumo_mesa(sMesa, sEmpresa)
+                        #efetua_impressao_resumo_mesa(sMesa, sEmpresa)
+                        imprime_pedido_mesa(sMesa, sEmpresa)
                     send_response(conn, '200')
                 elif sTipo == '5':
                     comando_sql = request[1:].split(';')[0]
@@ -175,254 +182,384 @@ def send_response(conn, response):
 def mostrar_alerta(mensagem):
     exibe_alerta(mensagem)
 
-def efetua_impressao_por_grupo(mesa, empresa):
-    try:
-        if parametros.FIREBIRD_CONNECTION.closed:
-            inicializa_conexao_firebird()
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+def imp_pedido_grupo(mesa, empresa):
+    aMesas = selectfb(f"SELECT FK_MOVIMENTO FROM MESA WHERE CODIGO = {mesa}")
+    aComanda = selectfb(f"SELECT CODIGO FROM COMANDA_PESSOA WHERE FK_COMANDA = {aMesas[0][0]}")
 
-        cursor.execute(f"""
-            SELECT ci.codigo AS codigounico, ci.qtd, ci.observacao, ci.preco, ci.total,
-                   pr.codigo AS codigoproduto, pr.descricao, gr.descricao AS grupo_nome,
-                   im.codigo AS codigo_impressora, im.PORTA_IMPRESSORA AS nome_impressora,
-                   me.nome AS mesa_nome, em.fantasia, cm.data_hora
+    codigo_pessoa = aComanda[0][0]
+
+    aItens = selectfb("""
+        SELECT im.codigo, gr.descricao
+        FROM comanda_itens ci
+        LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
+        LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
+        LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
+        WHERE ci.fk_comanda_pessoa = ? AND (ci.impresso = 0 or ci.impresso is null)
+    """, (codigo_pessoa,))
+    
+    grupos_sem_impressora = set()
+    for codigo, descricao in aItens:
+        if codigo is None:
+            grupos_sem_impressora.add(descricao)
+
+    if grupos_sem_impressora:
+        msg = '\n'.join(grupos_sem_impressora)
+        raise Exception(f'Grupo sem impressora configurada:\n{msg}')
+
+    # Busca impressoras distintas
+    aImpressoras = selectfb("""
+        SELECT DISTINCT im.codigo
+        FROM comanda_itens ci
+        LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
+        LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
+        LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
+        WHERE ci.fk_comanda_pessoa = ? AND (ci.impresso = 0 or ci.impresso is null)
+    """, (codigo_pessoa,))
+    
+    codigos_impressoras = [linha[0] for linha in aImpressoras]
+
+    for codigo_imp in codigos_impressoras:
+        empresa = selectfb(f"SELECT FANTASIA FROM EMPRESA WHERE CODIGO = {empresa}")
+        empresa = empresa[0]
+
+        impressora = selectfb(f"SELECT COLUNAS, PORTA_IMPRESSORA, IMPRESSORA FROM IMPRESSORA WHERE CODIGO = {codigo_imp}")
+        impressora = impressora[0]
+        colunas = impressora[0]
+        porta_impressora = impressora[1]
+        impressora = impressora[2]
+
+        aImpressao = []
+
+        aImpressao.append(f"[b]-{empresa[0]}[/b]")
+        aImpressao.append("[ls]")
+        aImpressao.append("[b][c]*** IMPRESSAO GRUPO ***[/c][/b]")
+        aImpressao.append(f"MESA.....:{mesa}")
+        aImpressao.append("[ld]")
+
+        sCodigoTitulo = "|COD |"
+        sQtdTitulo = "|   QTD|"
+        iAntes = (sCodigoTitulo + 'PRODUTO').index('P')
+        iDepois = len(sQtdTitulo)
+        iQtdProduto = colunas - len(sCodigoTitulo) - iDepois
+        sTitulo = sCodigoTitulo + 'PRODUTO'.ljust(iQtdProduto) + sQtdTitulo
+        aImpressao.append(sTitulo)
+        aImpressao.append("[ld]")
+
+        # Itens da comanda para essa impressora
+        aProduto = selectfb("""
+            SELECT ci.FK_PRODUTO, pr.DESCRICAO, ci.QTD, ci.OBSERVACAO, ci.DATA_HORA
             FROM comanda_itens ci
-            LEFT JOIN produto pr ON ci.fk_produto = pr.codigo
-            LEFT JOIN grupo gr ON pr.grupo = gr.codigo
-            LEFT JOIN impressora im ON gr.codigo_impressora = im.codigo
-            LEFT JOIN comanda_pessoa cp ON ci.fk_comanda_pessoa = cp.codigo
-            LEFT JOIN comanda_master cm ON cp.fk_comanda = cm.codigo
-            LEFT JOIN mesa me ON cm.codigo = me.fk_movimento
-            LEFT JOIN empresa em ON pr.empresa = em.codigo
-            WHERE coalesce(ci.impresso,0) = 0 and me.codigo = {mesa} AND ci.situacao = 'S' and em.codigo = {empresa}
-        """)
+            LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
+            LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
+            LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
+            WHERE ci.fk_comanda_pessoa = ? AND im.codigo = ? AND (ci.impresso = 0 or ci.impresso is null)
+        """, (codigo_pessoa, codigo_imp))
 
-        rows = cursor.fetchall()
-        colunas = [desc[0] for desc in cursor.description]
-        itens = [dict(zip(colunas, row)) for row in rows]
+        for fk_produto, descricao, qtd, observacao, data_hora in aProduto:
+            sProduto = f"|{str(fk_produto).ljust(len(sCodigoTitulo)-2)}|{descricao[:iQtdProduto].ljust(iQtdProduto)}|{format(qtd, '.2f').rjust(len(sQtdTitulo)-2)}|"
+            aImpressao.append(sProduto)
+            if observacao:
+                for linha in quebra_linhas(observacao, colunas):
+                    aImpressao.append(linha)
+            aImpressao.append("[ls]")
 
-        # Verifica se há grupo sem impressora
-        grupos_sem_impressora = set()
-        for item in itens:
-            if item['CODIGO_IMPRESSORA'] is None:
-                grupos_sem_impressora.add(item['GRUPO_NOME'])
+        aImpressao.append("[ld]")
+        if aProduto:
+            aImpressao.append(f"Data: {aProduto[0][4]}")
 
-        if grupos_sem_impressora:
-            msg = "Grupos sem impressora configurada:\n" + "\n".join(grupos_sem_impressora)
-            print_log(msg, "servidor_socket")
-            return
+        if impressora == 2:
+            aImpressao.extend([' ' * colunas] * 5)
 
-        # Agrupa os itens por impressora
-        impressoras = {}
-        for item in itens:
-            cod_imp = item['CODIGO_IMPRESSORA']
-            if cod_imp not in impressoras:
-                impressoras[cod_imp] = []
-            impressoras[cod_imp].append(item)
+        # Salva em arquivo
+        Path("Comanda.txt").write_text('\n'.join(aImpressao), encoding='utf-8')
 
-        # Imprime para cada impressora
-        for cod_imp, lista_itens in impressoras.items():
-            imprimir_comanda_formatada(lista_itens)
+        # Simulação de envio para impressora
+        print(f"Imprimindo na porta {porta_impressora}:")
+        print('\n'.join(aImpressao))
+        time.sleep(3)
 
-    except Exception as e:
-        erro_msg = f"Erro ao processar impressão: {e}"
-        print_log(erro_msg, "servidor_socket")
+        if porta_impressora[:4] == 'RAW:':
+            porta_impressora = porta_impressora[4:]
 
+        impressao = '\n'.join(aImpressao)
 
-def imprimir_comanda_formatada(itens):
-    if not itens:
-        return
-
-    empresa = itens[0]['FANTASIA']
-    mesa = itens[0]['MESA_NOME']
-    data_atual = datetime.now().strftime('%d/%m/%Y %H:%M')
-    porta_impressora = itens[0]['NOME_IMPRESSORA']
-
-    def ajustar_descricao(descricao):
-        descricao = descricao[:40]
-        partes = [descricao[i:i+20] for i in range(0, len(descricao), 20)]
-        if len(partes) == 1:
-            partes.append('')
-        return partes
-
-    negrito_on = '\x1b\x45\x01'
-    negrito_off = '\x1b\x45\x00'
-
-    texto = f"{empresa}\n\n"
-    texto += "       *** PEDIDO DA MESA ***\n\n"
-    texto += f"Mesa: {mesa}\n\n"
-    texto += "COD  | PRODUTO              | QTD \n"
-    texto += "----------------------------------\n"
-
-    for item in itens:
-        desc = ajustar_descricao(item['DESCRICAO'])
-        texto += f"{item['CODIGOPRODUTO']: <4} - {desc[0]: <20}   {item['QTD']}\n"
-        texto += f"       {desc[1]: <20}\n"
-        if item['OBSERVACAO']:
-            texto += f"{negrito_on}OBS: {item['OBSERVACAO'].decode('utf-8')}{negrito_off}\n"
-        texto += "----------------------------------\n"
-
-    texto += f"Data: {data_atual}\n"
-    texto += "----------------------------------\n"
-    texto += "----------------------------------\n"
-    texto += "----------------------------------\n"
-    texto += "----------------------------------\n"
-    texto += "----------------------------------\n"
-
-    imprime_documento(texto, porta_impressora)
-
-    # Atualiza os itens como impressos
-    try:
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
-        for item in itens:
-            cursor.execute(f"UPDATE comanda_itens SET impresso = 1 WHERE codigo = {item['CODIGOUNICO']}")
-        parametros.FIREBIRD_CONNECTION.commit()
-    except Exception as e:
-        print_log(f"Erro ao atualizar situação: {e}", "servidor_socket")
-
-def efetua_impressao_comanda(mesa, empresa):
-    impressao = ''
-    try:
-        if parametros.FIREBIRD_CONNECTION.closed:
-            inicializa_conexao_firebird();        
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
-
-        cursor.execute(f"""select ci.codigo as codigounico, cm.codigo, cm.data_hora, me.nome, PR.CODIGO as codigoproduto, pr.descricao, ci.qtd,ci.observacao,ci.PRECO ,ci.TOTAL, em.FANTASIA  
-                           from mesa me
-                           left outer join comanda_master cm
-                           on me.fk_movimento = cm.codigo
-                           left outer join comanda_pessoa cp
-                           on cm.codigo = cp.fk_comanda
-                           left outer join comanda_itens ci
-                           on cp.codigo= ci.fk_comanda_pessoa
-                           left outer join produto pr
-                           on ci.fk_produto = pr.codigo
-                           LEFT OUTER JOIN EMPRESA em 
-                             ON pr.EMPRESA = em.CODIGO 
-                           where me.codigo={mesa} AND ci.SITUACAO = 'S'
-                       """)
-        rows = cursor.fetchall()
-        colunas = [desc[0] for desc in cursor.description]
-        # Criar uma lista de dicionários
-        resultado = [dict(zip(colunas, row)) for row in rows]
-        # Calcular o total
-        total = sum(float(item['TOTAL']) for item in resultado)
-
-        # Obter a data atual
-        data_atual = datetime.now().strftime('%d/%m/%Y')
-
-        # Função para ajustar a descrição
-        def ajustar_descricao(descricao):
-            descricao = descricao[:40]  # Limitar a string a 40 caracteres (2 linhas de 20)
-            partes = [descricao[i:i+20] for i in range(0, len(descricao), 20)]
-            if len(partes) == 1:
-                partes.append('')
-            return partes
-        
-        # Códigos ESC/POS para negrito
-        negrito_on = '\x1b\x45\x01'
-        negrito_off = '\x1b\x45\x00'        
-
-        # Gerar a string para impressão
-        impressao = f"{resultado[0]['FANTASIA']}\n\n"        
-        impressao += "       *** PEDIDO DA MESA ***\n\n"
-        impressao += f"Mesa: {resultado[0]['NOME']}\n\n"
-        impressao += "COD  | PRODUTO              | QTD \n"
-
-        for item in resultado:
-            descricao_ajustada = ajustar_descricao(item['DESCRICAO'])
-            impressao += f"{item['CODIGOPRODUTO']: <4} - {descricao_ajustada[0]: <20}   {item['QTD']}\n"
-            impressao += f"       {descricao_ajustada[1]: <20}       \n"
-            impressao += f"{negrito_on}{item['OBSERVACAO'].decode('utf-8')}{negrito_off}\n"            
-            impressao += "------------------------------------------\n"  # Linha de separação
-
-        impressao += f"Data: {data_atual}     \n"
-
-        # imprime a string gerada
-        imprime_documento(impressao)
+        imprimir_texto_escpos(impressao, porta_impressora,colunas,impressora)
 
         # Marca como impresso
-        for item in resultado:
-            cursor = parametros.FIREBIRD_CONNECTION.cursor()
-            sql = f"UPDATE comanda_itens SET impresso=1 WHERE CODIGO={item['CODIGOUNICO']}"
-            cursor.execute(sql)
-            parametros.FIREBIRD_CONNECTION.commit()
+        # Itens da comanda para essa impressora
+        aProduto = selectfb("""
+            SELECT ci.codigo
+            FROM comanda_itens ci
+            LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
+            LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
+            LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
+            WHERE ci.fk_comanda_pessoa = ? AND im.codigo = ? AND (ci.impresso = 0 or ci.impresso is null)
+        """, (codigo_pessoa, codigo_imp))
 
-        print(f"Impressão comanda: Mesa {mesa}, Empresa {empresa}")
-    except fdb.fbcore.DatabaseError as e:
-        erro_msg = f"Erro no Banco de Dados: {e}"
-        print_log(erro_msg, "servidor_socket")
-        return json.dumps({'erro': erro_msg})
-    except Exception as e:
-        erro_msg = f"Erro ao executar comando SQL: {e}"
-        print_log(erro_msg, "servidor_socket")
-        return json.dumps({'erro': erro_msg})  
+        for codigo in aProduto:
+            updatefb("""
+                UPDATE comanda_itens
+                SET impresso = 1
+                WHERE codigo = ?
+            """, (codigo))
 
-def efetua_impressao_resumo_mesa(mesa, empresa):
-    impressao = ''
+def quebra_linhas(texto, largura):
+    palavras = texto.split()
+    linhas = []
+    atual = ""
+    for palavra in palavras:
+        if len(atual) + len(palavra) + 1 <= largura:
+            atual += (" " if atual else "") + palavra
+        else:
+            linhas.append(atual)
+            atual = palavra
+    if atual:
+        linhas.append(atual)
+    return linhas    
+
+def substituir_tags(texto: str, colunas: int) -> str:
+    linha_simples = '-' * colunas
+    linha_dupla = '=' * colunas
+
+    texto = texto.replace('\n', '\r\n')
+    texto = texto.replace('[b]', '\x1B\x45')
+    texto = texto.replace('[/b]', '\x1B\x46')
+    texto = texto.replace('[n]', '\x1B\x21\x00')
+    texto = texto.replace('[g]', '\x1B\x21\x30')
+    texto = texto.replace('[c]', '\x1B\x61\x01')
+    texto = texto.replace('[/c]', '\x1B\x61\x00')
+    texto = texto.replace('[e]', '\x1B\x61\x00')
+    texto = texto.replace('[/e]', '\x1B\x61\x00')
+    texto = texto.replace('[d]', '\x1B\x61\x02')
+    texto = texto.replace('[/d]', '\x1B\x61\x00')
+    texto = texto.replace('[ls]', linha_simples)
+    texto = texto.replace('[ld]', linha_dupla)
+    return texto
+
+def imprimir_texto_escpos(texto: str, porta_impressora: str, colunas: int, tipo_impressora: int = 1):
+    hPrinter = win32print.OpenPrinter(porta_impressora)
     try:
-           
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        texto = substituir_tags(texto, colunas)
 
-        cursor.execute(f"""select cm.codigo, cm.data_hora, me.nome, PR.CODIGO as codigoproduto, pr.descricao, ci.qtd,ci.observacao,ci.PRECO ,ci.TOTAL, em.FANTASIA  
-                           from mesa me
-                           left outer join comanda_master cm
-                           on me.fk_movimento = cm.codigo
-                           left outer join comanda_pessoa cp
-                           on cm.codigo = cp.fk_comanda
-                           left outer join comanda_itens ci
-                           on cp.codigo= ci.fk_comanda_pessoa
-                           left outer join produto pr
-                           on ci.fk_produto = pr.codigo
-                           LEFT OUTER JOIN EMPRESA em 
-                             ON pr.EMPRESA = em.CODIGO 
-                           where me.codigo={mesa}
-                       """)
-        rows = cursor.fetchall()
-        colunas = [desc[0] for desc in cursor.description]
-        # Criar uma lista de dicionários
-        resultado = [dict(zip(colunas, row)) for row in rows]
-        # Calcular o total
-        total = sum(float(item['TOTAL']) for item in resultado)
+        if tipo_impressora == 2:
+            texto += ' \r\n' * 5
 
-        # Obter a data atual
-        data_atual = datetime.now().strftime('%d/%m/%Y')
+        hJob = win32print.StartDocPrinter(hPrinter, 1, ("Cupom ESC/POS", None, "RAW"))
+        win32print.StartPagePrinter(hPrinter)
+        win32print.WritePrinter(hPrinter, texto.encode('cp850'))  # ESC/POS geralmente usa cp850
+        win32print.EndPagePrinter(hPrinter)
+        win32print.EndDocPrinter(hPrinter)
+        win32print.ClosePrinter(hPrinter)
 
-        # Função para ajustar a descrição
-        def ajustar_descricao(descricao):
-            descricao = descricao[:40]  # Limitar a string a 40 caracteres (2 linhas de 20)
-            partes = [descricao[i:i+20] for i in range(0, len(descricao), 20)]
-            if len(partes) == 1:
-                partes.append('')
-            return partes
+        time.sleep(0.15)
 
-        # Gerar a string para impressão
-        impressao = f"{resultado[0]['FANTASIA']}\n\n"        
-        impressao += "       *** RESUMO DA MESA ***\n\n"
-        impressao += f"Mesa: {resultado[0]['NOME']}\n\n"
-        impressao += "COD  | PRODUTO              | QTD x PRECO\n"
-        impressao += "                                    TOTAL\n"
-
-        for item in resultado:
-            descricao_ajustada = ajustar_descricao(item['DESCRICAO'])
-            impressao += f"{item['CODIGOPRODUTO']: <4} - {descricao_ajustada[0]: <20}   {item['QTD']} x {item['PRECO']:.2f}\n"
-            impressao += f"       {descricao_ajustada[1]: <20}       {item['TOTAL']:.2f}\n"
-            impressao += "------------------------------------------\n"  # Linha de separação
-
-        impressao += f"Data: {data_atual}     Total: R$ {total:.2f}\n"
-
-
-        # imprime a string gerada
-        imprime_documento(impressao)
-        print(f"Impressão Resumo Mesa: Mesa {mesa}, Empresa {empresa}")
-    except fdb.fbcore.DatabaseError as e:
-        erro_msg = f"Erro no Banco de Dados: {e}"
-        print_log(erro_msg, "servidor_socket")
-        return json.dumps({'erro': erro_msg})
+        # Corte
+        hPrinter = win32print.OpenPrinter(porta_impressora)
+        hJob = win32print.StartDocPrinter(hPrinter, 1, ("Corte", None, "RAW"))
+        win32print.StartPagePrinter(hPrinter)
+        corte = '\n\n\n\n\n\n' + '\x1B\x69'
+        win32print.WritePrinter(hPrinter, corte.encode('cp850'))
+        win32print.EndPagePrinter(hPrinter)
+        win32print.EndDocPrinter(hPrinter)
+        win32print.ClosePrinter(hPrinter)
     except Exception as e:
-        erro_msg = f"Erro ao executar comando SQL: {e}"
-        print_log(erro_msg, "servidor_socket")
-        return json.dumps({'erro': erro_msg})  
+        raise Exception(f"Erro ao imprimir: {e}")    
+
+
+def imprime_consumo_mesa(mesa, empresa):
+    aMesas = selectfb(f"SELECT FK_MOVIMENTO FROM MESA WHERE CODIGO = {mesa}")
+    aComanda = selectfb(f"SELECT CODIGO, TOTAL FROM COMANDA_PESSOA WHERE FK_COMANDA = {aMesas[0][0]}")
+
+    codigo_pessoa = aComanda[0][0]
+    total_geral = aComanda[0][1]
+
+    if not aMesas:
+        raise Exception("Mesa não encontrada")
+
+    if not aComanda:
+        raise Exception("Pessoa da comanda não encontrada")
+
+    # Detalhes da comanda
+    aProduto = selectfb(f"""
+        SELECT ci.fk_produto, pr.descricao, ci.qtd, ci.preco, ci.total, ci.observacao
+        FROM comanda_itens ci
+        LEFT JOIN produto pr ON ci.fk_produto = pr.codigo
+        WHERE ci.fk_comanda_pessoa = {codigo_pessoa} AND (ci.impresso = 0 or ci.impresso is null)
+    """)
+
+    empresa = selectfb(f"SELECT FANTASIA FROM EMPRESA WHERE CODIGO = {empresa}")
+    empresa = empresa[0]
+
+    nome_terminal = obter_nome_terminal()
+    nome_terminal = nome_terminal.upper()    
+
+    aImpressora = selectfb(f"""
+        SELECT COLUNAS, PORTA_IMPRESSORA, IMPRESSORA, I.CODIGO 
+        FROM IMPRESSORAS_PADROES IP
+        LEFT JOIN IMPRESSORA I ON IP.CODIGO_IMPRESSORA = I.CODIGO
+        WHERE MODULO = 'PDV' AND IP.NOME_TERMINAL = '{nome_terminal}'
+    """)
+
+    aImpressora = aImpressora[0]
+    colunas = aImpressora[0]
+    porta_impressora = aImpressora[1]
+    impressora = aImpressora[2]    
+    codigo_impressora = aImpressora[3]    
+    
+    aImpressao = []
+
+    aImpressao.append(f"[e][b]-{empresa[0]}[/b][/e]")
+    aImpressao.append("[ls]")
+    aImpressao.append(f"[c][b]**** PEDIDO MESA No. {mesa} ***[/b][/c]")
+    aImpressao.append("[ls]")
+
+    titulo_base = "|COD |PRODUTO".ljust(colunas - 24) + "| QTD|"
+    iAntes = titulo_base.find("PRODUTO")
+    iDepois = len("| QTD|")
+    iQtdProduto = colunas - len("|COD |") - iDepois
+    sTitulo = "|COD |" + "PRODUTO".ljust(iQtdProduto) + "| QTD|"
+    aImpressao.append(sTitulo)
+    aImpressao.append("[ld]")
+
+    for item in aProduto:
+        cod = str(item[0]).ljust(4)
+        desc = item[1][:iQtdProduto].ljust(iQtdProduto)
+        qtd = f"{item[2]:.2f}".rjust(4)
+        linha = f"|{cod}|{desc}|{qtd}|"
+        aImpressao.append(linha)
+
+        observacao = item[5]
+
+        if observacao: 
+            aImpressao.extend(quebra_linhas(observacao, colunas))
+
+    if impressora == 2:
+        aImpressao.extend([' ' * colunas] * 5)
+
+    Path("caixa.txt").write_text("\n".join(aImpressao), encoding="utf-8")
+
+    # Simulação de envio para impressora
+    print_log(f"Imprimindo na porta {porta_impressora}", "servidor_socket")
+    print_log('\n'.join(aImpressao), "servidor_socket")
+    time.sleep(3)
+
+    if porta_impressora[:4] == 'RAW:':
+        porta_impressora = porta_impressora[4:]
+
+    impressao = '\n'.join(aImpressao)    
+
+    # Imprime
+    imprimir_texto_escpos(impressao, porta_impressora, colunas, impressora)
+
+    # Marca como impresso
+    # Itens da comanda para essa impressora
+    aProduto = selectfb("""
+        SELECT ci.codigo
+        FROM comanda_itens ci
+        LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
+        LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
+        LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
+        WHERE ci.fk_comanda_pessoa = ? AND im.codigo = ? AND (ci.impresso = 0 or ci.impresso is null)
+    """, (codigo_pessoa, codigo_impressora))
+
+    for codigo in aProduto:
+        updatefb("""
+            UPDATE comanda_itens
+            SET impresso = 1
+            WHERE codigo = ?
+        """, (codigo))    
+
+def imprime_pedido_mesa(mesa, empresa):
+    aMesas = selectfb(f"SELECT FK_MOVIMENTO FROM MESA WHERE CODIGO = {mesa}")
+    aComanda = selectfb(f"SELECT CODIGO, TOTAL FROM COMANDA_PESSOA WHERE FK_COMANDA = {aMesas[0][0]}")
+
+    codigo_pessoa = aComanda[0][0]
+    total_geral = aComanda[0][1]
+
+    if not aMesas:
+        raise Exception("Mesa não encontrada")
+
+    if not aComanda:
+        raise Exception("Pessoa da comanda não encontrada")
+
+    # Detalhes da comanda
+    aProduto = selectfb(f"""
+        SELECT ci.fk_produto, pr.descricao, ci.qtd, ci.preco, ci.total, ci.observacao
+        FROM comanda_itens ci
+        LEFT JOIN produto pr ON ci.fk_produto = pr.codigo
+        WHERE ci.fk_comanda_pessoa = {codigo_pessoa} 
+    """)
+
+    empresa = selectfb(f"SELECT FANTASIA FROM EMPRESA WHERE CODIGO = {empresa}")
+    empresa = empresa[0]
+
+    nome_terminal = obter_nome_terminal()
+    nome_terminal = nome_terminal.upper()    
+
+    impressora = selectfb(f"""
+        SELECT COLUNAS, PORTA_IMPRESSORA, IMPRESSORA 
+        FROM IMPRESSORAS_PADROES IP
+        LEFT JOIN IMPRESSORA I ON IP.CODIGO_IMPRESSORA = I.CODIGO
+        WHERE MODULO = 'PDV' AND IP.NOME_TERMINAL = '{nome_terminal}'
+    """)
+
+    impressora = impressora[0]
+    colunas = impressora[0]
+    porta_impressora = impressora[1]
+    impressora = impressora[2]    
+
+    aImpressao = []
+
+    aImpressao.append(f"[e][b]-{empresa[0]}[/b][/e]")
+    aImpressao.append("[ls]")
+    aImpressao.append(f"[c][b]**** PEDIDO MESA No. {mesa} ***[/b][/c]")
+    aImpressao.append("[ls]")
+
+    titulo_base = "|COD |PRODUTO".ljust(colunas - 24) + "| QTD|  VALOR|  TOTAL|"
+    iAntes = titulo_base.find("PRODUTO")
+    iDepois = len("| QTD|  VALOR|  TOTAL|")
+    iQtdProduto = colunas - len("|COD |") - iDepois
+    sTitulo = "|COD |" + "PRODUTO".ljust(iQtdProduto) + "| QTD|  VALOR|  TOTAL|"
+    aImpressao.append(sTitulo)
+    aImpressao.append("[ld]")
+
+    for item in aProduto:
+        cod = str(item[0]).ljust(4)
+        desc = item[1][:iQtdProduto].ljust(iQtdProduto)
+        qtd = f"{item[2]:.2f}".rjust(4)
+        preco = f"{item[3]:.2f}".rjust(7)
+        total = f"{item[4]:.2f}".rjust(7)
+        linha = f"|{cod}|{desc}|{qtd}|{preco}|{total}|"
+        aImpressao.append(linha)
+
+        observacao = item[5]
+
+        if observacao: 
+            aImpressao.extend(quebra_linhas(observacao, colunas))
+
+    aImpressao.append("[ls]")
+    aImpressao.append(f"[e]TOTAL     :{total_geral}[/e]")
+    aImpressao.append("[ls]")
+    aImpressao.append("NAO E DOCUMENTO FISCAL")
+    aImpressao.extend(quebra_linhas("<<" + "Volte Sempre"[:colunas] + ">>", colunas))
+
+    if impressora == 2:
+        aImpressao.extend([' ' * colunas] * 5)
+
+    Path("caixa.txt").write_text("\n".join(aImpressao), encoding="utf-8")
+
+    # Simulação de envio para impressora
+    print_log(f"Imprimindo na porta {porta_impressora}", "servidor_socket")
+    print_log('\n'.join(aImpressao), "servidor_socket")
+    time.sleep(3)
+
+    if porta_impressora[:4] == 'RAW:':
+        porta_impressora = porta_impressora[4:]
+
+    impressao = '\n'.join(aImpressao)    
+
+    # Imprime
+    imprimir_texto_escpos(impressao, porta_impressora, colunas, impressora)
 
 def verifica_impressora():
     ip_servidor = get_local_ip()
@@ -451,8 +588,7 @@ def imprime_documento(texto, porta_impressora = None):
 
     print_log(f'Imprimindo na impressora {printer_name}', "servidor_socket")
 
-    # Adicionar linhas em branco antes do comando de corte
-    linhas_em_branco = "\n\n\n\n\n\n"
+
 
     # Comando de corte (dependendo da impressora, isso pode variar)
     # Comando ESC/POS para corte total: '\x1d\x56\x00'
@@ -466,9 +602,16 @@ def imprime_documento(texto, porta_impressora = None):
     job = win32print.StartDocPrinter(printer_handle, 1, ("Impressão Python", None, "RAW"))
     win32print.StartPagePrinter(printer_handle)
 
+    # Comando para aumentar fonte (2x altura e largura)
+    # aumentar_fonte = b'\x1B\x21\x30'
+    fonte_normal = b'\x1B\x21\x00'
+    # Enviar o comando para aumentar fonte
+    win32print.WritePrinter(printer_handle, fonte_normal)
+
+    
+
     # Enviar o texto para a impressora
     win32print.WritePrinter(printer_handle, texto.encode('cp850', errors='replace'))
-    win32print.WritePrinter(printer_handle, linhas_em_branco.encode('utf-8'))
 
     # Enviar o comando de corte para a impressora
     win32print.WritePrinter(printer_handle, corte.encode('utf-8'))
