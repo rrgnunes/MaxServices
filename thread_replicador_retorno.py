@@ -216,7 +216,7 @@ if __name__ == '__main__':
                 if connection_mysql.is_connected:
                     connection_mysql.close()
 
-            print_log('Finalizado o retorno de dados.')
+            print_log('Finalizado o retorno de dados.', nome_servico)
         except Exception as e:
             print_log(f'Não foi possível executar serviço -> motivo: {e}', nome_servico)
         finally:
