@@ -49,7 +49,7 @@ def salva_promocoes(promocoes, codigo_empresa):
                     UPDATE PROMOCOES
                     SET TITULO = %s, DESCRICAO = %s, TIPO = %s, QUANTIDADE_TOTAL = %s, PAGA = %s, VIGENCIA_DESDE = %s, VIGENCIA_HASTA = %s, CNPJ_EMPRESA = %s
                     WHERE CODIGO = %s
-                """, (titulo, descricao, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, codigo, cnpj))
+                """, (titulo, descricao, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj, codigo))
             else:
                 print_log('Inserindo a promoção ' + str(codigo))
                 # Insere nova promoção
@@ -75,7 +75,7 @@ def salva_promocoes(promocoes, codigo_empresa):
                             UPDATE PRODUTO_PROMOCOES
                             SET NOME = %s, QUANTIDADE = %s, PRECO = %s, CNPJ_EMPRESA = %s
                             WHERE CODIGO_PROMOCAO = %s AND CODIGO_BARRAS = %s
-                        """, (nome, quantidade_item, preco, codigo, codigo_barras, cnpj))
+                        """, (nome, quantidade_item, preco, cnpj, codigo, codigo_barras))
                     else:
                         # Insere novo produto
                         cursor.execute("""
@@ -194,11 +194,8 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
     cur_con.execute(f"SELECT * FROM NFCE_DETALHE ND LEFT OUTER JOIN PRODUTO P ON ND.ID_PRODUTO = P.CODIGO WHERE ND.FKVENDA = {venda['CODIGO']}  AND ND.CNPJ_EMPRESA = '{cnpj}' AND P.CNPJ_EMPRESA = '{cnpj}' ")
     obj_detalhes = cur_con.fetchall()
     cur_con.close()        
-    
 
-
-    # Lista de detalhes
-    
+    # Lista de detalhes    
     detalles = []
     for detalhe in obj_detalhes:
         print_log(f"Produto {detalhe['DESCRICAO']}", nome_servico)            
