@@ -303,6 +303,13 @@ def imp_pedido_grupo(mesa, empresa):
                 WHERE codigo = ?
             """, (codigo))
 
+
+    updatefb("""
+        UPDATE MESA
+        SET impresso = 1
+        WHERE codigo = ?
+    """, (mesa))      
+
 def quebra_linhas(texto, largura):
     palavras = texto.split()
     linhas = []
@@ -468,6 +475,12 @@ def imprime_consumo_mesa(mesa, empresa):
             SET impresso = 1
             WHERE codigo = ?
         """, (codigo))    
+
+    updatefb("""
+        UPDATE MESA
+        SET impresso = 1
+        WHERE codigo = ?
+    """, (mesa))              
 
 def imprime_pedido_mesa(mesa, empresa):
     aMesas = selectfb(f"SELECT FK_MOVIMENTO FROM MESA WHERE CODIGO = {mesa}")

@@ -1,0 +1,14 @@
+[e][b]-MAX SUPORT SISTEMAS[/b][/e]
+[ls]
+[c][b]**** PEDIDO MESA No. 1 ***[/b][/c]
+[ls]
+|COD |PRODUTO                             | QTD|
+[ld]
+|2   |BANANA                              |1.00|
+|407 |KITUBAINA MARAJA 2L                 |1.00|
+|461 |SORVETE NAPOLITANO 1L               |1.00|
+                                                
+                                                
+                                                
+                                                
+                                                

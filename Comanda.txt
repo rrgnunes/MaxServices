@@ -1,0 +1,20 @@
+[b]-MAX SUPORT SISTEMAS[/b]
+[ls]
+[b][c]*** IMPRESSAO GRUPO ***[/c][/b]
+MESA.....:2
+[ld]
+|COD |PRODUTO                           |   QTD|
+[ld]
+|2   |BANANA                            |  1.00|
+[ls]
+|407 |KITUBAINA MARAJA 2L               |  1.00|
+[ls]
+|461 |SORVETE NAPOLITANO 1L             |  1.00|
+[ls]
+[ld]
+Data: 2025-04-23 15:47:11
+                                                
+                                                
+                                                
+                                                
+                                                
