@@ -1,27 +1,25 @@
 import sys
-import fdb
 import parametros
 import configparser
 import os
 from salva_metadados_json import salva_json_metadados_local
-from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config
+from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config, buscar_estrutura_remota, comparar_metadados, executar_scripts_meta, inicializa_conexao_firebird
 
 
 def atualiza_banco():
     nome_servico = 'thread_atualiza_banco'
     pasta_metadados_local = os.path.join(parametros.SCRIPT_PATH, 'metadados_local')
     pasta_metadados_remoto = os.path.join(parametros.SCRIPT_PATH, 'metadados_remoto')
+    buscar_estrutura_remota()
     carrega_arquivo_config()
     try:
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
             caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-            porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
-            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
 
             # Pula para a proxima configuracao caso nao tenha o caminho do banco de dados
-            if caminho_base_dados_maxsuport == 'None':
+            if caminho_base_dados_maxsuport.lower() == 'none':
                 continue
 
             caminho_sistema = caminho_base_dados_maxsuport.lower().replace('\\dados\\dados.fdb', '')
@@ -44,8 +42,33 @@ def atualiza_banco():
                     salva_json_metadados_local(caminho_base_dados_maxsuport)
 
                     if (os.path.exists(pasta_metadados_local)) and (os.path.exists(pasta_metadados_remoto)):
-                        ...
-                    else:
+                        script = comparar_metadados(pasta_metadados_remoto, pasta_metadados_local)
+                        try:
+                            parametros.DATABASEFB = caminho_base_dados_maxsuport
+                            parametros.FIREBIRD_CONNECTION = None
+                            parametros.USERFB = 'MAXSUPORT'
+                            inicializa_conexao_firebird()
+
+                            erros = executar_scripts_meta(script, parametros.FIREBIRD_CONNECTION)
+                            
+                            if erros:
+                                print_log('Erros ao executar o script:', nome_servico)
+                                for erro in erros:
+                                    print_log(erro, nome_servico)
+
+                            config['manutencao']['atualizabanco'] = '0'
+                            with open(caminho_ini, 'w') as configfile:
+                                config.write(configfile)
+
+                            config.clear
+
+                        except Exception as e:
+                            print_log(f'Erro em conexão a banco de dados -> motivo: {e}')                    
+                        finally:
+                            if not parametros.FIREBIRD_CONNECTION.closed:
+                                parametros.FIREBIRD_CONNECTION.close()
+                                parametros.FIREBIRD_CONNECTION = None
+                    else:                        
                         print_log('Pasta metadados nao existe!', nome_servico)
 
 

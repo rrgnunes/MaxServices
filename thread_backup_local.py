@@ -58,6 +58,7 @@ def backup():
                         parametros.DATABASEFB = caminho_base_dados_maxsuport
                         parametros.PORTFB = 3050
 
+
                         if parametros.DATABASEFB == 'None':
                             continue
                         
@@ -80,6 +81,8 @@ def backup():
                             os.makedirs(path, exist_ok=True)
                         else:
                             continue
+                    else:
+                        continue
 
                 elif sistema_em_uso == '2':  # gfil
                     if pasta_compartilhada_backup and caminho_base_dados_gfil and caminho_gbak_firebird_gfil:
@@ -104,6 +107,8 @@ def backup():
                             continue
                         print_log("Inicia backup", nome_servico)
                         os.makedirs(path, exist_ok=True)
+                    else:
+                        continue
                 
                 cursor_fb.close()
                 conn_fb.close()
