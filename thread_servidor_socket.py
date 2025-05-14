@@ -104,6 +104,9 @@ def servidor_socket():
 
             resultado_empresa = selectfb(sql)
 
+            if not resultado_empresa:
+                resultado_empresa = [(None,)]
+
             lImprimeGrupo = resultado_empresa[0][0] == 1
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
