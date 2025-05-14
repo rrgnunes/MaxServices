@@ -37,6 +37,8 @@ def require_api_key(f):
         if key == API_KEY:
             return f(*args, **kwargs)
         else:
+            print_log(f'Chave de API inválida ou ausente','apidados')            
+            
             return jsonify({'error': 'Chave de API inválida ou ausente'}), 403
     return decorated_function
 
@@ -80,6 +82,7 @@ def list_tables(db_type):
 @app.route('/<table_name>', methods=['GET'])
 @require_api_key
 def get_all(table_name):
+    print_log(f'get_all({table_name})','apidados')    
     data = request.json    
     cnpj = data.get('cnpj_empresa')   
      
@@ -103,6 +106,7 @@ def get_all(table_name):
 @app.route('/produto/codigo_barra/<codigo>', methods=['GET'])
 @require_api_key
 def get_by_barcode(codigo):
+    print_log(f'get_by_barcode({codigo})','apidados')        
     data = request.json    
     cnpj = data.get('cnpj_empresa')   
     
@@ -169,6 +173,7 @@ def convert_blob_to_base64(row, columns):
 @app.route('/<table_name>/consulta', methods=['POST'])
 @require_api_key
 def consulta_banco(table_name):
+    print_log(f'consulta_banco({table_name})','apidados')            
     data = request.get_json()
     if not data:
         return jsonify({'error': 'JSON inválido ou ausente'}), 400
@@ -212,6 +217,7 @@ def consulta_banco(table_name):
 @app.route('/<table_name>', methods=['POST'])
 @require_api_key
 def insert_into_table(table_name):
+    print_log(f'insert_into_table({table_name})','apidados')          
     data = request.json
     cnpj = data.get('cnpj_empresa')       
     
@@ -253,6 +259,7 @@ def insert_into_table(table_name):
 @app.route('/dashboard/metricas', methods=['POST'])
 @require_api_key
 def get_dashboard_metrics():
+    print_log(f'get_dashboard_metrics','apidados')       
     data = request.get_json()
     if not data:
         return jsonify({'error': 'JSON inválido ou ausente'}), 400
@@ -303,6 +310,7 @@ def get_dashboard_metrics():
 @app.route('/<table_name>/<int:id>', methods=['PUT'])
 @require_api_key
 def update_table(table_name, id):
+    print_log(f'update_table({table_name}, {id})','apidados')           
     data = request.json
     cnpj = data.get('cnpj_empresa')      
         
@@ -357,6 +365,7 @@ def update_table(table_name, id):
 @app.route('/<table_name>/<int:id>', methods=['DELETE'])
 @require_api_key
 def delete_from_table(table_name, id):
+    print_log(f'delete_from_table({table_name}, {id})','apidados')           
     data = request.json
     cnpj = data.get('cnpj_empresa')        
     

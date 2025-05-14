@@ -127,9 +127,6 @@ def atualizar_conexoes_firebird():
         parametros.PORTFB = dados['porta_firebird_maxsuport'] 
         inicializa_conexao_firebird()
 
-      
-        
-
 def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):
     try:
         cursor_notafiscal = conn.cursor()
@@ -685,8 +682,6 @@ def config_zap(conexao):
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
     return resultados_em_dicionario[0]
 
-
-
 def atualiza_mensagem(codigo, status):
     inicializa_conexao_mysql()
 
@@ -877,7 +872,6 @@ def envia_mensagem(conexao, session):
 # Obtém o nome do arquivo do script principal (quem está chamando este código)
 script_principal = os.path.basename(sys.argv[0]).replace('.py', '')
 
-
 # Função que verifica se o script pode ser executado
 def pode_executar(nome_script:str) -> bool:
     lock_file = nome_script + '.lock'
@@ -999,7 +993,6 @@ def caminho_bd():
     except:
         return ''
     return caminho_banco_dados, ip_banco_dados 
-
 
 def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
     sql = """ select
@@ -1259,17 +1252,45 @@ def extrair_metadados_procedures(conexao: fdb.Connection) -> dict:
     return metadados
 
 def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
-    select_sql = ''' select
-                        trim(rt.rdb$relation_name) as tabela,
-                        trim(rt.rdb$trigger_name) as nome_trigger,
-                        cast(rt.rdb$trigger_source as varchar(20000)) as conteudo,
-                        trim(rt.rdb$trigger_inactive) as trigger_inativa
-                    from
+    # select_sql = '''select
+    #                     trim(rt.rdb$relation_name) as tabela,
+    #                     trim(rt.rdb$trigger_name) as nome_trigger,
+    #                     cast(rt.rdb$trigger_source as varchar(20000)) as conteudo,
+    #                     trim(rt.rdb$trigger_inactive) as trigger_inativa
+    #                 from
+    #                     rdb$triggers rt
+    #                 where
+    #                     rt.rdb$system_flag = 0
+    #                 order by
+    #                     rt.rdb$relation_name, rt.rdb$trigger_sequence'''
+    select_sql = """SELECT
+                        TRIM(rt.rdb$relation_name) AS tabela,
+                        TRIM(rt.rdb$trigger_name) AS nome_trigger,                       
+                        CASE TRIM(rt.rdb$trigger_type)
+                            WHEN 1 THEN 'BEFORE INSERT'
+                            WHEN 2 THEN 'AFTER INSERT'
+                            WHEN 3 THEN 'BEFORE UPDATE'
+                            WHEN 4 THEN 'AFTER UPDATE'
+                            WHEN 5 THEN 'BEFORE DELETE'
+                            WHEN 6 THEN 'AFTER DELETE'
+                            WHEN 17 THEN 'BEFORE INSERT OR UPDATE'
+                            WHEN 18 THEN 'AFTER INSERT OR UPDATE'
+                            WHEN 25 THEN 'BEFORE INSERT OR DELETE'
+                            WHEN 26 THEN 'AFTER INSERT OR DELETE'
+                            WHEN 27 THEN 'BEFORE UPDATE OR DELETE'
+                            WHEN 28 THEN 'AFTER UPDATE OR DELETE'
+                            WHEN 113 THEN 'BEFORE INSERT OR UPDATE OR DELETE'
+                            WHEN 114 THEN 'AFTER INSERT OR UPDATE OR DELETE'
+                            ELSE 'DESCONHECIDO'
+                        END AS tipo_descricao,
+                        CAST(rt.rdb$trigger_source AS VARCHAR(20000)) AS conteudo,
+                        TRIM(rt.rdb$trigger_inactive) AS trigger_inativa
+                    FROM
                         rdb$triggers rt
-                    where
+                    WHERE
                         rt.rdb$system_flag = 0
-                    order by
-                        rt.rdb$relation_name, rt.rdb$trigger_sequence'''
+                    ORDER BY
+                        rt.rdb$relation_name, rt.rdb$trigger_sequence;"""
     metadados = {}
     try:
         cursor: fdb.Cursor = conexao.cursor()
@@ -1279,13 +1300,15 @@ def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
         for resultado in resultados:
             tabela = resultado[0]
             nome_trigger = resultado[1]
-            conteudo_trigger = resultado[2]
-            trigger_inativa = resultado[3]
+            tipo = resultado[2]
+            conteudo_trigger = resultado[3]
+            trigger_inativa = resultado[4]
 
             if tabela not in metadados:
                 metadados[tabela] = {}
 
             metadados[tabela][nome_trigger] = {
+                'TIPO': tipo,
                 'CONTEUDO': conteudo_trigger,
                 'INATIVA': trigger_inativa
             }

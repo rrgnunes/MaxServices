@@ -14,14 +14,15 @@ def salvar_json_metadados_master():
         parametros.DATABASEFB = '/home/base/dados.fdb'
         parametros.USERFB = 'SYSDBA'
         parametros.PASSFB = 'masterkey'
-        inicializa_conexao_firebird('/home/MaxServices/libfbclient.so.2.5.9')
+        parametros.PATHDLL = '/home/MaxServices/libfbclient.so.2.5.9'
+        inicializa_conexao_firebird()
 
         with parametros.FIREBIRD_CONNECTION as con:
 
             # salva estrutura das tabelas
             metadados_tabelas = extrair_metadados_tabelas_firebird(con)
             if metadados_tabelas:
-                with open(os.path.join(pasta_metadados,"estrutura_banco.json"), 'w') as j:
+                with open(os.path.join(pasta_metadados,"banco.json"), 'w') as j:
                     json.dump(metadados_tabelas, j, indent=4)
                 print_log('Arquivo de estrutura do banco salvo com sucesso', 'salva_metadados_json')
             else:
@@ -132,4 +133,4 @@ def salva_json_metadados_local(caminho_base_dados:str):
 
 if __name__ == '__main__':
 
-    salva_json_metadados_local()
+    salvar_json_metadados_master()
