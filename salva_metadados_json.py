@@ -72,9 +72,10 @@ def salva_json_metadados_local(caminho_base_dados:str):
         carrega_arquivo_config()
 
         parametros.DATABASEFB = caminho_base_dados
-        client_dll = verifica_dll_firebird()
+        parametros.PATHDLL = verifica_dll_firebird()
+        parametros.FIREBIRD_CONNECTION = None
 
-        inicializa_conexao_firebird(client_dll)
+        inicializa_conexao_firebird()
     except Exception as e:
         print_log(f'Nao foi possivel conectar ao banco de dados -> motivo: {e}', 'salva_metadados_json')
 
@@ -87,10 +88,12 @@ def salva_json_metadados_local(caminho_base_dados:str):
 
             metadados_tabelas = extrair_metadados_tabelas_firebird(con)
             if metadados_tabelas:
-                with open(os.path.join(pasta_metadados,"estrutura_banco.json"), 'w') as j:
+                with open(os.path.join(pasta_metadados,"banco.json"), 'w') as j:
                     json.dump(metadados_tabelas, j, indent=4)
                 print_log('Arquivo de estrutura do banco salvo com sucesso', 'salva_metadados_json')
             else:
+                with open(os.path.join(pasta_metadados,"banco.json"), 'w') as j:
+                    json.dump({}, j, indent=4)                
                 print_log('Falha ao salvar estrutura de banco', 'salva_metadados_json')
 
             # salva as chaves primarias das tabelas
@@ -100,6 +103,8 @@ def salva_json_metadados_local(caminho_base_dados:str):
                     json.dump(metadados_chaves, j, indent=2)
                 print_log('Arquivo de chaves primarias salvo com sucesso', 'salva_metadados_json')
             else:
+                with open(os.path.join(pasta_metadados,"chaves_primarias.json"), 'w') as j:
+                    json.dump({}, j, indent=2)                
                 print_log('Falha ao salvar as chaves primarias.', 'salva_metadados_json')
 
             # salva as chaves estrangeiras das tabelas
@@ -109,6 +114,8 @@ def salva_json_metadados_local(caminho_base_dados:str):
                     json.dump(metadados_chaves_estrangeiras, j, indent=2)
                 print_log('Arquivo de chaves estrangeiras salvo com sucesso', 'salva_metadados_json')
             else:
+                with open(os.path.join(pasta_metadados,"chaves_estrangeiras.json"), 'w') as j:
+                    json.dump({}, j, indent=2)                            
                 print_log('Falha ao salvar as chaves estrangeiras.', 'salva_metadados_json')
 
             # salva o sql das procedures
@@ -118,6 +125,8 @@ def salva_json_metadados_local(caminho_base_dados:str):
                     json.dump(metadados_procedures, j, indent=2)
                 print_log('Arquivo de procedures salvo com sucesso', 'salva_metadados_json')
             else:
+                with open(os.path.join(pasta_metadados,"procedures.json"), 'w') as j:
+                    json.dump({}, j, indent=2)                
                 print_log('Falha ao salvar sql das procedures.', 'salva_metadados_json')
             
             # salva o sql das triggers
@@ -127,7 +136,10 @@ def salva_json_metadados_local(caminho_base_dados:str):
                     json.dump(metadados_triggers, j, indent=2)
                 print_log('Arquivo de tiggers salvo com sucesso', 'salva_metadados_json')
             else:
+                with open(os.path.join(pasta_metadados,'triggers.json'), 'w') as j:
+                    json.dump({}, j, indent=2)                
                 print_log('Falha ao salvar sql das triggers.', 'salva_metadados_json')
+
     except Exception as e:
         print_log(f'Erro ao salvar arquivo JSON da estrutura banco local -> motivo: {e}')
 

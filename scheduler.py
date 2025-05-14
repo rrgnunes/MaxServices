@@ -42,7 +42,7 @@ def setup_schedules():
     # Defina os scripts e seus agendamentos em segundos
     scripts = [
         {'path': scripts_directory / 'thread_backup_local.py', 'interval': 3600},  # 1 hora
-        {'path': scripts_directory / 'thread_atualiza_banco.py', 'interval': 10},  # 10 segundos
+        # {'path': scripts_directory / 'thread_atualiza_banco.py', 'interval': 10},  # 10 segundos
         {'path': scripts_directory / 'thread_IBPT_NCM_CEST.py', 'interval': 1800},  # 30 minutos
         {'path': scripts_directory / 'thread_servidor_socket.py', 'interval': 0},  # Executa uma vez
         {'path': scripts_directory / 'thread_api_maxsuport.py', 'interval': 0}, # Executa uma vez

@@ -7,6 +7,7 @@ import fdb
 import parametros
 import subprocess
 import configparser
+import requests
 from pathlib import Path
 from mysql.connector import Error
 from funcoes_zap import *
@@ -1096,6 +1097,7 @@ def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
                                         }
     except Exception as e:
         print_log(f'Nao foi possível extrair metadados do banco -> motivo: {e}')
+        return metadados
     finally:
         cursor.close()
 
@@ -1132,6 +1134,7 @@ def extrair_metadados_chaves_primarias_firebird(conexao: fdb.Connection) -> dict
 
     except Exception as e:
         print_log(f'Nao foi possivel extrair metadados das chaves -> motivo: {e}')
+        return metadados
     finally:
         if cusor:
             cusor.close()
@@ -1218,6 +1221,7 @@ def extrair_metadados_chaves_estrangeiras(conexao: fdb.Connection) -> dict:
             }
     except Exception as e:
         print_log(f'Nao foi possivel extrair informacoes das chaves estrangeiras -> motivo: {e}')
+        return metadados
     finally:
         if cusor:
             cusor.close()
@@ -1252,7 +1256,7 @@ def extrair_metadados_procedures(conexao: fdb.Connection) -> dict:
     return metadados
 
 def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
-    # select_sql = '''select
+    # select_sql = ''' select
     #                     trim(rt.rdb$relation_name) as tabela,
     #                     trim(rt.rdb$trigger_name) as nome_trigger,
     #                     cast(rt.rdb$trigger_source as varchar(20000)) as conteudo,
@@ -1564,3 +1568,296 @@ def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:st
         finally:
             if cursor:
                 cursor.close()
+
+def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
+    print_log('Buscando dados da estrutura master...')
+    url_base = 'https://dbjson.maxsuportsistemas.com/retorno'
+    diretorio_metadados = os.path.join(parametros.SCRIPT_PATH, 'metadados_remoto')
+    if not os.path.exists(diretorio_metadados):
+        os.makedirs(diretorio_metadados)
+
+    response = requests.get(f'{url_base}/procedures')
+    if response.status_code == 200:
+        with open(os.path.join(diretorio_metadados, 'procedures.json'), 'w') as j:
+            json.dump(response.json(), j)
+        print_log('Arquivo de procedures salvo.', nome_servico)
+    else:
+        print_log('Falha ao buscar procedures: ' + str(response.status_code), nome_servico)
+    
+    response = requests.get(f'{url_base}/banco')
+    if response.status_code == 200:
+        with open(os.path.join(diretorio_metadados, 'banco.json'), 'w') as j:
+            json.dump(response.json(), j)
+        print_log('Arquivo de estrutura do banco salvo.', nome_servico)
+    else:
+        print_log('Falha ao buscar estrutura do banco (tabelas): ' + str(response.status_code), nome_servico)
+
+    response = requests.get(f'{url_base}/chaves_primarias')
+    if response.status_code == 200:
+        with open(os.path.join(diretorio_metadados, 'chaves_primarias.json'), 'w') as j:
+            json.dump(response.json(), j)
+        print_log('Arquivo de chaves primarias salvo.', nome_servico)
+    else:
+        print_log('Falha ao buscar chaves primarias: ' + str(response.status_code), nome_servico)
+
+    response = requests.get(f'{url_base}/chaves_estrangeiras')
+    if response.status_code == 200:
+        with open(os.path.join(diretorio_metadados, 'chaves_estrangeiras.json'), 'w') as j:
+            json.dump(response.json(), j)
+        print_log('Arquivo de chaves estrangeiras salvo.', nome_servico)
+    else:
+        print_log('Falha ao buscar chaves estrangeiras: ' + str(response.status_code), nome_servico)
+    
+    response = requests.get(f'{url_base}/triggers')
+    if response.status_code == 200:
+        with open(os.path.join(diretorio_metadados, 'triggers.json'), 'w') as j:
+            json.dump(response.json(), j)
+        print_log('Arquivo de triggers salvo.', nome_servico)
+    else:
+        print_log('Falha ao buscar triggers: ' + str(response.status_code), nome_servico)
+
+def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str) -> dict:
+    arquivos_origem = os.listdir(caminho_meta_origem)
+    arquivos_local = os.listdir(caminho_meta_local)
+    scripts = {"create": [], "drop": [], "alter": [], "comment": [], "grant": []}
+
+    for arquivo in arquivos_origem:
+        diferencas = []
+
+        if arquivo in arquivos_local:
+            origem = os.path.join(caminho_meta_origem, arquivo)
+            destino = os.path.join(caminho_meta_local, arquivo)
+
+            if arquivo == 'banco.json':
+                diferencas = gerar_diferancas_metas(origem, destino, 'tabelas')
+                scripts['create'].extend(diferencas[0])
+                scripts['alter'].extend(diferencas[2])
+                scripts['comment'].extend(diferencas[3])
+                scripts['grant'].extend(diferencas[4])
+
+            elif arquivo == 'procedures.json':
+                diferencas = gerar_diferancas_metas(origem, destino, 'procedures')
+                scripts['create'].extend(diferencas[0])
+                scripts['alter'].extend(diferencas[2])
+                scripts['grant'].extend(diferencas[4])
+
+            elif arquivo == 'triggers.json':
+                diferencas = gerar_diferancas_metas(origem, destino, 'triggers')
+                scripts['create'].extend(diferencas[0])
+                scripts['alter'].extend(diferencas[2])
+
+            elif arquivo == 'chaves_estrangeiras.json':
+                ...
+                # diferencas = gerar_diferancas_metas(origem, destino, 'FK')
+
+            elif arquivo == 'chaves_primarias.json':
+                diferencas = gerar_diferancas_metas(origem, destino, 'PK')
+                scripts['alter'].extend(diferencas[2])
+                scripts['drop'].extend(diferencas[1])
+
+            else:
+                ...
+    
+    return scripts
+
+def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str) -> tuple[list]:
+    with open(arquivo_origem, 'r') as j:
+        metadados_origem:dict = json.load(j)
+    with open(arquivo_destino, 'r') as j:
+        metadados_destino:dict = json.load(j)
+
+    sqls_create = []
+    sqls_drop = []
+    sqls_alter = []
+    sqls_grant = []
+    sqls_comment = []
+
+    if tipo == 'tabelas':
+
+        for tabela in metadados_origem.keys():
+
+            if not tabela in metadados_destino.keys():
+                sql_create = f'CREATE TABLE {tabela} ('
+                declaracao_colunas = ''
+
+                for coluna, propriedades in metadados_origem[tabela].items():
+                    declaracao_colunas += f', {coluna}' if declaracao_colunas else coluna
+
+                    for propriedade in propriedades.keys():
+
+                        if not propriedades[propriedade]:
+                            continue
+                        
+                        if propriedade.lower() == 'descricao':
+                            sql_comment = ''
+                            comentario = propriedades[propriedade].replace("'", '"')
+                            sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{comentario}';"
+                            sqls_comment.append(sql_comment)
+                            continue
+
+                        if propriedade.lower() == 'valor_padrao':
+                            sql_alter = f'ALTER TABLE {tabela} ALTER COLUMN {coluna} SET DEFAULT {propriedades[propriedade]};'
+                            continue
+
+                        declaracao_colunas += f' {propriedades[propriedade]}' if propriedades[propriedade] != 'NONE' else ''
+
+                sql_create += declaracao_colunas + ');'
+                sqls_create.append(sql_create)
+                sqls_grant.append(f'GRANT ALL {tabela} TO MAXSERVICES WITH GRANT OPTION;')
+            else:
+
+                for coluna in metadados_origem[tabela].keys():
+                    sql_alter = ''
+                    sql_comment = ''
+
+                    if not coluna in metadados_destino[tabela].keys():
+                        sql_alter = f"ALTER TABLE {tabela} ADD {coluna} {metadados_origem[tabela][coluna]['TIPO']}"
+                        sql_alter += f" DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']}" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
+                        sql_alter += f' NOT NULL' if metadados_origem[tabela][coluna]['NULO'] else ''
+                        sql_alter += ';'            
+                        sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{metadados_origem[tabela][coluna]['DESCRICAO']}';" if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
+                    else:
+                        if metadados_origem[tabela][coluna]['TIPO'] != metadados_destino[tabela][coluna]['TIPO']:
+                            sql_alter = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} TYPE {metadados_origem[tabela][coluna]['TIPO']}"
+
+                        if metadados_origem[tabela][coluna]['VALOR_PADRAO'] != metadados_destino[tabela][coluna]['VALOR_PADRAO']:
+                            sql_alter = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} TYPE {metadados_origem[tabela][coluna]['TIPO']}"
+                            sql_alter += f" DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']}" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
+
+                        if metadados_origem[tabela][coluna]['NULO'] != metadados_destino[tabela][coluna]['NULO']:
+                            sql_alter = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} TYPE {metadados_origem[tabela][coluna]['TIPO']}"
+                            sql_alter += f" {metadados_origem[tabela][coluna]['NULO']}" if metadados_origem[tabela][coluna]['NULO'] else ''
+
+                        if metadados_origem[tabela][coluna]['DESCRICAO'] != metadados_destino[tabela][coluna]['DESCRICAO']:
+                            sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{metadados_origem[tabela][coluna]['DESCRICAO']}';"
+
+                    if sql_alter:
+                        sqls_alter.append(sql_alter)
+                    
+                    if sql_comment:
+                        sqls_comment.append(sql_comment)
+
+    elif tipo == 'procedures':
+
+        for procedure in metadados_origem.keys():
+            sql_create = ''
+            sql_alter = ''
+            sql_grant = ''
+
+            if not procedure in metadados_destino.keys():
+                sql_create = f"create or alter procedure {procedure} as "
+                sql_create += metadados_origem[procedure]['PROCEDIMENTO']
+                sql_grant = f"GRANT EXECUTE ON PROCEDURE {procedure} TO MAXSERVICES;"
+            else:
+
+                if metadados_origem[procedure]['PROCEDIMENTO'] != metadados_destino[procedure]['PROCEDIMENTO']:
+                    sql_alter = f"create or alter procedure {procedure} as "
+                    sql_alter += metadados_origem[procedure]['PROCEDIMENTO']
+
+            if sql_create:
+                sqls_create.append(sql_create)
+
+            if sql_alter:
+                sqls_alter.append(sql_alter)
+
+            if sql_grant:
+                sqls_grant.append(sql_grant)
+
+    elif tipo == 'triggers':
+
+        for tabela in metadados_origem.keys():
+            for trigger in metadados_origem[tabela].keys():                
+                sql_create = ''
+                sql_alter = ''
+
+                if not (tabela in metadados_destino.keys()) or not ( trigger in metadados_destino[tabela].keys()):
+                    sql_create = f'CREATE OR ALTER TRIGGER {trigger} FOR {tabela} '
+                    sql_create += 'ACTIVE' if metadados_origem[tabela][trigger]['INATIVA'] == '0' else 'INACTIVE'
+                    sql_create += f" {metadados_origem[tabela][trigger]['TIPO']} POSITION 0 "
+                    sql_create += metadados_origem[tabela][trigger]['CONTEUDO']
+                else:
+
+                    if metadados_origem[tabela][trigger]['CONTEUDO'] != metadados_destino[tabela][trigger]['CONTEUDO']:
+                        sql_alter = f'CREATE OR ALTER TRIGGER {trigger} FOR {tabela} '
+                        sql_alter += 'ACTIVE' if metadados_origem[tabela][trigger]['INATIVA'] == '0' else 'INACTIVE'
+                        sql_alter += f" {metadados_origem[tabela][trigger]['TIPO'].strip()} POSITION 0 "
+                        sql_alter += metadados_origem[tabela][trigger]['CONTEUDO']
+
+                if sql_create:
+                    sqls_create.append(sql_create)
+
+                if sql_alter:
+                    sqls_alter.append(sql_alter)
+
+    elif tipo == 'PK':
+
+        for tabela in metadados_origem.keys():
+            for pk in metadados_origem[tabela].keys():
+                sql_alter = ''
+                sql_drop = ''
+
+                if not (tabela in metadados_destino.keys()) or not (pk in metadados_destino[tabela].keys()):
+
+                    if len(metadados_origem[tabela][pk]) > 1:
+                        chaves = ', '.join(chave for chave in metadados_origem[tabela][pk])
+                    else:
+                        chaves = metadados_origem[tabela][pk][0]
+
+                    sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"                    
+                else:
+
+                    if len(metadados_origem[tabela][pk]) > 1:
+                        chaves = ', '.join(chave for chave in metadados_origem[tabela][pk])
+
+                    else:
+                        chaves = metadados_origem[tabela][pk][0]
+
+                    if len(metadados_origem[tabela][pk]) != len(metadados_destino[tabela][pk]):
+                        sql_drop = f'ALTER TABLE {tabela} DROP CONSTRAINT {pk};'
+                        sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"
+                        
+                    elif chaves not in metadados_destino[tabela][pk]:
+                        sql_drop = f'ALTER TABLE {tabela} DROP CONSTRAINT {pk};'
+                        sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"
+
+                if sql_alter:
+                    sqls_alter.append(sql_alter)
+
+                if sql_drop:
+                    sqls_drop.append(sql_drop)
+
+    elif tipo == 'FK':
+
+        for fk in metadados_origem.keys():
+            if not fk in metadados_destino.keys():
+                ...
+            else:
+                ...
+
+    return sqls_create, sqls_drop, sqls_alter, sqls_comment, sqls_grant
+
+def executar_scripts_meta(scritps: dict, connection:fdb.Connection):
+    tipos = ['create', 'drop', 'alter', 'comment', 'grant']
+    cursor = ''
+    erros = []
+
+    try:
+        cursor:fdb.Cursor = connection.cursor()
+        print_log('Iniciando execução de scripts...')
+        for tipo in tipos:
+            for script in scritps.get(tipo, []):
+                try:
+                    print_log(script, 'thread_atualiza_banco')
+                    cursor.execute(script)
+                except Exception as e:
+                    erros.append(str(e))
+                    continue
+            connection.commit()
+
+    except Exception as e:
+        print_log(f'Não foi possível executar scripts -> motivo: {e}')
+    finally:
+        if cursor:
+            cursor.close()
+
+    return erros
