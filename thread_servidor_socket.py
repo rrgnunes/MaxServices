@@ -489,11 +489,11 @@ def imprime_consumo_mesa(mesa, empresa):
             WHERE codigo = ?
         """, (codigo))    
 
-    updatefb("""
+    updatefb(f"""
         UPDATE MESA
         SET impresso = 1
         WHERE codigo = ?
-    """, (mesa))              
+    """, (mesa,))              
 
 def imprime_pedido_mesa(mesa, empresa):
     aMesas = selectfb(f"SELECT FK_MOVIMENTO FROM MESA WHERE CODIGO = {mesa}")
