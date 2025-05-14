@@ -50,6 +50,8 @@ def require_api_key(f):
         if key == API_KEY:
             return f(*args, **kwargs)
         else:
+            print_log(f'Chave de API inválida ou ausente','apidados')            
+            
             return jsonify({'error': 'Chave de API inválida ou ausente'}), 403
     return decorated_function
 
@@ -268,12 +270,11 @@ def get_by_id(table_name, id):
     }
 })
 def get_by_barcode(codigo):
-    cnpj = request.args.get('cnpj_empresa')
-
-    if not cnpj:
-        return jsonify({'error': 'CNPJ é obrigatório'}), 400
-
-    table_name = 'produto'
+    print_log(f'get_by_barcode({codigo})','apidados')        
+    data = request.json    
+    cnpj = data.get('cnpj_empresa')   
+    
+    table_name = 'produto'  # Substitua pelo nome correto da tabela
 
     if table_name.lower() not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
@@ -356,6 +357,50 @@ def convert_blob_to_base64(row, columns):
             data[col] = valor
     return data
 
+@app.route('/<table_name>/consulta', methods=['POST'])
+@require_api_key
+def consulta_banco(table_name):
+    print_log(f'consulta_banco({table_name})','apidados')            
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'JSON inválido ou ausente'}), 400
+
+    cnpj = data.get('cnpj_empresa')
+    codigo = data.get('codigo_produto')
+    
+    if codigo == 'null':
+        codigo = ''
+    
+    if not cnpj:
+        cnpj = '19775656000104'
+        #return jsonify({'error': 'CNPJ é obrigatório'}), 400
+    
+    if table_name.lower() not in get_table_names():
+        return jsonify({'error': 'Tabela não encontrada'}), 404
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    if db_type == 'mysql':
+        if codigo:
+            cur.execute(f"SELECT * FROM {table_name.upper()} WHERE CODIGO = %s AND CNPJ_EMPRESA = %s", (codigo, cnpj))
+        else:
+            cur.execute(f"SELECT * FROM {table_name.upper()} WHERE CNPJ_EMPRESA = %s LIMIT 10", (cnpj,))
+    else:  # Firebird
+        if codigo:
+            cur.execute(f"SELECT * FROM {table_name} WHERE CODIGO = ? AND CNPJ_EMPRESA = ?", (codigo, cnpj))
+        else:
+            cur.execute(f"SELECT FISRT 10 * FROM {table_name} WHERE CNPJ_EMPRESA = ?", (cnpj,))
+    
+    columns = [desc[0].strip().lower() for desc in cur.description]
+    rows = cur.fetchall()
+    conn.close()
+    
+    if rows:
+        return jsonify({"produtos": convert_blob_to_base64(rows, columns)})
+    else:
+        return jsonify({'error': 'Registro não encontrado'}), 404
+
 @app.route('/<table_name>', methods=['POST'])
 @require_api_key
 @swag_from({
@@ -386,6 +431,7 @@ def convert_blob_to_base64(row, columns):
     }
 })
 def insert_into_table(table_name):
+    print_log(f'insert_into_table({table_name})','apidados')          
     data = request.json
     cnpj = data.get('cnpj_empresa')
 
@@ -483,6 +529,7 @@ def insert_into_table(table_name):
     }
 })
 def get_dashboard_metrics():
+    print_log(f'get_dashboard_metrics','apidados')       
     data = request.get_json()
     if not data:
         return jsonify({'error': 'JSON inválido ou ausente'}), 400
@@ -648,6 +695,7 @@ def get_dashboard_metrics():
     }
 })
 def update_table(table_name, id):
+    print_log(f'update_table({table_name}, {id})','apidados')           
     data = request.json
     cnpj = data.get('cnpj_empresa')
 
@@ -720,11 +768,10 @@ def update_table(table_name, id):
     }
 })
 def delete_from_table(table_name, id):
-    cnpj = request.args.get('cnpj_empresa')
+    print_log(f'delete_from_table({table_name}, {id})','apidados')           
+    data = request.json
+    cnpj = data.get('cnpj_empresa')        
     
-    if not cnpj:
-        return jsonify({'error': 'CNPJ é obrigatório'}), 400
-
     if table_name.lower() not in get_table_names():
         return jsonify({'error': 'Tabela não encontrada'}), 404
 

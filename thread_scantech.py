@@ -39,6 +39,7 @@ def salva_promocoes(promocoes, codigo_empresa):
             quantidade_total = promocao['detalles']['condiciones']['items'][0]['cantidad']
             paga = promocao['detalles'].get('paga', None)           
             preco = promocao['detalles'].get('precio', None)
+            desconto = promocao['detalles'].get('descuento', None)
             vigencia_desde = promocao['vigenciaDesde'].split('T')[0]
             vigencia_hasta = promocao['vigenciaHasta'].split('T')[0]
 
@@ -73,15 +74,45 @@ def salva_promocoes(promocoes, codigo_empresa):
                         # Atualiza produto existente
                         cursor.execute("""
                             UPDATE PRODUTO_PROMOCOES
-                            SET NOME = %s, QUANTIDADE = %s, PRECO = %s, CNPJ_EMPRESA = %s
+                            SET NOME = %s, QUANTIDADE = %s, PRECO = %s, DESCONTO = %s, CNPJ_EMPRESA = %s
                             WHERE CODIGO_PROMOCAO = %s AND CODIGO_BARRAS = %s
-                        """, (nome, quantidade_item, preco, cnpj, codigo, codigo_barras))
+                        """, (nome, quantidade_item, preco, desconto, cnpj, codigo, codigo_barras))
                     else:
                         # Insere novo produto
                         cursor.execute("""
-                            INSERT INTO PRODUTO_PROMOCOES (CODIGO_PROMOCAO, CODIGO_BARRAS, NOME, QUANTIDADE, PRECO, CNPJ_EMPRESA)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                        """, (codigo, codigo_barras, nome, quantidade_item, preco, cnpj))
+                            INSERT INTO PRODUTO_PROMOCOES (CODIGO_PROMOCAO, CODIGO_BARRAS, NOME, QUANTIDADE, PRECO, DESCONTO, CNPJ_EMPRESA)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (codigo, codigo_barras, nome, quantidade_item, preco, desconto, cnpj))
+                        
+            # Insere ou atualiza bines da promocao        
+            print_log('Adicionando os bines da promoção')
+            formas_pagamento = promocao['detalles']['condiciones'].get('formasPago', [])
+            if formas_pagamento:               
+                for forma in formas_pagamento:
+                    descricao_forma  = forma['descripcion']
+                    codigo_tipo_pgto = str(forma['codigoTipoPago'])
+                    bines = forma.get('bines', [])
+
+                    for bin_valor in bines:
+                        cursor.execute("""
+                            SELECT COUNT(*) FROM PROMOCOES_BINES 
+                            WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
+                        """, (codigo, codigo_tipo_pgto, bin_valor))
+                        bin_existe = cursor.fetchone()[0]
+
+                        if bin_existe > 0:
+                            print_log(f'Atualizando BIN {bin_valor} da promoção {codigo}')
+                            cursor.execute("""
+                                UPDATE PROMOCOES_BINES
+                                SET DESCRICAO = %s
+                                WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
+                            """, (descricao_forma, codigo, codigo_tipo_pgto, bin_valor))
+                        else:
+                            print_log(f'Inserindo BIN {bin_valor} da promoção {codigo}')
+                            cursor.execute("""
+                                INSERT INTO PROMOCOES_BINES (CODIGO_TIPO_PGTO, CODIGO_PROMOCAO, DESCRICAO, BIN, CNPJ_EMPRESA)
+                                VALUES (%s, %s, %s, %s, %s)
+                            """, (codigo_tipo_pgto, codigo, descricao_forma, bin_valor, cnpj))                
                         
         print_log('Tudo comitado')
         # Confirma as alterações no banco

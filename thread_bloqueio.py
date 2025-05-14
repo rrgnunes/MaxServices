@@ -60,8 +60,8 @@ def verifica_dados_local():
                     if (parametros.DATABASEFB == None) or (parametros.DATABASEFB == 'None'):
                         print_log('Banco não definido...', nome_servico)
                         continue
-                    parametros.PATHDLL = os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll')
-                    inicializa_conexao_firebird()
+                    # parametros.PATHDLL = os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll')
+                    inicializa_conexao_firebird(os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll'))
                     con = parametros.FIREBIRD_CONNECTION
                     cur = con.cursor()
                     comando = 'Liberar' if ativo == "1" else 'Bloquear'
