@@ -13,6 +13,7 @@ from pathlib import Path
 from mysql.connector import Error
 from funcoes_zap import *
 from typing import Optional, Tuple
+import socket 
 
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
@@ -128,9 +129,6 @@ def atualizar_conexoes_firebird():
         parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
         parametros.PORTFB = dados['porta_firebird_maxsuport'] 
         inicializa_conexao_firebird()
-
-      
-        
 
 def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):
     try:
@@ -687,8 +685,6 @@ def config_zap(conexao):
     resultados_em_dicionario = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
     return resultados_em_dicionario[0]
 
-
-
 def atualiza_mensagem(codigo, status):
     inicializa_conexao_mysql()
 
@@ -879,7 +875,6 @@ def envia_mensagem(conexao, session):
 # Obtém o nome do arquivo do script principal (quem está chamando este código)
 script_principal = os.path.basename(sys.argv[0]).replace('.py', '')
 
-
 # Função que verifica se o script pode ser executado
 def pode_executar(nome_script:str) -> bool:
     lock_file = nome_script + '.lock'
@@ -1001,7 +996,6 @@ def caminho_bd():
     except:
         return ''
     return caminho_banco_dados, ip_banco_dados 
-
 
 def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
     sql = """ select
@@ -1312,13 +1306,15 @@ def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
         for resultado in resultados:
             tabela = resultado[0]
             nome_trigger = resultado[1]
-            conteudo_trigger = resultado[2]
-            trigger_inativa = resultado[3]
+            tipo = resultado[2]
+            conteudo_trigger = resultado[3]
+            trigger_inativa = resultado[4]
 
             if tabela not in metadados:
                 metadados[tabela] = {}
 
             metadados[tabela][nome_trigger] = {
+                'TIPO': tipo,
                 'CONTEUDO': conteudo_trigger,
                 'INATIVA': trigger_inativa
             }
@@ -1873,3 +1869,194 @@ def executar_scripts_meta(scritps: dict, connection:fdb.Connection):
             cursor.close()
 
     return erros
+
+def get_local_ip():
+    """
+    Obtém o endereço IP local da máquina.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Não precisa realmente enviar dados para obter o IP
+        s.connect(('10.254.254.254', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip     
+
+def retorna_token_sicoob(pix_boleto = 0) :
+    # Parâmetros de autenticação e URL
+    token_url = "https://auth.sicoob.com.br/auth/realms/cooperado/protocol/openid-connect/token"
+    client_id = "70f9bcea-a229-462d-b7a9-c16c92278138"
+    grant_type = "client_credentials"
+    
+    scope = "cob.write cob.read pix.write pix.read"
+    if pix_boleto == 1:
+        scope = "boletos_inclusao boletos_consulta boletos_alteracao"
+
+    # Caminhos para os arquivos de certificado público e chave privada
+    cert_path ='C:/MaxSuport/certificado/SicoobCertificado.pem'
+    key_path = 'C:/MaxSuport/certificado/SicoobChavePrivada.key'
+
+    # Dados para obter o token
+    token_data = {
+        'grant_type': grant_type,
+        'client_id': client_id,
+        'scope': scope
+    }
+
+    # Enviar requisição para obter o token
+    try:
+        response = requests.post(token_url, data=token_data, cert=(cert_path, key_path))
+
+        # Verificar a resposta
+        if response.status_code == 200:
+            token = response.json().get('access_token')
+            return token
+        else:
+            print("Falha ao obter o token.")
+            print("Código de status:", response.status_code)
+            print("Resposta:", response.text)
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"Erro ao realizar a requisição: {e}")           
+
+def gera_qr_code(descricao, valor):
+    valor = valor
+    token_sicoob = retorna_token_sicoob()
+    
+    if token_sicoob:
+        # URL da API para criar a cobrança
+        api_url = "https://api.sicoob.com.br/pix/api/v2/cob"
+
+        # JSON a ser enviado para criar a cobrança
+        cobranca = {
+            "calendario": {
+                "expiracao": 3600
+            },
+            "valor": {
+                "original": str(valor)
+            },
+            "chave": "19775656000104",
+            "solicitacaoPagador": descricao
+        }
+
+        # Caminhos para os arquivos de certificado público e chave privada
+        cert_path ='C:/MaxSuport/certificado/SicoobCertificado.pem'
+        key_path = 'C:/MaxSuport/certificado/SicoobChavePrivada.key'
+
+        # Cabeçalhos da requisição
+        headers = {
+            'Authorization': f'Bearer {token_sicoob}',
+            'Content-Type': 'application/json'
+        }
+
+        # Enviar a requisição para criar a cobrança
+        try:
+            response = requests.post(api_url, headers=headers, json=cobranca, cert=(cert_path, key_path))
+            response.raise_for_status()  # Levanta uma exceção para códigos de status de erro
+
+            # Verificar a resposta
+            if response.status_code == 201:
+                resposta_json = response.json()
+                return resposta_json.get('txid')
+            else:
+                print("Falha ao criar a cobrança.")
+                print("Código de status:", response.status_code)
+                print("Resposta:", response.text)
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"Erro ao realizar a requisição: {e}")
+            return None
+    else:
+        print("Token não obtido. Verifique a função retorna_token_sicoob.")
+        return None
+    
+def obter_imagem_qrcode(txid):
+    token_sicoob = retorna_token_sicoob()
+    if token_sicoob:
+        # URL da API para obter a imagem QRCode
+        api_url = f"https://api.sicoob.com.br/pix/api/v2/cob/{txid}/imagem"
+
+        # Parâmetros da requisição
+        params = {
+            'revisao': 0,
+            'largura': 360
+        }
+
+        # Caminhos para os arquivos de certificado público e chave privada
+        cert_path ='C:/MaxSuport/certificado/SicoobCertificado.pem'
+        key_path = 'C:/MaxSuport/certificado/SicoobChavePrivada.key'
+
+        # Cabeçalhos da requisição
+        headers = {
+            'Authorization': f'Bearer {token_sicoob}',
+            'client_id': "70f9bcea-a229-462d-b7a9-c16c92278138"
+        }
+
+        # Enviar a requisição para obter a imagem QRCode
+        try:
+            response = requests.get(api_url, headers=headers, params=params, cert=(cert_path, key_path))
+            response.raise_for_status()  # Levanta uma exceção para códigos de status de erro
+
+            # Verificar a resposta
+            if response.status_code == 200:
+                print("Imagem QRCode obtida com sucesso!")
+                return response.content  # Retorna a imagem QRCode como bytes
+            else:
+                print("Falha ao obter a imagem QRCode.")
+                print("Código de status:", response.status_code)
+                print("Resposta:", response.text)
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"Erro ao realizar a requisição: {e}")
+            return None
+    else:
+        print("Token não obtido. Verifique a função retorna_token_sicoob.")
+        return None    
+    
+def consultar_cobranca(txid):
+    token_sicoob = retorna_token_sicoob()
+    if token_sicoob:
+        api_url = f"https://api.sicoob.com.br/pix/api/v2/cob/{txid}"
+
+
+        # Caminhos para os arquivos de certificado público e chave privada
+        cert_path ='C:/MaxSuport/certificado/SicoobCertificado.pem'
+        key_path = 'C:/MaxSuport/certificado/SicoobChavePrivada.key'
+
+        # Cabeçalhos da requisição
+        headers = {
+            'Authorization': f'Bearer {token_sicoob}',
+            'client_id': "70f9bcea-a229-462d-b7a9-c16c92278138"
+        }
+
+        # Enviar a requisição para consultar a cobrança
+        try:
+            response = requests.get(api_url, headers=headers, cert=(cert_path, key_path))
+            response.raise_for_status()  # Levanta uma exceção para códigos de status de erro
+
+            # Verificar a resposta
+            if response.status_code == 200:
+                data = response.json()
+                status = data.get('status')
+                data_pagamento = data.get('pix')[0].get('horario') if status == 'CONCLUIDA' else None
+                if data_pagamento:
+                    data_pagamento = datetime.datetime.strptime(data_pagamento, "%Y-%m-%dT%H:%M:%S.%fZ").date()         
+                    vendas_master = selectfb("SELECT VENDAS_MASTER FROM VENDAS_FPG WHERE CODIGOTRANSACAO = 'txid' ")
+                    codigo_venda = vendas_master[0][0]
+                    updatefb("UPDATE VENDAS_MASTER SET SITUACAO = 'F' WHERE CODIGO = " + str(codigo_venda))
+
+
+                return status, data_pagamento
+            else:
+                print("Falha ao consultar a cobrança.")
+                print("Código de status:", response.status_code)
+                print("Resposta:", response.text)
+                return None, None
+        except requests.exceptions.RequestException as e:
+            print(f"Erro ao realizar a requisição: {e}")
+            return None, None
+    else:
+        return None, None    

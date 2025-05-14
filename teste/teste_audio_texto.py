@@ -1,11 +1,11 @@
 import requests
 
-def envia_audio_texto_api_comando(tipo, dados, cnpj_empresa):        
+def envia_audio_texto_api_comando():        
     url = "http://10.105.96.102:8000/processar_audio/"
     
-    with open(dados, "rb") as f:
+    with open('/home/MaxServices/teste/erivelton.mp3', "rb") as f:
         files = {"arquivo": ("audio.wav", f, "audio/wav")}
-        data = {"cnpj_empresa": cnpj_empresa}  # Adiciona o CNPJ no envio
+        data = {"cnpj_empresa": 1}  # Adiciona o CNPJ no envio
         response = requests.post(url, files=files, data=data)
 
     print("📨 Resposta da API:", response.text)
@@ -13,3 +13,4 @@ def envia_audio_texto_api_comando(tipo, dados, cnpj_empresa):
     return response.text   
 
 texto = envia_audio_texto_api_comando()
+print(texto)

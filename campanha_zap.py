@@ -1,4 +1,4 @@
-from campanha_mensagens import cumprimento
+from campanha_mensagens import gerar_cumprimento, mensagens
 from funcoes_zap import * 
 import time
 import random
@@ -56,7 +56,7 @@ cur_con.execute(f'''select codigo, REPLACE(SUBSTRING_INDEX(cl.telefone, ' ', 2),
                           (cl.cnae LIKE '%4789002%') OR 
                           (cl.cnae LIKE '%4789003%') OR 
                           (cl.cnae LIKE '%4789004%'))
-                      and cl.localidade = 'AM' ''') 
+                      and cl.localidade = 'PA' and cl.campanha_enviado is null''') 
 
 # cur_con.execute(f'''select codigo, REPLACE(SUBSTRING_INDEX(cl.telefone, ' ', 2), ' ', '') as telefone
 #                     from cliente_lead cl 
@@ -88,7 +88,7 @@ if obj_empresas:
             if not parametros.MYSQL_CONNECTION.is_connected():
               inicializa_conexao_mysql()    
 
-            mensagem_aleatoria = cumprimento()
+            mensagem_aleatoria = gerar_cumprimento()
             print_log(f'Enviando para o número {numero["telefone"]}')
             retorno = envia_mensagem_zap(name_session, str(numero['telefone']), mensagem_aleatoria)
             print_log(f' O envio para o número {numero["telefone"]} foi um {retorno["status"]}')
@@ -100,21 +100,15 @@ if obj_empresas:
             cur_con.execute(f'''UPDATE cliente_lead SET campanha_enviado = 1 WHERE codigo = {numero['codigo']}''')
             cur_con.close()
             parametros.MYSQL_CONNECTION.commit()
-
- 
             
             if contador % 20 == 0:
-                pausa_longa = random.uniform(400, 700)
+                pausa_longa = random.uniform(800, 1100)
                 print_log(f'Pausa longa de {pausa_longa / 60:.2f} minutos após {contador} mensagens.')
                 time.sleep(pausa_longa)
             else:
                 
-                tempo_aleatorio = random.uniform(600, 900)
+                tempo_aleatorio = random.uniform(1080, 1260)
                 print_log(f'Pausando o envio em {tempo_aleatorio} segundos')
-                time.sleep(tempo_aleatorio)       
-                
-                
-            
-            
+                time.sleep(tempo_aleatorio)
         except Exception as e:
             print_log('Erro: ' + str(e))
