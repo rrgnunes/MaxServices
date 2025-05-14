@@ -1,4 +1,5 @@
-from funcoes import print_log,carregar_configuracoes,exibe_alerta, configurar_pos_printer,inicializa_conexao_firebird, selectfb, updatefb,obter_nome_terminal
+from funcoes import print_log, carregar_configuracoes, exibe_alerta, configurar_pos_printer, inicializa_conexao_firebird, selectfb, updatefb, obter_nome_terminal, get_local_ip, gera_qr_code,consultar_cobranca
+from funcoes_pdv import fechar_venda_mesa,cancelar_fechar_venda_mesa,gera_qrcode_mesa
 import socket
 import threading
 import json
@@ -14,20 +15,6 @@ import win32ui
 
 lImprimeGrupo = False
 
-def get_local_ip():
-    """
-    Obtém o endereço IP local da máquina.
-    """
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        # Não precisa realmente enviar dados para obter o IP
-        s.connect(('10.254.254.254', 1))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = '127.0.0.1'
-    finally:
-        s.close()
-    return ip
 
 def handle_client_connection(client_socket):
     """
@@ -71,10 +58,34 @@ def handle_client_connection(client_socket):
                         #efetua_impressao_resumo_mesa(sMesa, sEmpresa)
                         imprime_pedido_mesa(sMesa, sEmpresa)
                     send_response(conn, '200')
-                elif sTipo == '5':
+                elif sTipo == '5': # select
                     comando_sql = request[1:].split(';')[0]
                     resultado = consulta_completa(comando_sql)
                     send_response(conn, resultado)
+                elif sTipo == '6': # fecha mesa
+                    valores = request[1:]
+                    codigo_usuario, codigo_mesa = valores.split('&')                    
+                    resultado = fechar_venda_mesa(int(codigo_usuario), int(codigo_mesa.split(';')[0]))
+                    send_response(conn, str(resultado))          
+                elif sTipo == '7': # cancelar FPG
+                    valores = request[1:]
+                    codigo_venda, codigo_mesa = valores.split('&')       
+                    resultado = cancelar_fechar_venda_mesa(int(codigo_venda), int(codigo_mesa.split(';')[0]))
+                    send_response(conn, str(resultado))     
+                elif sTipo == '8':
+                    valores = request[1:]
+                    descricao, valor, codigo_venda, codigo_forma_pagamento,codigo_usuario, acao = valores.split('&')
+                    acao = acao.split(';')[0]
+                    
+                    if acao == 'GerarQRCode':
+                        imgQRCode = gera_qrcode_mesa(descricao, valor, codigo_venda, codigo_forma_pagamento, codigo_usuario)
+                        send_response_bytes(conn, imgQRCode)   
+                    elif acao == 'ConsultaQRCodeTxId':
+                        resultado = consultar_cobranca(valor)  
+                        send_response(conn, str(resultado))  
+
+                                     
+
     except Exception as e:
         print_log(f"Erro ao tratar a conexão do cliente: {e}", "servidor_socket")
 
@@ -173,6 +184,9 @@ def consulta_completa(comando_sql):
         transacao.rollback()
         return json.dumps({'erro': erro_msg})
 
+def send_response_bytes(conn, response_bytes):
+    tamanho = len(response_bytes).to_bytes(4, 'big')
+    conn.sendall(tamanho + response_bytes)
 
 def send_response(conn, response):
     response += '\n'
@@ -371,7 +385,6 @@ def imprimir_texto_escpos(texto: str, porta_impressora: str, colunas: int, tipo_
         win32print.ClosePrinter(hPrinter)
     except Exception as e:
         raise Exception(f"Erro ao imprimir: {e}")    
-
 
 def imprime_consumo_mesa(mesa, empresa):
     aMesas = selectfb(f"SELECT FK_MOVIMENTO FROM MESA WHERE CODIGO = {mesa}")
@@ -586,8 +599,6 @@ def verifica_impressora():
     except Exception as e:
         erro_msg = f'Erro ao adquirir impressora: {e}'
         print_log(erro_msg, "servidor_socket")
-
-
 
 def imprime_documento(texto, porta_impressora = None):
     import win32print

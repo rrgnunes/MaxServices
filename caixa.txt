@@ -4,9 +4,7 @@
 [ls]
 |COD |PRODUTO                             | QTD|
 [ld]
-|2   |BANANA                              |1.00|
-|407 |KITUBAINA MARAJA 2L                 |1.00|
-|461 |SORVETE NAPOLITANO 1L               |1.00|
+|1   |KIT FRONTAL SAMSUNG A14 DA MARCA NOK|1.00|
                                                 
                                                 
                                                 
