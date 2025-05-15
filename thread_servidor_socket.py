@@ -480,14 +480,23 @@ def imprime_consumo_mesa(mesa, empresa):
 
     # Marca como impresso
     # Itens da comanda para essa impressora
-    aProduto = selectfb("""
-        SELECT ci.codigo
-        FROM comanda_itens ci
-        LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
-        LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
-        LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
-        WHERE ci.fk_comanda_pessoa = ? AND im.codigo = ? AND (ci.impresso = 0 or ci.impresso is null)
-    """, (codigo_pessoa, codigo_impressora))
+    # aProduto = selectfb("""
+    #     SELECT ci.codigo
+    #     FROM comanda_itens ci
+    #     LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
+    #     LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
+    #     LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
+    #     WHERE ci.fk_comanda_pessoa = ? AND im.codigo = ? AND (ci.impresso = 0 or ci.impresso is null)
+    # """, (codigo_pessoa, codigo_impressora))
+
+    aProduto = selectfb("""select
+                            ci.codigo
+                        from
+                            comanda_itens ci
+                        left join
+                            produto pr
+                            on ci.fk_produto = pr.codigo
+                        where ci.fk_comanda_pessoa = ?""", (codigo_pessoa,))
 
     for codigo in aProduto:
         updatefb("""
