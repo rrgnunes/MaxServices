@@ -1,10 +1,10 @@
 [e][b]-MAX SUPORT SISTEMAS[/b][/e]
 [ls]
-[c][b]**** PEDIDO MESA No. 1 ***[/b][/c]
+[c][b]**** PEDIDO MESA No. 2 ***[/b][/c]
 [ls]
 |COD |PRODUTO                             | QTD|
 [ld]
-|492 |BATATA FRITA PEQUENA                |1.00|
+|623 |LANCHE X-BACON + BATATA             |1.00|
                                                 
                                                 
                                                 
