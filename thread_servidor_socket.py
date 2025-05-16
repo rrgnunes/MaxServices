@@ -235,9 +235,9 @@ def imp_pedido_grupo(mesa, empresa):
     
     codigos_impressoras = [linha[0] for linha in aImpressoras]
 
-    for codigo_imp in codigos_impressoras:
-        empresa = selectfb(f"SELECT FANTASIA FROM EMPRESA WHERE CODIGO = {empresa}")
-        empresa = empresa[0]
+    for codigo_imp in codigos_impressoras:        
+        nome_empresa = selectfb(f"SELECT FANTASIA FROM EMPRESA WHERE CODIGO = {empresa}")
+        nome_empresa = nome_empresa[0]
 
         impressora = selectfb(f"SELECT COLUNAS, PORTA_IMPRESSORA, IMPRESSORA FROM IMPRESSORA WHERE CODIGO = {codigo_imp}")
         impressora = impressora[0]
@@ -247,7 +247,7 @@ def imp_pedido_grupo(mesa, empresa):
 
         aImpressao = []
 
-        aImpressao.append(f"[b]-{empresa[0]}[/b]")
+        aImpressao.append(f"[b]-{nome_empresa[0]}[/b]")
         aImpressao.append("[ls]")
         aImpressao.append("[b][c]*** IMPRESSAO GRUPO ***[/c][/b]")
         aImpressao.append(f"MESA.....:{mesa}")
@@ -318,14 +318,14 @@ def imp_pedido_grupo(mesa, empresa):
                 UPDATE comanda_itens
                 SET impresso = 1
                 WHERE codigo = ?
-            """, (codigo))
+            """, codigo)
 
 
     updatefb("""
         UPDATE MESA
         SET impresso = 1
         WHERE codigo = ?
-    """, (mesa))      
+    """, (mesa,))      
 
 def quebra_linhas(texto, largura):
     palavras = texto.split()
