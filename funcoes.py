@@ -8,6 +8,7 @@ import parametros
 import subprocess
 import configparser
 import requests
+import unicodedata
 from pathlib import Path
 from mysql.connector import Error
 from funcoes_zap import *
@@ -1691,7 +1692,7 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
                         
                         if propriedade.lower() == 'descricao':
                             sql_comment = ''
-                            comentario = propriedades[propriedade].replace("'", '"')
+                            comentario = unicodedata.normalize('NFD', propriedades[propriedade].replace("'", '"')).encode('ascii', 'ignore').decode('utf-8')
                             sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{comentario}';"
                             sqls_comment.append(sql_comment)
                             continue
@@ -1704,36 +1705,41 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
 
                 sql_create += declaracao_colunas + ');'
                 sqls_create.append(sql_create)
-                sqls_grant.append(f'GRANT ALL {tabela} TO MAXSERVICES WITH GRANT OPTION;')
+                sqls_grant.append(f'GRANT ALL ON {tabela} TO MAXSERVICES WITH GRANT OPTION;')
             else:
 
                 for coluna in metadados_origem[tabela].keys():
                     sql_alter = ''
+                    sql_alter_default = ''
                     sql_comment = ''
 
                     if not coluna in metadados_destino[tabela].keys():
                         sql_alter = f"ALTER TABLE {tabela} ADD {coluna} {metadados_origem[tabela][coluna]['TIPO']}"
-                        sql_alter += f" DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']}" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
+                        sql_alter_default = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} SET DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']};" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
                         sql_alter += f' NOT NULL' if metadados_origem[tabela][coluna]['NULO'] else ''
-                        sql_alter += ';'            
-                        sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{metadados_origem[tabela][coluna]['DESCRICAO']}';" if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
+                        sql_alter += ';'
+                        comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8') if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
+                        sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{comentario}';" if comentario else ''                    
                     else:
                         if metadados_origem[tabela][coluna]['TIPO'] != metadados_destino[tabela][coluna]['TIPO']:
                             sql_alter = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} TYPE {metadados_origem[tabela][coluna]['TIPO']}"
 
                         if metadados_origem[tabela][coluna]['VALOR_PADRAO'] != metadados_destino[tabela][coluna]['VALOR_PADRAO']:
-                            sql_alter = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} TYPE {metadados_origem[tabela][coluna]['TIPO']}"
-                            sql_alter += f" DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']}" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
+                            sql_alter_default = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} SET DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']};" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
 
                         if metadados_origem[tabela][coluna]['NULO'] != metadados_destino[tabela][coluna]['NULO']:
                             sql_alter = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} TYPE {metadados_origem[tabela][coluna]['TIPO']}"
                             sql_alter += f" {metadados_origem[tabela][coluna]['NULO']}" if metadados_origem[tabela][coluna]['NULO'] else ''
 
                         if metadados_origem[tabela][coluna]['DESCRICAO'] != metadados_destino[tabela][coluna]['DESCRICAO']:
-                            sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{metadados_origem[tabela][coluna]['DESCRICAO']}';"
+                            comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8') if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
+                            sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{comentario}';" if comentario else ''
 
                     if sql_alter:
                         sqls_alter.append(sql_alter)
+
+                    if sql_alter_default:
+                        sqls_alter.append(sql_alter_default)
                     
                     if sql_comment:
                         sqls_comment.append(sql_comment)
@@ -1851,7 +1857,8 @@ def executar_scripts_meta(scritps: dict, connection:fdb.Connection):
                     print_log(script, 'thread_atualiza_banco')
                     cursor.execute(script)
                 except Exception as e:
-                    erros.append(str(e))
+                    erro = f'{script} ocorreu erro: {str(e)}'
+                    erros.append(erro)
                     continue
             connection.commit()
 

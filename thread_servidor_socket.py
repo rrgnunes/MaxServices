@@ -115,6 +115,9 @@ def servidor_socket():
 
             resultado_empresa = selectfb(sql)
 
+            if not resultado_empresa:
+                resultado_empresa = [(None,)]
+
             lImprimeGrupo = resultado_empresa[0][0] == 1
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -232,9 +235,9 @@ def imp_pedido_grupo(mesa, empresa):
     
     codigos_impressoras = [linha[0] for linha in aImpressoras]
 
-    for codigo_imp in codigos_impressoras:
-        empresa = selectfb(f"SELECT FANTASIA FROM EMPRESA WHERE CODIGO = {empresa}")
-        empresa = empresa[0]
+    for codigo_imp in codigos_impressoras:        
+        nome_empresa = selectfb(f"SELECT FANTASIA FROM EMPRESA WHERE CODIGO = {empresa}")
+        nome_empresa = nome_empresa[0]
 
         impressora = selectfb(f"SELECT COLUNAS, PORTA_IMPRESSORA, IMPRESSORA FROM IMPRESSORA WHERE CODIGO = {codigo_imp}")
         impressora = impressora[0]
@@ -244,7 +247,7 @@ def imp_pedido_grupo(mesa, empresa):
 
         aImpressao = []
 
-        aImpressao.append(f"[b]-{empresa[0]}[/b]")
+        aImpressao.append(f"[b]-{nome_empresa[0]}[/b]")
         aImpressao.append("[ls]")
         aImpressao.append("[b][c]*** IMPRESSAO GRUPO ***[/c][/b]")
         aImpressao.append(f"MESA.....:{mesa}")
@@ -315,14 +318,14 @@ def imp_pedido_grupo(mesa, empresa):
                 UPDATE comanda_itens
                 SET impresso = 1
                 WHERE codigo = ?
-            """, (codigo))
+            """, codigo)
 
 
     updatefb("""
         UPDATE MESA
         SET impresso = 1
         WHERE codigo = ?
-    """, (mesa))      
+    """, (mesa,))      
 
 def quebra_linhas(texto, largura):
     palavras = texto.split()
@@ -477,14 +480,23 @@ def imprime_consumo_mesa(mesa, empresa):
 
     # Marca como impresso
     # Itens da comanda para essa impressora
-    aProduto = selectfb("""
-        SELECT ci.codigo
-        FROM comanda_itens ci
-        LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
-        LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
-        LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
-        WHERE ci.fk_comanda_pessoa = ? AND im.codigo = ? AND (ci.impresso = 0 or ci.impresso is null)
-    """, (codigo_pessoa, codigo_impressora))
+    # aProduto = selectfb("""
+    #     SELECT ci.codigo
+    #     FROM comanda_itens ci
+    #     LEFT JOIN produto pr ON ci.FK_PRODUTO = pr.CODIGO
+    #     LEFT JOIN grupo gr ON pr.GRUPO = gr.CODIGO
+    #     LEFT JOIN impressora im ON gr.CODIGO_IMPRESSORA = im.CODIGO
+    #     WHERE ci.fk_comanda_pessoa = ? AND im.codigo = ? AND (ci.impresso = 0 or ci.impresso is null)
+    # """, (codigo_pessoa, codigo_impressora))
+
+    aProduto = selectfb("""select
+                            ci.codigo
+                        from
+                            comanda_itens ci
+                        left join
+                            produto pr
+                            on ci.fk_produto = pr.codigo
+                        where ci.fk_comanda_pessoa = ?""", (codigo_pessoa,))
 
     for codigo in aProduto:
         updatefb("""

@@ -2,6 +2,7 @@ import sys
 import parametros
 import configparser
 import os
+import fdb
 from salva_metadados_json import salva_json_metadados_local
 from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config, buscar_estrutura_remota, comparar_metadados, executar_scripts_meta, inicializa_conexao_firebird
 
@@ -59,8 +60,13 @@ def atualiza_banco():
                             config['manutencao']['atualizabanco'] = '0'
                             with open(caminho_ini, 'w') as configfile:
                                 config.write(configfile)
-
                             config.clear
+
+                            try:
+                                cursor: fdb.Cursor = parametros.FIREBIRD_CONNECTION.cursor()
+                                cursor.execute('EXECUTE PROCEDURE')
+                            except Exception as e:
+                                print()
 
                         except Exception as e:
                             print_log(f'Erro em conexão a banco de dados -> motivo: {e}')                    
