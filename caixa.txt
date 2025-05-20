@@ -4,7 +4,7 @@
 [ls]
 |COD |PRODUTO                             | QTD|
 [ld]
-|623 |LANCHE X-BACON + BATATA             |1.00|
+|407 |KITUBAINA MARAJA 2L                 |1.00|
                                                 
                                                 
                                                 
