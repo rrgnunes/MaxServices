@@ -1362,8 +1362,10 @@ def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global
             if not chave_primaria:
                 print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
                 return None
-            
-            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s AND CNPJ_EMPRESA = %s"
+            if tabela.lower() == 'relatorios':
+                sql_select = f'SELECT * FROM {tabela} WHERE {chave_primaria} = %s'
+            else:
+                sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s AND CNPJ_EMPRESA = %s"
             cursor.execute(sql_select, (codigo, cnpj))
 
         dados = cursor.fetchone()
@@ -1535,7 +1537,7 @@ def tratar_valores(dados: dict) -> list:
             valores.append(valor)  # Adiciona os outros valores
     return valores
 
-def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:str = 0, firebird:bool=True, nome_servico:str='replicador') -> None:
+def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:str = 0, firebird:bool=True, nome_servico:str='replicador', cnpj:str='') -> None:
 
     if firebird:
         try:
@@ -1558,8 +1560,8 @@ def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:st
                 sql_delete = "DELETE FROM REPLICADOR WHERE TABELA = %s AND ACAO = %s AND CODIGO_GLOBAL = %s LIMIT 1;"
                 valores = tabela, acao, codigo_global
             else:
-                sql_delete = "DELETE FROM REPLICADOR WHERE CHAVE = %s AND TABELA = %s AND ACAO = %s LIMIT 1;"
-                valores = chave, tabela, acao
+                sql_delete = "DELETE FROM REPLICADOR WHERE CHAVE = %s AND TABELA = %s AND ACAO = %s AND CNPJ_EMPRESA = %s LIMIT 1;"
+                valores = chave, tabela, acao, cnpj
 
             cursor = connection.cursor()
             cursor.execute(sql_delete, valores)
@@ -1718,7 +1720,7 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
                         sql_alter_default = f"ALTER TABLE {tabela} ALTER COLUMN {coluna} SET DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']};" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
                         sql_alter += f' NOT NULL' if metadados_origem[tabela][coluna]['NULO'] else ''
                         sql_alter += ';'
-                        comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8') if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
+                        comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
                         sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{comentario}';" if comentario else ''                    
                     else:
                         if metadados_origem[tabela][coluna]['TIPO'] != metadados_destino[tabela][coluna]['TIPO']:
@@ -1732,7 +1734,7 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
                             sql_alter += f" {metadados_origem[tabela][coluna]['NULO']}" if metadados_origem[tabela][coluna]['NULO'] else ''
 
                         if metadados_origem[tabela][coluna]['DESCRICAO'] != metadados_destino[tabela][coluna]['DESCRICAO']:
-                            comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8') if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
+                            comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
                             sql_comment = f"COMMENT ON COLUMN {tabela}.{coluna} IS '{comentario}';" if comentario else ''
 
                     if sql_alter:

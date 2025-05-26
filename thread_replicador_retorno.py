@@ -190,7 +190,7 @@ def mysql_firebird():
         if elemento_mysql is not None:
             delete_registro_replicador(tabela, acao, valor, elemento_mysql['CODIGO_GLOBAL'], firebird=False)
         else:
-            delete_registro_replicador(tabela, acao, valor, firebird=False)
+            delete_registro_replicador(tabela, acao, valor, firebird=False, cnpj=cnpj)
 
 if __name__ == '__main__':
 

@@ -10,7 +10,7 @@ HOSTMYSQL = "maxsuportsistemas.com"
 
 #Kinghost
 # HOSTMYSQL = "177.153.69.3"
-USERMYSQL = "maxservices"
+USERMYSQL = "maxsuport"
 PASSMYSQL = "oC8qUsDp"
 BASEMYSQL = "maxservices"
 
