@@ -26,5 +26,7 @@ config.json
 temp/*.lock
 *.mp3
 *.wav
+*.txt
 /metadados_remoto/
 /metadados_local/
+caixa.txt
