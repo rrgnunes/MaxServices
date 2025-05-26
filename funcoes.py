@@ -88,13 +88,19 @@ def inicializa_conexao_mysql():
                 auth_plugin='mysql_native_password',  # Força o uso do plugin correto
                 connection_timeout=15
             )
-        print_log("Conexão com MySQL estabelecida com sucesso.")
+        print_log(f"Conexão com Firebird estabelecida com sucesso. Host: {parametros.HOSTMYSQL}, Banco: {parametros.BASEMYSQL}")
     except mysql.connector.Error as err:
         print_log(f"Erro ao conectar ao MySQL: {err}")
 
 def inicializa_conexao_firebird():
     try:
         fdb.load_api(parametros.PATHDLL)
+
+        if get_local_ip() == '192.168.10.115':
+            parametros.HOSTFB = '192.168.10.242'
+            parametros.USERFB = 'maxsuport'
+
+
         if parametros.FIREBIRD_CONNECTION is None:
             parametros.FIREBIRD_CONNECTION = fdb.connect(
                 host=parametros.HOSTFB,
@@ -103,7 +109,7 @@ def inicializa_conexao_firebird():
                 password=parametros.PASSFB,
                 port=int(parametros.PORTFB)
             )
-        print_log("Conexão com Firebird estabelecida com sucesso.")
+        print_log(f"Conexão com Firebird estabelecida com sucesso. Host: {parametros.HOSTFB}, Banco: {parametros.DATABASEFB}")
     except fdb.fbcore.DatabaseError as err:
         print_log(f"Erro ao conectar ao Firebird: {err}")
 
@@ -353,7 +359,7 @@ def inicializa_conexao_mysql_replicador():
                 database=parametros.BASEMYSQL_REP,
                 auth_plugin='mysql_native_password'
             )
-        print_log(f"Conexão com MySQL estabelecida com sucesso.")
+        print_log(f"Conexão com MySQL estabelecida com sucesso. Host: {parametros.HOSTMYSQL_REP}, Banco: {parametros.BASEMYSQL_REP}")
     except mysql.connector.Error as err:
         print_log(f"Erro ao conectar ao MySQL: {err}")
 
@@ -1364,7 +1370,7 @@ def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global
                 return None
             if tabela.lower() == 'relatorios':
                 sql_select = f'SELECT * FROM {tabela} WHERE {chave_primaria} = %s'
-                cursor.execute(sql_select, (cnpj,))
+                cursor.execute(sql_select, (codigo,))
             else:
                 sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s AND CNPJ_EMPRESA = %s"
                 cursor.execute(sql_select, (codigo, cnpj))

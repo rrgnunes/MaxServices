@@ -99,19 +99,20 @@ def insert_firebird(tabela: str, dados: dict) -> None:
         connection_firebird.commit()
 
         # tratamento para retorno do valor da chave primaria gerada em banco firebird local
-        codigo_global = dados['CODIGO_GLOBAL']
-        try:
-            cursor_mysql = connection_mysql.cursor()
-            sql_update_retorno = f'UPDATE {tabela} SET {campo_chave_primaria} = {valor_chave_primaria} WHERE CODIGO_GLOBAL = {codigo_global}'
-            cursor_mysql.execute(sql_update_retorno)
-            connection_mysql.commit()
-            print_log(f'Valor de chave primaria retornado: {valor_chave_primaria} \n', nome_servico)
-        except Exception as e:
-            print_log(f'Erro ao retornar valor de chave primaria: {e} \n', nome_servico)
-            connection_mysql.rollback()
-        finally:
-            if cursor_mysql:
-                cursor_mysql.close()
+        if tabela.lower() != 'relatorios':
+            codigo_global = dados['CODIGO_GLOBAL']
+            try:
+                cursor_mysql = connection_mysql.cursor()
+                sql_update_retorno = f'UPDATE {tabela} SET {campo_chave_primaria} = {valor_chave_primaria} WHERE CODIGO_GLOBAL = {codigo_global}'
+                cursor_mysql.execute(sql_update_retorno)
+                connection_mysql.commit()
+                print_log(f'Valor de chave primaria retornado: {valor_chave_primaria} \n', nome_servico)
+            except Exception as e:
+                print_log(f'Erro ao retornar valor de chave primaria: {e} \n', nome_servico)
+                connection_mysql.rollback()
+            finally:
+                if cursor_mysql:
+                    cursor_mysql.close()
 
     except Exception as e:
         print_log(f"Erro ao inserir dados no Firebird: {e}", nome_servico)
@@ -188,7 +189,10 @@ def mysql_firebird():
                 insert_firebird(tabela, elemento_mysql)
 
         if elemento_mysql is not None:
-            delete_registro_replicador(tabela, acao, valor, elemento_mysql['CODIGO_GLOBAL'], firebird=False)
+            if tabela.lower() == 'relatorios':
+                delete_registro_replicador(tabela, acao, valor, None, firebird=False, cnpj=cnpj)
+            else:
+                delete_registro_replicador(tabela, acao, valor, elemento_mysql['CODIGO_GLOBAL'], firebird=False)
         else:
             delete_registro_replicador(tabela, acao, valor, firebird=False, cnpj=cnpj)
 
