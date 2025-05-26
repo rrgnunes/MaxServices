@@ -447,7 +447,6 @@ def imprime_consumo_mesa(mesa, empresa):
     if not len(aProduto) > 0:
         return
 
-
     for item in aProduto:
         cod = str(item[0]).ljust(4)
         desc = item[1][:iQtdProduto].ljust(iQtdProduto)
