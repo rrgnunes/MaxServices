@@ -1364,9 +1364,10 @@ def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global
                 return None
             if tabela.lower() == 'relatorios':
                 sql_select = f'SELECT * FROM {tabela} WHERE {chave_primaria} = %s'
+                cursor.execute(sql_select, (cnpj))
             else:
                 sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s AND CNPJ_EMPRESA = %s"
-            cursor.execute(sql_select, (codigo, cnpj))
+                cursor.execute(sql_select, (codigo, cnpj))
 
         dados = cursor.fetchone()
 
