@@ -575,7 +575,9 @@ def imprime_pedido_mesa(mesa, empresa):
 
         observacao = item[5]
 
-        if observacao: 
+        if observacao:
+            if isinstance(observacao, bytes):
+                observacao = observacao.decode('utf-8')
             aImpressao.extend(quebra_linhas(observacao, colunas))
 
     aImpressao.append("[ls]")
