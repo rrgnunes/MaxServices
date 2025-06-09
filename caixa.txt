@@ -1,12 +1,13 @@
 [e][b]-MAX SUPORT SISTEMAS[/b][/e]
 [ls]
-[c][b]**** PEDIDO MESA No. 1 ***[/b][/c]
+[c][b]**** PEDIDO MESA No. 13 ***[/b][/c]
 [ls]
-|COD |PRODUTO                             | QTD|
+|COD |PRODUTO             | QTD|  VALOR|  TOTAL|
 [ld]
-|1   |KIT FRONTAL SAMSUNG A14 DA MARCA NOK|1.00|
-                                                
-                                                
-                                                
-                                                
-                                                
+|847 |COCA COLA           |5.00|  10.40|  52.00|
+Com gelo e limao
+[ls]
+[e]TOTAL     :57.2[/e]
+[ls]
+NAO E DOCUMENTO FISCAL
+<<Volte Sempre>>
