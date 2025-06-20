@@ -226,3 +226,43 @@ MAXSUPORT-09	Mon Jun  2 17:16:26 2025
 MAXSUPORT-09	Mon Jun  2 17:16:29 2025
 	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
 
+
+MAXSUPORT-09	Sat Jun 14 14:45:34 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:45:37 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:45:41 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:45:47 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:45:53 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:45:57 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:46:02 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:46:14 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Sat Jun 14 14:46:16 2025
+	INET/INET_connect: getaddrinfo(localhost,3050) failed: O nome solicitado é válido, mas não foram encontrados dados do tipo solicitado. 
+
+
+MAXSUPORT-09	Fri Jun 20 11:14:37 2025
+	INET/INET_connect: getaddrinfo(localhost3050,3050) failed: Este host não é conhecido. 
+

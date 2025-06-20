@@ -9,6 +9,7 @@ import subprocess
 import configparser
 import requests
 import unicodedata
+import platform
 from pathlib import Path
 from mysql.connector import Error
 from funcoes_zap import *
@@ -980,15 +981,16 @@ def crypt(action: str, src: str) -> str:
     return dest
 
 def verifica_dll_firebird():
-
-    if os.path.exists('C:/Program Files/Firebird/Firebird_2_5/bin'):
-        return f'{parametros.SCRIPT_PATH}\\fbclient64.dll'
-    
-    elif os.path.exists('C:/Program Files (x86)/Firebird/Firebird_2_5/bin/'):
-        return f'{parametros.SCRIPT_PATH}/fbclient32.dll'
-    
-    else:
-        return ''
+    try:
+        arquitetura = platform.architecture()[0]
+        if arquitetura == '64bit':
+            return os.path.join(f'{parametros.SCRIPT_PATH}', 'fbclient64.dll')
+        elif arquitetura == '32bit':
+            return os.path.join(f'{parametros.SCRIPT_PATH}', 'fbclient32.dll')
+        else:
+            return 'C:\\Windows\\System32\\FBCLIENT.DLL'
+    except Exception as e:
+        print_log(f'Não foi possível verificar dll adequada para computador -> motivo {e}')
     
 def caminho_bd():
     try:

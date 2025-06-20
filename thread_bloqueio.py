@@ -37,7 +37,7 @@ def verifica_dados_local():
                             print_log(f"Encerra Processo do GFIL na proc {caminho_base_dados_gfil}, no caminho {proc.info['exe']}", nome_servico)
                             proc.kill()
                             print_log("Iniciar conexão com alerta", nome_servico)
-                            exibe_alerta()
+                            # exibe_alerta()
 
             if sistema_em_uso == "1":
                 data_cripto = '80E854C4A6929988F97AE2'
@@ -60,8 +60,9 @@ def verifica_dados_local():
                     if (parametros.DATABASEFB == None) or (parametros.DATABASEFB == 'None'):
                         print_log('Banco não definido...', nome_servico)
                         continue
-                    # parametros.PATHDLL = os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll')
-                    inicializa_conexao_firebird(os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll'))
+                    parametros.PATHDLL = os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll')
+                    # inicializa_conexao_firebird(os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll'))
+                    inicializa_conexao_firebird()
                     con = parametros.FIREBIRD_CONNECTION
                     cur = con.cursor()
                     comando = 'Liberar' if ativo == "1" else 'Bloquear'
@@ -71,7 +72,7 @@ def verifica_dados_local():
                     cur.close()
                     con.close()
                     parametros.FIREBIRD_CONNECTION = None
-                except fdb.fbcore.DatabaseError as e:
+                except Exception as e:
                     print_log(f"Erro ao executar consulta: {e}", nome_servico)
     except Exception as e:
         print_log(f"Erro: {e}", nome_servico)

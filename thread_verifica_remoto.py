@@ -4,6 +4,26 @@ import sys
 import fdb
 from funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio, verifica_dll_firebird
 
+def gerar_conexao(servidor='localhost', porta='3050', usuario='sysdba', senha='masterkey', pasta_banco=''):
+    con = fdb.connect(host=f'{servidor}/{porta}', user=usuario, password=senha, database=pasta_banco)
+    return con
+
+def iterar_cnpjs(cnpjs: list, con: fdb.Connection, sistema: str = 'max'):
+    cursor = con.cursor()
+
+    if sistema == 'max':
+        cursor.execute('select cnpj from empresa')
+
+    elif sistema == 'gfil':
+        cursor.execute('select cnpj from diversos')
+
+    results = cursor.fetchall()
+
+    for result in results:
+        if result[0] not in cnpjs:
+            cnpjs.append(result[0])
+
+    cursor.close()
 
 def consulta_cnpj():
     pasta_raiz = os.path.abspath(os.sep)
@@ -21,19 +41,44 @@ def consulta_cnpj():
 
             if os.path.exists(pasta_bd):
                 print_log(f'Consultando em pasta -> {pasta_bd}', nome_script)
+                con = gerar_conexao(pasta_banco=pasta_bd)
+
+                if con:
+                    try:
+                        iterar_cnpjs(cnpjs, con)
+                    except Exception as e:
+                        print_log(f'Erro ao verificar pastas -> motivo: {e}', nome_script)
+                    finally:
+                        if not con.closed:
+                            con.close()
+
+        elif 'sistemagfil' in pasta.lower():
+            pasta_bd = os.path.join(pasta, 'dados', 'infolivre.fdb')
+
+            if os.path.exists(pasta_bd):
+                print_log(f'Consultando em pasta -> {pasta_bd}', nome_script)
+
                 try:
-                    con = fdb.connect(host='localhost/3050', user='sysdba', password='masterkey', database=pasta_bd)
-                    cursor = con.cursor()
-                    cursor.execute('select cnpj from empresa')
-                    results = cursor.fetchall()
-                    for result in results:
-                        if result[0] not in cnpjs:
-                            cnpjs.append(result[0])
-                    cursor.close()
+                    con = gerar_conexao(usuario='GFILMASTER', senha='b32@m451', pasta_banco=pasta_bd)
+                    if con:
+                        iterar_cnpjs(cnpjs, con, 'gfil')
                 except Exception as e:
-                    print_log(f'Erro ao verificar pastas -> motivo: {e}', nome_script)
+
+                    if 'unsupported on-disk structure' in str(e):
+                        print_log('Realizando troca da porta de conexão', nome_script)
+                        con = gerar_conexao(porta='3040', usuario='GFILMASTER', senha='b32@m451', pasta_banco=pasta_bd)
+
+                        if con:
+                            try:
+                                iterar_cnpjs(cnpjs, con, 'gfil')
+                            except Exception as er:
+                                print_log(f'Erro ao consultar cnpjs em segunda tentativa -> motivo: {er}', nome_script)
+                    else:
+                        print_log(f'Erro ao verificar pastas -> motivo: {e.__class__.__name__}:{e}', nome_script)
                 finally:
-                    con.close()
+                    if not con.closed:
+                        con.close()
+
     return cnpjs
 
 def salva_json():
