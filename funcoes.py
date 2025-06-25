@@ -332,8 +332,12 @@ def selectfb(sql_query, values=None):
         print_log("Comando OK")          
 
 def exibe_alerta():
-    comando = 'start http://maxsuport.com/alerta'
+    # comando = 'start http://maxsuport.com/alerta'
+    alerta = os.path.join(parametros.SCRIPT_PATH, 'alerta.html')
+    comando = f'start {alerta}'
+    print_log(comando, 'thread_bloqueio')
     subprocess.run(comando, shell=True)
+
 
 def VerificaVersaoOnline(arquivo_versao):
     versao_online = 0

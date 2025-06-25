@@ -37,7 +37,7 @@ def verifica_dados_local():
                             print_log(f"Encerra Processo do GFIL na proc {caminho_base_dados_gfil}, no caminho {proc.info['exe']}", nome_servico)
                             proc.kill()
                             print_log("Iniciar conexão com alerta", nome_servico)
-                            # exibe_alerta()
+                            exibe_alerta()
 
             if sistema_em_uso == "1":
                 data_cripto = '80E854C4A6929988F97AE2'

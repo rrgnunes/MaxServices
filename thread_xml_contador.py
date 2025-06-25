@@ -8,6 +8,7 @@ import os
 def xmlcontador():
     nome_servico = 'thread_xml_contador'
     print_log("Carrega configurações- xmlcontador")
+    parametros.PATHDLL = verifica_dll_firebird()
     carregar_configuracoes()
     try:
         

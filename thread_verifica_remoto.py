@@ -65,7 +65,7 @@ def consulta_cnpj():
                 except Exception as e:
 
                     if 'unsupported on-disk structure' in str(e):
-                        print_log('Realizando troca da porta de conexão', nome_script)
+                        print_log('Falha ao conectar, tentando em outra porta de conexao', nome_script)
                         con = gerar_conexao(porta='3040', usuario='GFILMASTER', senha='b32@m451', pasta_banco=pasta_bd)
 
                         if con:
