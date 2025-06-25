@@ -60,6 +60,7 @@ def handle_client_connection(client_socket):
                     send_response(conn, '200')
                 elif sTipo == '5': # select
                     comando_sql = request[1:].split(';')[0]
+                    print_log(comando_sql)
                     resultado = consulta_completa(comando_sql)
                     send_response(conn, resultado)
                 elif sTipo == '6': # fecha mesa

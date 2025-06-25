@@ -1,5 +1,14 @@
 [e][b]-MAX SUPORT SISTEMAS[/b][/e]
 [ls]
+<<<<<<< HEAD
+[c][b]**** PEDIDO MESA No. 2 ***[/b][/c]
+[ls]
+|COD |PRODUTO             | QTD|  VALOR|  TOTAL|
+[ld]
+|1   |KIT FRONTAL SAMSUNG |1.00|  10.00|  10.00|
+[ls]
+[e]TOTAL     :10[/e]
+=======
 [c][b]**** PEDIDO MESA No. 8 ***[/b][/c]
 [ls]
 |COD |PRODUTO             | QTD|  VALOR|  TOTAL|
@@ -8,6 +17,12 @@
 |407 |KITUBAINA MARAJA 2L |1.00|   8.00|   8.00|
 [ls]
 [e]TOTAL     :23.58[/e]
+>>>>>>> 8b891ecc033d3148874ef0d1ba24ed664189f1df
 [ls]
 NAO E DOCUMENTO FISCAL
 <<Volte Sempre>>
+                                                
+                                                
+                                                
+                                                
+                                                
