@@ -897,7 +897,7 @@ if __name__ == '__main__':
         host = get_local_ip()
 
         if host == '192.168.10.115':
-            ip = '192.168.10.242'
+            ip = 'MAXSUPORT-09'
 
         FIREBIRD_CONFIG = {
             'dsn': f'{ip}:{caminho_base_dados_maxsuport}',
