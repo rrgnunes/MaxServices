@@ -12,12 +12,6 @@ def is_running(script_path):
     script_name = os.path.basename(script_path)
     for proc in psutil.process_iter(attrs=['pid', 'name', 'cmdline']):
         try:
-            # process = proc.name().lower()
-            # if process == 'python.exe':
-            #     cmdlines = proc.as_dict()['cmdline']
-            #     for cmdline in cmdlines:
-            #         if script_name in cmdline:
-            #             return True
             if (proc.info['name'].lower() == 'python.exe') and any(script_name in cmd for cmd in proc.info['cmdline']):
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -42,7 +36,7 @@ def setup_schedules():
     # Defina os scripts e seus agendamentos em segundos
     scripts = [
         {'path': scripts_directory / 'thread_backup_local.py', 'interval': 3600},  # 1 hora
-        # {'path': scripts_directory / 'thread_atualiza_banco.py', 'interval': 10},  # 10 segundos
+        {'path': scripts_directory / 'thread_atualiza_banco.py', 'interval': 10},  # 10 segundos
         {'path': scripts_directory / 'thread_IBPT_NCM_CEST.py', 'interval': 1800},  # 30 minutos
         {'path': scripts_directory / 'thread_servidor_socket.py', 'interval': 0},  # Executa uma vez
         {'path': scripts_directory / 'thread_api_maxsuport.py', 'interval': 0}, # Executa uma vez

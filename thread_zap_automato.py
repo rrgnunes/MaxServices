@@ -41,6 +41,10 @@ def zapautomato():
                     parametros.DATABASEFB = caminho_base_dados_maxsuport
                     if (parametros.DATABASEFB == None) or (parametros.DATABASEFB == "None"):
                         continue
+
+                    if not os.path.exists(parametros.DATABASEFB):
+                        print_log('Banco de dados não encontrando, pulando execução...')
+                        continue
                     
                     parametros.PORTFB = porta_firebird_maxsuport
                     parametros.PATHDLL = f'{caminho_gbak_firebird_maxsuport}/fbclient.dll'

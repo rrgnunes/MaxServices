@@ -1,5 +1,4 @@
-from funcoes import print_log,carregar_configuracoes, pode_executar, criar_bloqueio, remover_bloqueio
-import fdb
+from funcoes import print_log, pode_executar, criar_bloqueio, remover_bloqueio, carrega_arquivo_config, inicializa_conexao_mysql, inicializa_conexao_firebird
 import sys
 import datetime
 import csv
@@ -7,12 +6,43 @@ import parametros
 import pathlib
 import os
 
+
+def consultar_ibpt_online(results: pathlib.Path) -> (str|list):
+    sVersaoRemota = ''
+    resultados = []
+
+    try:
+        if parametros.MYSQL_CONNECTION.is_connected():
+            cursorMYSQL = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
+            cursorMYSQL.execute("SELECT * FROM ibpt_ibpt WHERE ESTADO = 'MT'")
+            result_remoto = cursorMYSQL.fetchone()
+            sVersaoRemota = result_remoto['versao']
+            resultados = cursorMYSQL.fetchall()
+
+            # Salva os dados em um arquivo CSV
+            with open(results, encoding='utf-8', mode='w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=resultados[0].keys())
+                writer.writeheader()
+                writer.writerows(resultados)
+            print_log("Dados salvos em resultados.csv", nome_script)
+    except Exception as e:
+        print_log(f'Nao foi possivel consultar IBPT remoto -> motivo: {e}')
+
+    return sVersaoRemota, resultados
+
 def IBPTNCMCEST():
     nome_servico = "thread_IBPT_NCM_CEST"
     print_log("Carrega configurações da thread", nome_servico)
     try:
+        inicializa_conexao_mysql()
+
         results = os.path.join(pathlib.Path(__file__).parent, 'resultados.csv')
-        carregar_configuracoes()
+        sVersaoRemota, resultados = consultar_ibpt_online(results)
+        carrega_arquivo_config()
+
+        if not sVersaoRemota:
+            print_log('Sem informações de IBPT online, cancelando execução...')
+            return
 
         print_log("Pega dados local", nome_servico)
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
@@ -23,78 +53,66 @@ def IBPTNCMCEST():
             porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
 
             if ativo:
-                conMYSQL = parametros.MYSQL_CONNECTION
-                if conMYSQL.is_connected():
-                    print_log("Banco MySQL conectado", nome_servico)
-                    if sistema_em_uso == '1':  # maxsuport
-                        if caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
-                            fdb.load_api(f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll')
-                            conFirebird = parametros.FIREBIRD_CONNECTION
+                if sistema_em_uso == '1':  # maxsuport
 
-                            cursorMYSQL = conMYSQL.cursor(dictionary=True)
-                            cursorFirebird = conFirebird.cursor()
+                    if not os.path.exists(caminho_base_dados_maxsuport):
+                        continue
 
-                            cursorMYSQL.execute("SELECT * FROM ibpt_ibpt WHERE ESTADO = 'MT'")
-                            result_remoto = cursorMYSQL.fetchone()
-                            sVersaoRemota = result_remoto['versao']
+                    print_log(f'Verificando versão de IBPT local, pasta -> {caminho_base_dados_maxsuport}')
+                    if caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:                    
+                        parametros.DATABASEFB = caminho_base_dados_maxsuport
+                        parametros.PATHDLL = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
 
-                            resultados = cursorMYSQL.fetchall()
+                        inicializa_conexao_firebird()
 
-                            # Salva os dados em um arquivo CSV
-                            with open(results, encoding='utf-8', mode='w', newline='') as f:
-                                writer = csv.DictWriter(f, fieldnames=resultados[0].keys())
-                                writer.writeheader()
-                                writer.writerows(resultados)
+                        conFirebird = parametros.FIREBIRD_CONNECTION
+                        cursorFirebird = conFirebird.cursor()                        
+                        cursorFirebird.execute("SELECT * FROM IBPT WHERE VERSAO = ?", (sVersaoRemota,))
+                        result_local = cursorFirebird.fetchone()
+                        sVersaoLocal = result_local[11] if result_local else None
 
-                            print_log("Dados salvos em resultados.csv", nome_servico)
+                        dia = datetime.datetime.now().day
 
-                            cursorFirebird.execute("SELECT * FROM IBPT WHERE VERSAO = ?", (sVersaoRemota,))
-                            result_local = cursorFirebird.fetchone()
-                            sVersaoLocal = result_local[12] if result_local else None
+                        if sVersaoRemota != sVersaoLocal and dia in [2, 4, 6, 20, 26]:
+                            print_log("Versão remota diferente da versão local, iniciando atualização", nome_servico)
 
-                            dia = datetime.datetime.now().day
+                            cursorFirebird.execute("DELETE FROM IBPT")
+                            conFirebird.commit()
+                            print_log("Tabela IBPT local limpa", nome_servico)
 
-                            if sVersaoRemota != sVersaoLocal and dia in [2, 4, 6, 20]:
-                                print_log("Versão remota diferente da versão local, iniciando atualização", nome_servico)
+                            contagem = 0
 
-                                cursorFirebird.execute("DELETE FROM IBPT")
-                                conFirebird.commit()
-                                print_log("Tabela IBPT local limpa", nome_servico)
+                            for row in resultados:
+                                cursorFirebird.execute("""
+                                    INSERT INTO IBPT (
+                                        CODIGO, EX, TIPO, DESCRICAO, NACIONALFEDERAL, IMPORTADOSFEDERAL, 
+                                        ESTADUAL, MUNICIPAL, VIGENCIAINICIO, VIGENCIAFIM, CHAVE, VERSAO, FONTE
+                                    ) VALUES (?, ?, ?, CAST(? AS VARCHAR(250) CHARACTER SET UTF8), ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                """, (
+                                    row['codigo'], row['ex'], row['tipo'], row['descricao'][:250].encode('utf-8'), row['nacional_federal'], 
+                                    row['importados_federal'], row['estadual'], row['municipal'], row['vigencia_inicio'], 
+                                    row['vigencia_fim'], row['chave'], row['versao'], row['fonte']
+                                ))
+                                contagem += 1
+                                if contagem % 25 == 0:
+                                    print_log(f"{contagem} registros inseridos na tabela IBPT local", nome_servico)
+                            conFirebird.commit()
 
-                                contagem = 0
+                            print_log(f"Total de {contagem} registros inseridos na tabela IBPT local", nome_servico)
+                            atualiza_ncm_cest(conFirebird, parametros.MYSQL_CONNECTION, nome_servico)
 
-                                for row in resultados:
-                                    cursorFirebird.execute("""
-                                        INSERT INTO IBPT (
-                                            CODIGO, EX, TIPO, DESCRICAO, NACIONALFEDERAL, IMPORTADOSFEDERAL, 
-                                            ESTADUAL, MUNICIPAL, VIGENCIAINICIO, VIGENCIAFIM, CHAVE, VERSAO, FONTE
-                                        ) VALUES (?, ?, ?, CAST(? AS VARCHAR(250) CHARACTER SET UTF8), ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                    """, (
-                                        row['codigo'], row['ex'], row['tipo'], row['descricao'][:250].encode('utf-8'), row['nacional_federal'], 
-                                        row['importados_federal'], row['estadual'], row['municipal'], row['vigencia_inicio'], 
-                                        row['vigencia_fim'], row['chave'], row['versao'], row['fonte']
-                                    ))
-                                    contagem += 1
-                                    if contagem % 25 == 0:
-                                        print_log(f"{contagem} registros inseridos na tabela IBPT local", nome_servico)
-                                conFirebird.commit()
-
-                                print_log(f"Total de {contagem} registros inseridos na tabela IBPT local", nome_servico)
-                                atualiza_ncm_cest(conFirebird, conMYSQL, nome_servico)
-
-                                print_log("Atualizando tabela IBPT (NCMs), por favor aguarde...", nome_servico)
-                                cursorFirebird.execute("UPDATE PRODUTO SET CEST = '' WHERE ncm <> '' AND ncm <> '00000000'")
-                                conFirebird.commit()
-                                print_log("Tabela IBPT (NCMs) atualizada", nome_servico)
+                            print_log("Atualizando tabela IBPT (NCMs), por favor aguarde...", nome_servico)
+                            cursorFirebird.execute("UPDATE PRODUTO SET CEST = '' WHERE ncm <> '' AND ncm <> '00000000'")
+                            conFirebird.commit()
+                            print_log("Tabela IBPT (NCMs) atualizada", nome_servico)
     except Exception as a:
-        if conMYSQL.is_connected():
-            conMYSQL.rollback()
         if conFirebird:
             conFirebird.rollback()
         print_log(f"Erro: {a}", nome_servico)
     finally:
-        if conMYSQL.is_connected():
-            conMYSQL.close()
+        if parametros.MYSQL_CONNECTION:
+            if parametros.MYSQL_CONNECTION.is_connected():
+                parametros.MYSQL_CONNECTION.close()
         if conFirebird:
             conFirebird.close()
 

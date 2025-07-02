@@ -89,7 +89,7 @@ def inicializa_conexao_mysql():
                 auth_plugin='mysql_native_password',  # Força o uso do plugin correto
                 connection_timeout=15
             )
-        print_log(f"Conexão com Firebird estabelecida com sucesso. Host: {parametros.HOSTMYSQL}, Banco: {parametros.BASEMYSQL}")
+        print_log(f"Conexão com MYSQL estabelecida com sucesso. Host: {parametros.HOSTMYSQL}, Banco: {parametros.BASEMYSQL}")
     except mysql.connector.Error as err:
         print_log(f"Erro ao conectar ao MySQL: {err}")
 
@@ -108,7 +108,8 @@ def inicializa_conexao_firebird():
                 database=parametros.DATABASEFB,
                 user=parametros.USERFB,
                 password=parametros.PASSFB,
-                port=int(parametros.PORTFB)
+                port=int(parametros.PORTFB),
+                charset='UTF-8'
             )
         print_log(f"Conexão com Firebird estabelecida com sucesso. Host: {parametros.HOSTFB}, Banco: {parametros.DATABASEFB}")
     except fdb.fbcore.DatabaseError as err:
@@ -984,7 +985,7 @@ def crypt(action: str, src: str) -> str:
 
     return dest
 
-def verifica_dll_firebird():
+def verifica_dll_firebird() -> str|None:
     try:
         arquitetura = platform.architecture()[0]
         if arquitetura == '64bit':
@@ -1339,6 +1340,49 @@ def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
     
     return metadados
 
+def extrair_metadados_indices(conn: fdb.Connection):
+    select_sql = """SELECT
+                    TRIM(ri.RDB$RELATION_NAME) AS TABELA,
+                    TRIM(ri.RDB$INDEX_NAME) AS INDICE,
+                    TRIM(ris.RDB$FIELD_NAME) AS COLUNA
+                FROM
+                    RDB$INDICES ri
+                LEFT OUTER JOIN
+                    RDB$INDEX_SEGMENTS ris
+                    ON ris.RDB$INDEX_NAME = ri.RDB$INDEX_NAME
+                WHERE
+                    ri.RDB$SYSTEM_FLAG = 0
+                    AND ri.RDB$INDEX_NAME NOT IN (
+                        SELECT RDB$INDEX_NAME
+                        FROM RDB$RELATION_CONSTRAINTS
+                        WHERE RDB$CONSTRAINT_TYPE IN ('PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE')
+                    )
+                ORDER BY
+                    ri.RDB$RELATION_NAME, ri.RDB$INDEX_NAME, ris.RDB$FIELD_NAME;"""
+    metadados = {}
+    try:
+        cursor: fdb.Cursor = conn.cursor()
+        cursor.execute(select_sql)
+        resultados = cursor.fetchall()
+        for resultado in resultados:
+            tabela = resultado[0]
+            indice = resultado[1]
+            coluna = resultado[2]
+
+            if not tabela in metadados:
+                metadados[tabela] = {}
+
+            if not indice in metadados[tabela]:
+                metadados[tabela][indice] = []
+
+            metadados[tabela][indice].append(coluna)
+    except Exception as e:
+        print_log(f'Nao foi possivel extrair informacoes dos indices -> motivo: {e}')
+    finally:
+        if cursor:
+            cursor.close()
+    return metadados
+
 def obter_nome_terminal():
     import socket
     return socket.gethostname()
@@ -1596,7 +1640,7 @@ def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
     response = requests.get(f'{url_base}/procedures')
     if response.status_code == 200:
         with open(os.path.join(diretorio_metadados, 'procedures.json'), 'w') as j:
-            json.dump(response.json(), j)
+            json.dump(response.json(), j, indent=2)
         print_log('Arquivo de procedures salvo.', nome_servico)
     else:
         print_log('Falha ao buscar procedures: ' + str(response.status_code), nome_servico)
@@ -1604,7 +1648,7 @@ def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
     response = requests.get(f'{url_base}/banco')
     if response.status_code == 200:
         with open(os.path.join(diretorio_metadados, 'banco.json'), 'w') as j:
-            json.dump(response.json(), j)
+            json.dump(response.json(), j, indent=2)
         print_log('Arquivo de estrutura do banco salvo.', nome_servico)
     else:
         print_log('Falha ao buscar estrutura do banco (tabelas): ' + str(response.status_code), nome_servico)
@@ -1612,7 +1656,7 @@ def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
     response = requests.get(f'{url_base}/chaves_primarias')
     if response.status_code == 200:
         with open(os.path.join(diretorio_metadados, 'chaves_primarias.json'), 'w') as j:
-            json.dump(response.json(), j)
+            json.dump(response.json(), j, indent=2)
         print_log('Arquivo de chaves primarias salvo.', nome_servico)
     else:
         print_log('Falha ao buscar chaves primarias: ' + str(response.status_code), nome_servico)
@@ -1620,7 +1664,7 @@ def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
     response = requests.get(f'{url_base}/chaves_estrangeiras')
     if response.status_code == 200:
         with open(os.path.join(diretorio_metadados, 'chaves_estrangeiras.json'), 'w') as j:
-            json.dump(response.json(), j)
+            json.dump(response.json(), j, indent=2)
         print_log('Arquivo de chaves estrangeiras salvo.', nome_servico)
     else:
         print_log('Falha ao buscar chaves estrangeiras: ' + str(response.status_code), nome_servico)
@@ -1628,10 +1672,18 @@ def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
     response = requests.get(f'{url_base}/triggers')
     if response.status_code == 200:
         with open(os.path.join(diretorio_metadados, 'triggers.json'), 'w') as j:
-            json.dump(response.json(), j)
+            json.dump(response.json(), j, indent=2)
         print_log('Arquivo de triggers salvo.', nome_servico)
     else:
         print_log('Falha ao buscar triggers: ' + str(response.status_code), nome_servico)
+
+    response = requests.get(f'{url_base}/indices')
+    if response.status_code == 200:
+        with open(os.path.join(diretorio_metadados, 'indices.json'), 'w') as j:
+            json.dump(response.json(), j, indent=2)
+        print_log('Arquivo de indices salvo.', nome_servico)
+    else:
+        print_log('Falha ao buscar indices: ' + str(response.status_code), nome_servico)
 
 def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str) -> dict:
     arquivos_origem = os.listdir(caminho_meta_origem)
@@ -1647,20 +1699,20 @@ def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str) -> dic
 
             if arquivo == 'banco.json':
                 diferencas = gerar_diferancas_metas(origem, destino, 'tabelas')
-                scripts['create'].extend(diferencas[0])
+                scripts['create'].extend(diferencas[1])
                 scripts['alter'].extend(diferencas[2])
                 scripts['comment'].extend(diferencas[3])
                 scripts['grant'].extend(diferencas[4])
 
             elif arquivo == 'procedures.json':
                 diferencas = gerar_diferancas_metas(origem, destino, 'procedures')
-                scripts['create'].extend(diferencas[0])
+                scripts['create'].extend(diferencas[1])
                 scripts['alter'].extend(diferencas[2])
                 scripts['grant'].extend(diferencas[4])
 
             elif arquivo == 'triggers.json':
                 diferencas = gerar_diferancas_metas(origem, destino, 'triggers')
-                scripts['create'].extend(diferencas[0])
+                scripts['create'].extend(diferencas[1])
                 scripts['alter'].extend(diferencas[2])
 
             elif arquivo == 'chaves_estrangeiras.json':
@@ -1669,9 +1721,13 @@ def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str) -> dic
 
             elif arquivo == 'chaves_primarias.json':
                 diferencas = gerar_diferancas_metas(origem, destino, 'PK')
+                scripts['drop'].extend(diferencas[0])
                 scripts['alter'].extend(diferencas[2])
-                scripts['drop'].extend(diferencas[1])
 
+            elif arquivo == 'indices.json':
+                diferencas = gerar_diferancas_metas(origem, destino, 'IDX')
+                scripts['drop'].extend(diferencas[0])
+                scripts['create'].extend(diferencas[1])
             else:
                 ...
     
@@ -1683,8 +1739,8 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
     with open(arquivo_destino, 'r') as j:
         metadados_destino:dict = json.load(j)
 
-    sqls_create = []
     sqls_drop = []
+    sqls_create = []
     sqls_alter = []
     sqls_grant = []
     sqls_comment = []
@@ -1834,13 +1890,13 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
                     else:
                         chaves = metadados_origem[tabela][pk][0]
 
-                    if len(metadados_origem[tabela][pk]) != len(metadados_destino[tabela][pk]):
+                    if metadados_origem[tabela][pk].sort() != metadados_destino[tabela][pk].sort():
                         sql_drop = f'ALTER TABLE {tabela} DROP CONSTRAINT {pk};'
                         sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"
                         
-                    elif chaves not in metadados_destino[tabela][pk]:
-                        sql_drop = f'ALTER TABLE {tabela} DROP CONSTRAINT {pk};'
-                        sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"
+                    # elif chaves not in metadados_destino[tabela][pk]:
+                    #     sql_drop = f'ALTER TABLE {tabela} DROP CONSTRAINT {pk};'
+                    #     sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"
 
                 if sql_alter:
                     sqls_alter.append(sql_alter)
@@ -1855,8 +1911,39 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
                 ...
             else:
                 ...
+    elif tipo == 'IDX':
+        
+        for tabela in metadados_origem.keys():
+            for idx in metadados_origem[tabela].keys():
+                sql_create = ''
+                sql_drop = ''
 
-    return sqls_create, sqls_drop, sqls_alter, sqls_comment, sqls_grant
+                if not (tabela in metadados_destino.keys()) or not (idx in metadados_destino[tabela].keys()):
+
+                    if len(metadados_origem[tabela][idx]) > 1:
+                        indices = ', '.join(indice for indice in metadados_origem[tabela][idx])
+                    else:
+                        indices = metadados_origem[tabela][idx][0]
+                    
+                    sql_create = f'CREATE INDEX {idx} ON {tabela} ({indices});'
+                else:
+
+                    if len(metadados_origem[tabela][idx]) > 1:
+                        indices = ', '.join(indice for indice in metadados_origem[tabela][idx])
+                    else:
+                        indices = metadados_origem[tabela][idx][0]
+
+                    if metadados_origem[tabela][idx].sort() != metadados_destino[tabela][idx].sort():
+                        sql_create = f'CREATE INDEX {idx} ON {tabela} ({indices});'
+                        sql_drop = f'DROP INDEX {idx};'
+
+                if sql_create:
+                    sqls_create.append(sql_create)
+                
+                if sql_drop:
+                    sqls_drop.append(sql_drop)
+
+    return sqls_drop, sqls_create, sqls_alter, sqls_comment, sqls_grant
 
 def executar_scripts_meta(scritps: dict, connection:fdb.Connection):
     tipos = ['create', 'drop', 'alter', 'comment', 'grant']
@@ -1872,6 +1959,14 @@ def executar_scripts_meta(scritps: dict, connection:fdb.Connection):
                     print_log(script, 'thread_atualiza_banco')
                     cursor.execute(script)
                 except Exception as e:
+                    if 'Cannot add or remove COMPUTED from column TOTAL' in str(e):
+                        continue
+                    elif 'New scale specified for column' in str(e):
+                        continue
+                    elif 'Attempt to define a second PRIMARY KEY for the same table' in str(e):
+                        continue
+                    elif ('Index' in str(e)) and ('already exists' in str(e)):
+                        continue
                     erro = f'{script} ocorreu erro: {str(e)}'
                     erros.append(erro)
                     continue

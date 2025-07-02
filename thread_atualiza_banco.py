@@ -4,7 +4,7 @@ import configparser
 import os
 import fdb
 from salva_metadados_json import salva_json_metadados_local
-from funcoes import os, extrair_metadados, gerar_scripts_diferencas, executar_scripts_sql, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config, buscar_estrutura_remota, comparar_metadados, executar_scripts_meta, inicializa_conexao_firebird
+from funcoes import os, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config, buscar_estrutura_remota, comparar_metadados, executar_scripts_meta, inicializa_conexao_firebird
 
 
 def atualiza_banco():
@@ -21,6 +21,10 @@ def atualiza_banco():
 
             # Pula para a proxima configuracao caso nao tenha o caminho do banco de dados
             if caminho_base_dados_maxsuport.lower() == 'none':
+                continue
+            
+            # Pula para a proxima configuracao caso o banco de dados não exista
+            if not os.path.exists(caminho_base_dados_maxsuport):
                 continue
 
             caminho_sistema = caminho_base_dados_maxsuport.lower().replace('\\dados\\dados.fdb', '')
@@ -43,6 +47,7 @@ def atualiza_banco():
                     salva_json_metadados_local(caminho_base_dados_maxsuport)
 
                     if (os.path.exists(pasta_metadados_local)) and (os.path.exists(pasta_metadados_remoto)):
+                        print_log('Iniciando comparação de estrutura...', nome_servico)
                         script = comparar_metadados(pasta_metadados_remoto, pasta_metadados_local)
                         try:
                             parametros.DATABASEFB = caminho_base_dados_maxsuport
@@ -62,11 +67,18 @@ def atualiza_banco():
                                 config.write(configfile)
                             config.clear
 
+                            procedures = ['CREATE_TRIGGERS_GENERATOR', 'CREATE_TRIGGERS_INSERT', 'CREATE_TRIGGERS_REPLICADOR', 'CREATE_TRIGGER_BLOCK'] 
                             try:
                                 cursor: fdb.Cursor = parametros.FIREBIRD_CONNECTION.cursor()
-                                cursor.execute('EXECUTE PROCEDURE')
+                                for procedure in procedures:
+                                    try:
+                                        cursor.execute(f'EXECUTE PROCEDURE {procedure}')
+                                        parametros.FIREBIRD_CONNECTION.commit()
+                                    except Exception as e:
+                                        print_log(f'Não foi possível executar procedure "{procedure}", motivo: {e}')
+                                        continue
                             except Exception as e:
-                                print()
+                                print_log(f'Não foi possivel executar procedures -> motivo: {e}')
 
                         except Exception as e:
                             print_log(f'Erro em conexão a banco de dados -> motivo: {e}')                    

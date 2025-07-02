@@ -134,7 +134,7 @@ def salva_json():
                                             }
 
         with open(f'{parametros.SCRIPT_PATH}/config.json', 'w') as configfile:
-            json.dump(config, configfile)
+            json.dump(config, configfile, indent=2)
 
     except Exception as a:
         print_log(a, nome_servico)
