@@ -95,8 +95,6 @@ def inicializa_conexao_mysql():
 
 def inicializa_conexao_firebird():
     try:
-        
-
         if get_local_ip() == '192.168.10.115':
             parametros.HOSTFB = 'MAXSUPORT-09'
             parametros.USERFB = 'maxsuport'
