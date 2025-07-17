@@ -64,6 +64,15 @@ def salvar_json_metadados_master():
             else:
                 print_log('Falha ao salvar sql das triggers.', 'salva_metadados_json')
 
+            # salva o indice de pesquisa
+            metadados_indices = extrair_metadados_indices(con)
+            if metadados_indices:
+                with open(os.path.join(pasta_metadados, 'indices.json'), 'w') as j:
+                    json.dump(metadados_indices, j, indent=2)
+                print_log('Arquivo de indices salvo com sucesso', 'salva_metadados_json')
+            else:
+                print_log('Falha ao salvar sql dos indices.', 'salva_metadados_json')
+
     except Exception as e:
         print_log(f'Erro ao salvar JSONs -> motivo: {e.__class__.__name__}-{e}')
 
@@ -139,6 +148,15 @@ def salva_json_metadados_local(caminho_base_dados:str):
                 with open(os.path.join(pasta_metadados,'triggers.json'), 'w') as j:
                     json.dump({}, j, indent=2)                
                 print_log('Falha ao salvar sql das triggers.', 'salva_metadados_json')
+
+            # salva o indice de pesquisa
+            metadados_indices = extrair_metadados_indices(con)
+            if metadados_indices:
+                with open(os.path.join(pasta_metadados, 'indices.json'), 'w') as j:
+                    json.dump(metadados_indices, j, indent=2)
+                print_log('Arquivo de indices salvo com sucesso', 'salva_metadados_json')
+            else:
+                print_log('Falha ao salvar sql dos indices.', 'salva_metadados_json')
 
     except Exception as e:
         print_log(f'Erro ao salvar arquivo JSON da estrutura banco local -> motivo: {e}')

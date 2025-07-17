@@ -35,17 +35,18 @@ def backup():
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
             pasta_compartilhada_backup = dados_cnpj['pasta_compartilhada_backup']
             caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
-            porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
             caminho_base_dados_gfil = dados_cnpj['caminho_base_dados_gfil']
-            caminho_gbak_firebird_gfil = dados_cnpj['caminho_gbak_firebird_gfil']
             data_hora = datetime.datetime.now()
             data_hora_formatada = data_hora.strftime('%Y_%m_%d_%H_%M_%S')
             timer_minutos_backup = dados_cnpj['timer_minutos_backup']
 
             if ativo:
                 if sistema_em_uso == '1':  # maxsuport
-                    if pasta_compartilhada_backup and caminho_base_dados_maxsuport and caminho_gbak_firebird_maxsuport and porta_firebird_maxsuport:
+
+                    if not os.path.exists(caminho_base_dados_maxsuport):
+                        continue
+
+                    if pasta_compartilhada_backup and caminho_base_dados_maxsuport:
                         path = os.path.join(pasta_compartilhada_backup, 'maxsuport', cnpj)
                     
                         if parametros.FIREBIRD_CONNECTION:
@@ -85,7 +86,11 @@ def backup():
                         continue
 
                 elif sistema_em_uso == '2':  # gfil
-                    if pasta_compartilhada_backup and caminho_base_dados_gfil and caminho_gbak_firebird_gfil:
+
+                    if not os.path.exists(caminho_base_dados_gfil):
+                        continue
+
+                    if pasta_compartilhada_backup and caminho_base_dados_gfil:
                         path = os.path.join(pasta_compartilhada_backup, 'gfil', cnpj)
 
                         parametros.USERFB = 'GFILMASTER'

@@ -1,9 +1,9 @@
-from funcoes import *
 import fdb
 import zlib
 import parametros
 import sys
 import os
+from funcoes import *
 
 def xmlcontador():
     nome_servico = 'thread_xml_contador'

@@ -1,5 +1,4 @@
 from logging.handlers import RotatingFileHandler
-import fdb
 import psutil
 import os
 import sys
@@ -60,8 +59,11 @@ def verifica_dados_local():
                     if (parametros.DATABASEFB == None) or (parametros.DATABASEFB == 'None'):
                         print_log('Banco não definido...', nome_servico)
                         continue
-                    parametros.PATHDLL = os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll')
-                    # inicializa_conexao_firebird(os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll'))
+
+                    if not os.path.exists(parametros.DATABASEFB):
+                        print_log('Pasta com banco de dados não existe', nome_servico)
+                        continue
+                    parametros.PATHDLL = os.path.join(dados_cnpj['caminho_gbak_firebird_maxsuport'], 'fbclient.dll')        
                     inicializa_conexao_firebird()
                     con = parametros.FIREBIRD_CONNECTION
                     cur = con.cursor()

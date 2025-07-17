@@ -1,17 +1,16 @@
-from funcoes import print_log, carregar_configuracoes, exibe_alerta, configurar_pos_printer, inicializa_conexao_firebird, selectfb, updatefb, obter_nome_terminal, get_local_ip, gera_qr_code,consultar_cobranca
-from funcoes_pdv import fechar_venda_mesa,cancelar_fechar_venda_mesa,gera_qrcode_mesa
 import socket
 import threading
 import json
 import fdb
-from datetime import datetime, date
-from decimal import Decimal
 import parametros
 import base64
-from pathlib import Path
 import time
 import win32print
-import win32ui
+from pathlib import Path
+from decimal import Decimal
+from datetime import datetime, date
+from funcoes_pdv import fechar_venda_mesa,cancelar_fechar_venda_mesa,gera_qrcode_mesa
+from funcoes import print_log, carregar_configuracoes, exibe_alerta, configurar_pos_printer, selectfb, updatefb, obter_nome_terminal, get_local_ip, gera_qr_code,consultar_cobranca
 
 lImprimeGrupo = False
 
