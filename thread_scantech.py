@@ -140,7 +140,9 @@ def consulta_promocoes_crm(estado=None):
             headers = {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "Authorization": autorizacao
+                "Authorization": autorizacao,
+                "backend-version": backEndVersion,  # Substitua pela variável correspondente
+                "pdv-version": pdvVersion  # Substitua pela variável correspondente                
             }
             response = requests.get(caminho, headers=headers)
             return response.json()
@@ -220,7 +222,8 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
                 "bin": formas_pagamentos['BIN_TEF'],
                 "ultimosDigitosTarjeta": formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF'],
                 "numeroAutorizacion": formas_pagamentos['CODIGOTRANSACAO'],
-                "codigoTarjeta": None #formas_pagamentos['BIN_TEF'] + '**' + formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF']
+                "codigoTarjeta": None, #formas_pagamentos['BIN_TEF'] + '**' + formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF']
+                "detalleFinalizadora": "PAYGO"
             })             
 
     dados_principais["pagos"] = pagos
