@@ -19,7 +19,7 @@ from funcoes import (
     )
 
 
-def buscar_alteracoes_replicador_mysql(empresas: list) -> list:
+def buscar_alteracoes_replicador_mysql(empresas: list):
     """
     Função responsavel por buscar as alterações feitas no banco de dados remoto, considerando a tabela replicador,
     e filtrando somente os dados pertencentes aos cnpjs passados para a função
@@ -37,7 +37,7 @@ def buscar_alteracoes_replicador_mysql(empresas: list) -> list:
     except Exception as e:
         print_log(f"Verificar alteracao: {e}", nome_servico)
 
-def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int = 0) -> None:
+def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int = 0):
     """
     Atualiza o registro no banco local na tabela informada de acordo com o registro do banco remoto
     """
@@ -73,7 +73,7 @@ def update_firebird(tabela: str, codigo: int, dados: dict,  codigo_global: int =
             cursor.close()
 
 
-def insert_firebird(tabela: str, dados: dict) -> None:
+def insert_firebird(tabela: str, dados: dict):
     """
     Insere o registro no banco local de acordo com o registro criado no banco remoto
     """
@@ -121,7 +121,7 @@ def insert_firebird(tabela: str, dados: dict) -> None:
         if cursor:
             cursor.close()
 
-def delete_firebird(tabela: str, codigo: int, codigo_global: int = 0) -> None:
+def delete_firebird(tabela: str, codigo: int, codigo_global: int = 0):
     """
     Deleta o registro local de acordo com o registro remoto deletado
     """

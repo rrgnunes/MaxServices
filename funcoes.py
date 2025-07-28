@@ -102,7 +102,7 @@ def inicializa_conexao_firebird():
             parametros.USERFB = 'maxsuport'
             parametros.PATHDLL = 'C:\\Program Files\\Firebird\\Firebird_2_5\\bin\\fbclient.dll'
             parametros.DATABASEFB = 'c:\\maxsuport\\dados\\dados.fdb'
-
+            
         fdb.load_api(parametros.PATHDLL)
 
         if parametros.FIREBIRD_CONNECTION is None:
@@ -111,8 +111,7 @@ def inicializa_conexao_firebird():
                 database=parametros.DATABASEFB,
                 user=parametros.USERFB,
                 password=parametros.PASSFB,
-                port=int(parametros.PORTFB),
-                charset='UTF-8'
+                port=int(parametros.PORTFB)                
             )
         print_log(f"Conexão com Firebird estabelecida com sucesso. Host: {parametros.HOSTFB}, Banco: {parametros.DATABASEFB}")
     except fdb.fbcore.DatabaseError as err:
@@ -837,7 +836,7 @@ def salva_retorno(codigo, retorno):
     """, (retorno, codigo))
     parametros.MYSQL_CONNECTION.commit()
 
-def atualiza_agenda(conexao: fdb.Connection, codigo: int, tipo: str='') -> None:
+def atualiza_agenda(conexao: fdb.Connection, codigo: int, tipo: str=''):
     try:
         cursor = conexao.cursor()
         if tipo.lower() == 'lembrete':
@@ -891,7 +890,7 @@ def envia_mensagem(conexao, session):
 script_principal = os.path.basename(sys.argv[0]).replace('.py', '')
 
 # Função que verifica se o script pode ser executado
-def pode_executar(nome_script:str) -> bool:
+def pode_executar(nome_script:str):
     lock_file = nome_script + '.lock'
     caminho_lock_file = os.path.join(parametros.SCRIPT_PATH, 'temp', f'{lock_file}')
     # Verificar se o arquivo de bloqueio existe
@@ -934,7 +933,7 @@ def remover_bloqueio(nome_script):
     if os.path.exists(caminho_lock_file):
         os.remove(caminho_lock_file)
 
-def crypt(action: str, src: str) -> str:
+def crypt(action: str, src: str):
     if not src:
         return ''
     
@@ -988,9 +987,9 @@ def crypt(action: str, src: str) -> str:
 
     return dest
 
-def verifica_dll_firebird() -> str|None:
+def verifica_dll_firebird():
     try:
-        arquitetura = platform.architecture()[0]
+        arquitetura = platform.architecture()[0] + '-'
         if arquitetura == '64bit':
             return os.path.join(f'{parametros.SCRIPT_PATH}', 'fbclient64.dll')
         elif arquitetura == '32bit':
@@ -1013,7 +1012,7 @@ def caminho_bd():
         return ''
     return caminho_banco_dados, ip_banco_dados 
 
-def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
+def extrair_metadados_tabelas_firebird(conexao: fdb.Connection):
     sql = """ select
                 trim(rr.rdb$relation_name) as tabela,
                 trim(rrf.rdb$field_name) as campo,
@@ -1121,7 +1120,7 @@ def extrair_metadados_tabelas_firebird(conexao: fdb.Connection) -> dict:
 
     return metadados
 
-def extrair_metadados_chaves_primarias_firebird(conexao: fdb.Connection) -> dict:
+def extrair_metadados_chaves_primarias_firebird(conexao: fdb.Connection):
     select_sql = ''' SELECT 
                     trim(RC.RDB$RELATION_NAME) AS TABELA,
                     trim(IDX.RDB$INDEX_NAME) AS INDICE,
@@ -1159,7 +1158,7 @@ def extrair_metadados_chaves_primarias_firebird(conexao: fdb.Connection) -> dict
     
     return metadados
 
-def extrair_metadados_chaves_estrangeiras(conexao: fdb.Connection) -> dict:
+def extrair_metadados_chaves_estrangeiras(conexao: fdb.Connection):
     select_sql = ''' SELECT
                         trim(rc.RDB$RELATION_NAME) AS tabela,
                         trim(ixs.RDB$FIELD_NAME) AS campo,
@@ -1246,7 +1245,7 @@ def extrair_metadados_chaves_estrangeiras(conexao: fdb.Connection) -> dict:
     
     return metadados
 
-def extrair_metadados_procedures(conexao: fdb.Connection) -> dict:
+def extrair_metadados_procedures(conexao: fdb.Connection):
     select_sql = ''' select
                         trim(rp.rdb$procedure_name) as nome_procedure,
                         cast(rp.rdb$procedure_source as varchar(20000)) as procedimento
@@ -1273,7 +1272,7 @@ def extrair_metadados_procedures(conexao: fdb.Connection) -> dict:
     
     return metadados
 
-def extrair_metadados_triggers(conexao: fdb.Connection) -> dict:
+def extrair_metadados_triggers(conexao: fdb.Connection):
     # select_sql = ''' select
     #                     trim(rt.rdb$relation_name) as tabela,
     #                     trim(rt.rdb$trigger_name) as nome_trigger,
@@ -1409,7 +1408,7 @@ def configurar_pos_printer(modulo):
 
 #====================================== funcoes replicador ====================================
 
-def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None, nome_servico:str = 'replicador') -> Optional[dict]:
+def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None, nome_servico:str = 'replicador'):
     try:
         
         cursor = parametros.MYSQL_CONNECTION_REPLICADOR.cursor(dictionary=True)
@@ -1447,7 +1446,7 @@ def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global
         if cursor:
             cursor.close()
 
-def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nome_servico:str = 'replicador') -> Optional[dict]:
+def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nome_servico:str = 'replicador'):
     try:
         cursor = parametros.FIREBIRD_CONNECTION.cursor()
 
@@ -1496,7 +1495,7 @@ def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nom
         if cursor:
             cursor.close()
 
-def verifica_empresa_firebird(tabela:str, dados: dict, nome_servico:str = 'replicador') -> Optional[tuple[int, str]]:
+def verifica_empresa_firebird(tabela:str, dados: dict, nome_servico:str = 'replicador'):
     cursor = parametros.FIREBIRD_CONNECTION.cursor()
     codigo_empresa = 0
     if tabela == 'EMPRESA':
@@ -1521,7 +1520,7 @@ def verifica_empresa_firebird(tabela:str, dados: dict, nome_servico:str = 'repli
 
     return codigo_empresa, cnpj
 
-def buscar_nome_chave_primaria(tabela: str, nome_servico:str = 'replicador') -> str|None:
+def buscar_nome_chave_primaria(tabela: str, nome_servico:str = 'replicador'):
     try:
         cursor = parametros.FIREBIRD_CONNECTION.cursor()
 
@@ -1559,12 +1558,12 @@ def buscar_nome_chave_primaria(tabela: str, nome_servico:str = 'replicador') -> 
         return None
 
 
-def verifica_valor_chave_primaria(tabela:str, codigo_global:str, chave_primaria:str) -> str | None:
+def verifica_valor_chave_primaria(tabela:str, codigo_global:str, chave_primaria:str):
     elemento = buscar_elemento_firebird(tabela, None, codigo_global)
     return elemento.get(chave_primaria, None)
 
 
-def consulta_cnpjs_local() -> list | None:
+def consulta_cnpjs_local():
     try:
         cursor = parametros.FIREBIRD_CONNECTION.cursor()
         cursor.execute('SELECT CODIGO, CNPJ FROM EMPRESA')
@@ -1576,7 +1575,7 @@ def consulta_cnpjs_local() -> list | None:
     except Exception as e:
         print_log(f'Erro ao consultar os cnpjs locais -> motivo: {e}')
 
-def tratar_valores(dados: dict) -> list:
+def tratar_valores(dados: dict):
     valores = []
     for key, valor in dados.items():
         if isinstance(valor, fdb.fbcore.BlobReader):  # Verifica se o valor é BLOB
@@ -1597,7 +1596,7 @@ def tratar_valores(dados: dict) -> list:
             valores.append(valor)  # Adiciona os outros valores
     return valores
 
-def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:str = 0, firebird:bool=True, nome_servico:str='replicador', cnpj:str='') -> None:
+def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:str = 0, firebird:bool=True, nome_servico:str='replicador', cnpj:str=''):
 
     if firebird:
         try:
@@ -1688,7 +1687,7 @@ def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
     else:
         print_log('Falha ao buscar indices: ' + str(response.status_code), nome_servico)
 
-def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str) -> dict:
+def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str):
     arquivos_origem = os.listdir(caminho_meta_origem)
     arquivos_local = os.listdir(caminho_meta_local)
     scripts = {"create": [], "drop": [], "alter": [], "comment": [], "grant": []}
@@ -1736,7 +1735,7 @@ def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str) -> dic
     
     return scripts
 
-def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str) -> tuple[list]:
+def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str):
     with open(arquivo_origem, 'r') as j:
         metadados_origem:dict = json.load(j)
     with open(arquivo_destino, 'r') as j:

@@ -4,7 +4,7 @@ import configparser
 import os
 import fdb
 from salva_metadados_json import salva_json_metadados_local
-from funcoes import os, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config, buscar_estrutura_remota, comparar_metadados, executar_scripts_meta, inicializa_conexao_firebird
+from funcoes import os, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config, buscar_estrutura_remota, comparar_metadados, executar_scripts_meta, inicializa_conexao_firebird, verifica_dll_firebird
 
 
 def atualiza_banco():
@@ -57,6 +57,7 @@ def atualiza_banco():
 
                             erros = executar_scripts_meta(script, parametros.FIREBIRD_CONNECTION)
                             
+                            permissoes_maxservices()
                             if erros:
                                 print_log('Erros ao executar o script:', nome_servico)
                                 for erro in erros:
@@ -65,7 +66,7 @@ def atualiza_banco():
                             config['manutencao']['atualizabanco'] = '0'
                             with open(caminho_ini, 'w') as configfile:
                                 config.write(configfile)
-                            config.clear
+                            config.clear                            
 
                             procedures = ['CREATE_TRIGGERS_GENERATOR', 'CREATE_TRIGGERS_INSERT', 'CREATE_TRIGGERS_REPLICADOR', 'CREATE_TRIGGER_BLOCK'] 
                             try:
@@ -93,6 +94,29 @@ def atualiza_banco():
 
     except Exception as e:
         print_log(f'Nao foi possivel atualizar banco de dados -> motivo: {e}', nome_servico)
+
+def permissoes_maxservices():
+    try:
+        print_log('Iniciando permissões para MaxServices...', nome_script)
+        select_sql = """select trim(rr.rdb$relation_name) as tabela from rdb$relations rr
+                        where rr.rdb$system_flag = 0 and rr.rdb$relation_name <> 'IBE$REPORTS'
+                        order by rr.rdb$relation_name"""
+        cur:fdb.Cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        cur.execute(select_sql)
+        tabelas = cur.fetchall()
+        print_log('Executando permissções...', nome_script)
+        for tabela in tabelas:
+            try:
+                sql = f"GRANT ALL ON {tabela[0]} TO MAXSERVICES WITH GRANT OPTION;"
+                print_log(sql, nome_script)
+                cur.execute(sql)
+                parametros.FIREBIRD_CONNECTION.commit()
+            except Exception as e:
+                print(f"Erro ao dar permissão na tabela {tabela[0]}, motivo: {e}")
+                parametros.FIREBIRD_CONNECTION.rollback()
+
+    except Exception as e:
+        print_log(f'Erro ao realizar permissões do usuario -> motivo: {e}')
 
 if __name__ == '__main__':
 

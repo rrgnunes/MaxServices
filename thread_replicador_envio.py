@@ -22,7 +22,7 @@ from funcoes import (
     delete_registro_replicador
     )
 
-def buscar_alteracoes_firebird() -> list[dict | None]:
+def buscar_alteracoes_firebird():
     """
     Busca os registros alterados no banco de dados local
     """
@@ -193,7 +193,7 @@ def delete_mysql(tabela: str, codigo: int):
         if cursor:
             cursor.close()
 
-def buscar_relacionamentos(tabela: str) -> list:
+def buscar_relacionamentos(tabela: str):
     """
     Busca registro vinculado (via chave estrangeira) ao registro sendo enviado ao banco remoto
     """
@@ -252,7 +252,7 @@ def extrair_detalhes_chave_estrangeira(erro, dados):
         return tabela_referenciada, valor_chave_estrangeira
     return None, None
 
-def firebird_mysql() -> None:
+def firebird_mysql():
     """
     Loop Principal sobre os registros alterados no banco local
     """
