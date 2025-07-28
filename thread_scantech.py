@@ -42,22 +42,23 @@ def salva_promocoes(promocoes, codigo_empresa):
             desconto = promocao['detalles'].get('descuento', None)
             vigencia_desde = promocao['vigenciaDesde'].split('T')[0]
             vigencia_hasta = promocao['vigenciaHasta'].split('T')[0]
+            limite_ticket = promocao['limitePromocionesPorTicket']
 
             if existe > 0:
                 print_log('Atualizando a promoção ' + str(codigo))
                 # Atualiza promoção existente
                 cursor.execute("""
                     UPDATE PROMOCOES
-                    SET TITULO = %s, DESCRICAO = %s, TIPO = %s, QUANTIDADE_TOTAL = %s, PAGA = %s, VIGENCIA_DESDE = %s, VIGENCIA_HASTA = %s, CNPJ_EMPRESA = %s
+                    SET TITULO = %s, DESCRICAO = %s, LIMITETICKET = %s, TIPO = %s, QUANTIDADE_TOTAL = %s, PAGA = %s, VIGENCIA_DESDE = %s, VIGENCIA_HASTA = %s, CNPJ_EMPRESA = %s
                     WHERE CODIGO = %s
-                """, (titulo, descricao, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj, codigo))
+                """, (titulo, descricao, limite_ticket, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj, codigo))
             else:
                 print_log('Inserindo a promoção ' + str(codigo))
                 # Insere nova promoção
                 cursor.execute("""
-                    INSERT INTO PROMOCOES (CODIGO, CODIGO_EMPRESA, TITULO, DESCRICAO, TIPO, QUANTIDADE_TOTAL, PAGA, VIGENCIA_DESDE, VIGENCIA_HASTA, CNPJ_EMPRESA)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (codigo, codigo_empresa, titulo, descricao, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj))
+                    INSERT INTO PROMOCOES (CODIGO, CODIGO_EMPRESA, TITULO, DESCRICAO, LIMITETICKET, TIPO, QUANTIDADE_TOTAL, PAGA, VIGENCIA_DESDE, VIGENCIA_HASTA, CNPJ_EMPRESA)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (codigo, codigo_empresa, titulo, descricao, limite_ticket, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj))
 
             # Insere ou atualiza produtos da promoção
             print_log('Adicionando os produtos da promoção')
@@ -100,19 +101,22 @@ def salva_promocoes(promocoes, codigo_empresa):
                         """, (codigo, codigo_tipo_pgto, bin_valor))
                         bin_existe = cursor.fetchone()[0]
 
-                        if bin_existe > 0:
-                            print_log(f'Atualizando BIN {bin_valor} da promoção {codigo}')
-                            cursor.execute("""
-                                UPDATE PROMOCOES_BINES
-                                SET DESCRICAO = %s
-                                WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
-                            """, (descricao_forma, codigo, codigo_tipo_pgto, bin_valor))
-                        else:
-                            print_log(f'Inserindo BIN {bin_valor} da promoção {codigo}')
-                            cursor.execute("""
-                                INSERT INTO PROMOCOES_BINES (CODIGO_TIPO_PGTO, CODIGO_PROMOCAO, DESCRICAO, BIN, CNPJ_EMPRESA)
-                                VALUES (%s, %s, %s, %s, %s)
-                            """, (codigo_tipo_pgto, codigo, descricao_forma, bin_valor, cnpj))                
+                        try:
+                            if bin_existe > 0:
+                                print_log(f'Atualizando BIN {bin_valor} da promoção {codigo}')
+                                cursor.execute("""
+                                    UPDATE PROMOCOES_BINES
+                                    SET DESCRICAO = %s
+                                    WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
+                                """, (descricao_forma, codigo, codigo_tipo_pgto, bin_valor))
+                            else:
+                                print_log(f'Inserindo BIN {bin_valor} da promoção {codigo}')
+                                cursor.execute("""
+                                    INSERT INTO PROMOCOES_BINES (CODIGO_TIPO_PGTO, CODIGO_PROMOCAO, DESCRICAO, BIN, CNPJ_EMPRESA)
+                                    VALUES (%s, %s, %s, %s, %s)
+                                """, (codigo_tipo_pgto, codigo, descricao_forma, bin_valor, cnpj))       
+                        except Exception as e:
+                            print_log(f"Erro ao salvar promoções: {e}")       
                         
         print_log('Tudo comitado')
         # Confirma as alterações no banco
@@ -136,7 +140,9 @@ def consulta_promocoes_crm(estado=None):
             headers = {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "Authorization": autorizacao
+                "Authorization": autorizacao,
+                "backend-version": backEndVersion,  # Substitua pela variável correspondente
+                "pdv-version": pdvVersion  # Substitua pela variável correspondente                
             }
             response = requests.get(caminho, headers=headers)
             return response.json()
@@ -160,7 +166,7 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
     venda = obj_vendas
     numero_venda = venda['NUMERO']
     cancelado = foi_cancelado
-    numero_venda = f'{prefixo}{venda['NUMERO']}' 
+    numero_venda = f"{prefixo}{venda['NUMERO']}"
     # Supondo que 'DATA_EMISSAO' e 'HORA_EMISSAO' sejam strings
     data_emissao = datetime.datetime.strptime(str(venda['DATA_EMISSAO']), '%Y-%m-%d')
     hora_emissao = datetime.datetime.strptime(str(venda['HORA_EMISSAO']), '%H:%M:%S').time()
@@ -216,7 +222,8 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
                 "bin": formas_pagamentos['BIN_TEF'],
                 "ultimosDigitosTarjeta": formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF'],
                 "numeroAutorizacion": formas_pagamentos['CODIGOTRANSACAO'],
-                "codigoTarjeta": None #formas_pagamentos['BIN_TEF'] + '**' + formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF']
+                "codigoTarjeta": None, #formas_pagamentos['BIN_TEF'] + '**' + formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF']
+                "detalleFinalizadora": "PAYGO"
             })             
 
     dados_principais["pagos"] = pagos
@@ -374,26 +381,30 @@ def envia_fechamento_vendas_scantech_correcao():
             }
 
         try:
-            print_log(f"Enviando fechamento do dia {datetime.datetime.now().strftime("%Y-%m-%d")} da empresa {cnpj}")
+            print_log(f"Enviando fechamento do dia {datetime.datetime.now().strftime('%Y-%m-%d')} da empresa {cnpj}")
             json_data = json.dumps(dados_principais, default=lambda x: round(float(x), 2))
                         
             response = requests.post(url, data=json_data, headers=headers)
             response.raise_for_status()
 
+            data = datetime.datetime.now().strftime("%Y-%m-%d")
+
             cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-            cur_con.execute(f"INSERT INTO FECHAMENTOS_DIARIOS_SCANTECH (CNPJ_EMPRESA, DATA_REFERENCIA) VALUES('{cnpj}', '{datetime.datetime.now().strftime("%Y-%m-%d")}') ")
+            cur_con.execute(f"INSERT INTO FECHAMENTOS_DIARIOS_SCANTECH (CNPJ_EMPRESA, DATA_REFERENCIA) VALUES('{cnpj}', '{data}') ")
             cur_con.close()           
 
             parametros.MYSQL_CONNECTION.commit()
             
-            print_log(f"Enviado fechamento do dia {datetime.datetime.now().strftime("%Y-%m-%d")} da empresa {cnpj}")
+            print_log(f"Enviado fechamento do dia {datetime.datetime.now().strftime('%Y-%m-%d')} da empresa {cnpj}")
         except requests.exceptions.RequestException as e:
             print_log(f"Erro enviando cupom Web Service Scanntech: {e}")
     
 def envia_fechamento_vendas_scantech():
     print_log("Verifica se ainda tem que mandar fechamento hoje", nome_servico)
+
+    data = datetime.datetime.now().strftime("%Y-%m-%d")
     
-    query_fechamento_diario = f"SELECT * FROM FECHAMENTOS_DIARIOS_SCANTECH WHERE DATA_REFERENCIA = '{datetime.datetime.now().strftime("%Y-%m-%d")}' AND CNPJ_EMPRESA = '{cnpj}' "
+    query_fechamento_diario = f"SELECT * FROM FECHAMENTOS_DIARIOS_SCANTECH WHERE DATA_REFERENCIA = '{data}' AND CNPJ_EMPRESA = '{cnpj}' "
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
     cur_con.execute(query_fechamento_diario)
     result_fechamento_diario = cur_con.fetchone()
@@ -477,19 +488,20 @@ def envia_fechamento_vendas_scantech():
             }
 
         try:
-            print_log(f"Enviando fechamento do dia {datetime.datetime.now().strftime("%Y-%m-%d")} da empresa {cnpj}")
+            data = datetime.datetime.now().strftime("%Y-%m-%d")
+            print_log(f"Enviando fechamento do dia {data} da empresa {cnpj}")
             json_data = json.dumps(dados_principais, default=lambda x: round(float(x), 2))
                         
             response = requests.post(url, data=json_data, headers=headers)
             response.raise_for_status()
 
             cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-            cur_con.execute(f"INSERT INTO FECHAMENTOS_DIARIOS_SCANTECH (CNPJ_EMPRESA, DATA_REFERENCIA) VALUES('{cnpj}', '{datetime.datetime.now().strftime("%Y-%m-%d")}') ")
+            cur_con.execute(f"INSERT INTO FECHAMENTOS_DIARIOS_SCANTECH (CNPJ_EMPRESA, DATA_REFERENCIA) VALUES('{cnpj}', '{data}') ")
             cur_con.close()           
 
             parametros.MYSQL_CONNECTION.commit()
             
-            print_log(f"Enviado fechamento do dia {datetime.datetime.now().strftime("%Y-%m-%d")} da empresa {cnpj}")
+            print_log(f"Enviado fechamento do dia {data} da empresa {cnpj}")
         except requests.exceptions.RequestException as e:
             print_log(f"Erro enviando cupom Web Service Scanntech: {e}")
 
