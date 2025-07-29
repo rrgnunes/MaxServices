@@ -4,7 +4,7 @@ import subprocess
 import schedule
 import pathlib
 import psutil
-from funcoes import *
+from funcoes.funcoes import *
 
 name_script = os.path.basename(sys.argv[0]).replace('.py', '')
 

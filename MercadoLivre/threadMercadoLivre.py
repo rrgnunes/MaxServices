@@ -5,7 +5,7 @@ import meli
 from meli.rest import ApiException
 
 # Adiciona a pasta pai ao sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'funcoes')))
 from funcoes import (
     print_log, criar_bloqueio, remover_bloqueio,
     pode_executar, selectfb, updatefb,

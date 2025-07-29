@@ -23,10 +23,10 @@ log/log.txt
 cnpj.txt
 banco.ini
 config.json
-temp/*.lock
+/temp/
 *.mp3
 *.wav
 *.txt
-/metadados_remoto/
-/metadados_local/
 caixa.txt
+Comanda.txt
+/data/
