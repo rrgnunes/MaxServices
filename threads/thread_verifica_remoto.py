@@ -135,7 +135,9 @@ def salva_json():
                                             "timer_minutos_backup": str(row['timer_minutos_backup']),
                                             "ip": str(row['ip'])
                                             }
-
+        if not os.path.exists(os.path.join(parametros.SCRIPT_PATH, 'data')):
+            os.makedirs(os.path.exists(os.path.join(parametros.SCRIPT_PATH, 'data')))
+            
         with open(os.path.join(parametros.SCRIPT_PATH, 'data', 'config.json'), 'w') as configfile:            
             json.dump(config, configfile, indent=2)
 

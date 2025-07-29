@@ -990,7 +990,7 @@ def verifica_dll_firebird():
     try:
         arquitetura = platform.architecture()[0]
 
-        if os.path.exists('C:\\Windows\\System32\\FBCLIENT.DLLs'):
+        if os.path.exists('C:\\Windows\\System32\\FBCLIENT.DLL'):
             return 'C:\\Windows\\System32\\FBCLIENT.DLL'
         
         elif arquitetura == '64bit':
