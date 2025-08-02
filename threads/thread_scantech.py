@@ -297,7 +297,8 @@ def envia_vendas_scantech():
     print_log("Localiza vendas do ultimo dia", nome_servico)
 
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 2 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C', 'I') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
+    #cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 2 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C', 'I') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
+    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.NUMERO >= 41403 AND ENVIADO_SCANTECH = 0")
     obj_vendas = cur_con.fetchall()
     cur_con.close()
 
@@ -538,13 +539,13 @@ if __name__ == "__main__":
                 
                 #envia_fechamento_vendas_scantech_correcao()
 
-                #envia_vendas_scantech()
+                envia_vendas_scantech()
 
-                promocoes = consulta_promocoes_crm('ACEPTADA')
-                if 'erro' not in promocoes:
-                   salva_promocoes(promocoes, int(oEmpresa['CODIGO']))
-                else:
-                   print("Erro na consulta de promoções:", promocoes['erro'])             
+                # promocoes = consulta_promocoes_crm('ACEPTADA')
+                # if 'erro' not in promocoes:
+                #    salva_promocoes(promocoes, int(oEmpresa['CODIGO']))
+                # else:
+                #    print("Erro na consulta de promoções:", promocoes['erro'])             
 
         except Exception as e:
             if parametros.MYSQL_CONNECTION.is_connected():
