@@ -722,6 +722,7 @@ def retorna_pessoas_mensagemdiaria(conexao, envia_mensagem_diaria, dia_mensagem,
         dia_semana_hoje = datetime.datetime.now().isoweekday()
         dia_semana_hoje = 0 if dia_semana_hoje == 7 else dia_semana_hoje
         hora = data_hoje.time().replace(second=0,microsecond=0)
+        ultimo_envio = ultimo_envio if ultimo_envio else datetime.datetime.strptime("01/01/1900", "%d/%m/%Y")
         if ultimo_envio < data_hoje:
             if dia_mensagem == dia_semana_hoje:
                 if hora_mensagem == hora:

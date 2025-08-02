@@ -11,7 +11,7 @@ from funcoes.funcoes import (
     atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
     salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
     insere_mensagem_zap, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio,
-    inicializa_conexao_firebird, inicializa_conexao_mysql
+    inicializa_conexao_firebird, inicializa_conexao_mysql, carrega_arquivo_config
     )
 
 
@@ -22,8 +22,8 @@ def zapautomato():
     print_log(f'Iniciando', nome_servico)
     inicializa_conexao_mysql()
 
-    with open(f'{parametros.SCRIPT_PATH}/config.json', 'r') as j:
-        config = json.load(j)
+    carrega_arquivo_config()
+    config = parametros.CNPJ_CONFIG
     try:
         for cnpj in config['sistema']:
             try:
