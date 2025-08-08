@@ -40,8 +40,7 @@ def consultar_ibpt_online(results: pathlib.Path):
     return sVersaoRemota, resultados
 
 def IBPTNCMCEST():
-    nome_servico = "thread_IBPT_NCM_CEST"
-    print_log("Carrega configurações da thread", nome_servico)
+    print_log("Carrega configurações da thread", nome_script)
     conFirebird = None
     try:
         inicializa_conexao_mysql()
@@ -58,7 +57,7 @@ def IBPTNCMCEST():
             print_log('Sem informações de IBPT online, cancelando execução...')
             return
 
-        print_log("Pega dados local", nome_servico)
+        print_log("Pega dados local", nome_script)
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
@@ -88,11 +87,11 @@ def IBPTNCMCEST():
                         dia = datetime.datetime.now().day
 
                         if sVersaoRemota != sVersaoLocal and dia in [2, 4, 6, 20, 26]:
-                            print_log("Versão remota diferente da versão local, iniciando atualização", nome_servico)
+                            print_log("Versão remota diferente da versão local, iniciando atualização", nome_script)
 
                             cursorFirebird.execute("DELETE FROM IBPT")
                             conFirebird.commit()
-                            print_log("Tabela IBPT local limpa", nome_servico)
+                            print_log("Tabela IBPT local limpa", nome_script)
 
                             contagem = 0
 
@@ -109,20 +108,20 @@ def IBPTNCMCEST():
                                 ))
                                 contagem += 1
                                 if contagem % 25 == 0:
-                                    print_log(f"{contagem} registros inseridos na tabela IBPT local", nome_servico)
+                                    print_log(f"{contagem} registros inseridos na tabela IBPT local", nome_script)
                             conFirebird.commit()
 
-                            print_log(f"Total de {contagem} registros inseridos na tabela IBPT local", nome_servico)
-                            atualiza_ncm_cest(conFirebird, parametros.MYSQL_CONNECTION, nome_servico)
+                            print_log(f"Total de {contagem} registros inseridos na tabela IBPT local", nome_script)
+                            atualiza_ncm_cest(conFirebird, parametros.MYSQL_CONNECTION, nome_script)
 
-                            print_log("Atualizando tabela IBPT (NCMs), por favor aguarde...", nome_servico)
+                            print_log("Atualizando tabela IBPT (NCMs), por favor aguarde...", nome_script)
                             cursorFirebird.execute("UPDATE PRODUTO SET CEST = '' WHERE ncm <> '' AND ncm <> '00000000'")
                             conFirebird.commit()
-                            print_log("Tabela IBPT (NCMs) atualizada", nome_servico)
+                            print_log("Tabela IBPT (NCMs) atualizada", nome_script)
     except Exception as a:
         if conFirebird:
             conFirebird.rollback()
-        print_log(f"Erro: {a}", nome_servico)
+        print_log(f"Erro: {a}", nome_script)
     finally:
         if parametros.MYSQL_CONNECTION:
             if parametros.MYSQL_CONNECTION.is_connected():
@@ -179,6 +178,6 @@ if __name__ == '__main__':
         try:
             IBPTNCMCEST()
         except Exception as e:
-            print(f'Ocorreu um erro ao tentar executar - motivo: {e}')
+            print(f'Ocorreu um erro ao tentar executar - motivo: {e}', nome_script)
         finally:
             remover_bloqueio(nome_script)
