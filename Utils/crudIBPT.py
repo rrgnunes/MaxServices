@@ -2,15 +2,27 @@ from conexao import oConexao
 
 
 def insert_IBPT(valores):
-    query = """INSERT INTO ibpt_ibpt (codigo, ex,tipo, descricao,nacional_federal,importados_federal,
-                                 estadual,municipal,vigencia_inicio,vigencia_fim,chave,versao,
-                                 fonte,estado) 
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-    if not oConexao.is_connected:
+    query = ("""INSERT INTO ibpt_ibpt
+        (codigo, ex, tipo, descricao, nacional_federal, importados_federal,
+         estadual, municipal, vigencia_inicio, vigencia_fim, chave, versao,
+         fonte, estado)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
+
+    # valida: lista/tupla de tuplas e sem tipos compostos
+    assert isinstance(valores, (list, tuple)) and all(isinstance(r, tuple) for r in valores)
+    for r in valores:
+        if any(isinstance(c, (tuple, list, dict)) for c in r):
+            raise TypeError("Campo composto dentro da tupla de valores.")
+
+    if not oConexao.is_connected():
         oConexao.connect()
-    oCursor = oConexao.cursor(buffered=True)
-    oCursor.executemany(query, valores)
-    oConexao.commit()
+
+    cur = oConexao.cursor(buffered=True)
+    try:
+        cur.executemany(query, valores)
+        oConexao.commit()
+    finally:
+        cur.close()
 
 
 def delete_IBPT_versao_diferente(estado, versao):

@@ -15,7 +15,7 @@ def atualiza_banco_mysql():
     try:
         print_log('Verificando se precisa atualizar banco remoto', nome_servico)
         try:
-            fdb.load_api('/home/MaxServices/libfbclient.so.2.5.9')
+            fdb.load_api('/home/MaxServices/libs/libfbclient.so.2.5.9')
             server_origem = "maxsuportsistemas.com"
             port_origem = 3050
             path_origem = "/home/base/dados.fdb"
