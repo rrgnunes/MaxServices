@@ -195,7 +195,11 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
     }
     
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-    cur_con.execute(f"SELECT * FROM VENDAS_FPG VF WHERE VF.VENDAS_MASTER = {venda['FK_VENDA']} AND CNPJ_EMPRESA = '{cnpj}' ")
+    cur_con.execute(f"""SELECT * FROM VENDAS_FPG VF
+                        LEFT OUTER JOIN FORMA_PAGAMENTO FP
+                        ON VF.ID_FORMA = FP.CODIGO
+                        WHERE VF.VENDAS_MASTER = {venda['FK_VENDA']} AND CNPJ_EMPRESA = '{cnpj}' """)
+    
     obj_formas_pagamentos = cur_con.fetchall()
     cur_con.close()        
     print_log(f"Localiza venda {venda['FK_VENDA']}", nome_servico)    
@@ -215,7 +219,8 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
                 "importe": formas_pagamentos['VALOR'],
                 "cotizacion": 1,
                 "codigoMoneda": "986",
-                "codigoTipoPago": codigo_tipo_pagamento
+                "codigoTipoPago": codigo_tipo_pagamento,               
+                "detalleFinalizadora": formas_pagamentos['DESCRICAO']
             })        
         else:
             pagos.append({
@@ -226,8 +231,8 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
                 "bin": formas_pagamentos['BIN_TEF'],
                 "ultimosDigitosTarjeta": formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF'],
                 "numeroAutorizacion": formas_pagamentos['CODIGOTRANSACAO'],
-                "codigoTarjeta": None, #formas_pagamentos['BIN_TEF'] + '**' + formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF']
-                "detalleFinalizadora": "PAYGO"
+                "codigoTarjeta": str(formas_pagamentos['BIN_TEF']),                 
+                "detalleFinalizadora": formas_pagamentos['DESCRICAO']
             })             
 
     dados_principais["pagos"] = pagos
@@ -245,10 +250,10 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
         if not len(codigo_barra) == 13:
             codigo_barra = detalhe['CODIGO']        
         detalles.append({
-            "importe": detalhe['VALOR_ITEM'],
+            "importe": detalhe['VALOR_ITEM'] - detalhe['VDESCONTO'],
             "recargo": 0,
-            "cantidad": f"{detalhe['QTD']:.4f}",
-            "descuento": 0, #detalhe['VDESCONTO'],
+            "cantidad": detalhe['QTD'],
+            "descuento": detalhe['VDESCONTO'],
             "codigoBarras": codigo_barra,
             "codigoArticulo": detalhe['CODIGO'],
             "importeUnitario": detalhe['PRECO'],
@@ -273,6 +278,9 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
         print_log(f"Enviando cupom {venda['NUMERO']} da empresa {cnpj}!")
         json_data = json.dumps(dados_principais, default=lambda x: round(float(x), 2))
                     
+        with open('venda.json', 'w') as j:
+            json.dump(dados_principais, j, default=lambda x: round(float(x), 2))                    
+                    
         response = requests.post(url, data=json_data, headers=headers)
         response.raise_for_status()
 
@@ -289,7 +297,7 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
     except requests.exceptions.RequestException as e:
         print_log(f"Erro enviando cupom Web Service Scanntech: {e}")    
     
-def envia_vendas_scantech():
+def envia_vendas_scantech(CNPJEmpresa):
     # Formas de pagamento
     # 9 = dinheiro 
     # 10 = cartão de crédito
@@ -298,7 +306,8 @@ def envia_vendas_scantech():
 
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
     #cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 2 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C', 'I') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
-    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.NUMERO >= 41403 AND ENVIADO_SCANTECH = 0")
+
+    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE ENVIADO_SCANTECH = 0 AND CNPJ_EMPRESA='{CNPJEmpresa}'")
     obj_vendas = cur_con.fetchall()
     cur_con.close()
 
@@ -452,7 +461,6 @@ def envia_fechamento_vendas_scantech():
             AND FK_CAIXA = {caixa_aberto['CODIGO']}  
             AND CODIGO_GLOBAL > 457
         """
-        
 
         # Executar consultas
         cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
@@ -539,7 +547,7 @@ if __name__ == "__main__":
                 
                 #envia_fechamento_vendas_scantech_correcao()
 
-                envia_vendas_scantech()
+                envia_vendas_scantech(cnpj)
 
                 # promocoes = consulta_promocoes_crm('ACEPTADA')
                 # if 'erro' not in promocoes:
@@ -554,5 +562,3 @@ if __name__ == "__main__":
 
     except Exception as e:
         print_log(f'{e}', nome_servico)
-
-
