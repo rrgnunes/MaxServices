@@ -27,6 +27,7 @@ config.json
 *.mp3
 *.wav
 *.txt
+*.json
 caixa.txt
 Comanda.txt
 /data/
