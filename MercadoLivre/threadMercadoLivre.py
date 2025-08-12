@@ -23,7 +23,6 @@ TOKEN_FILE = os.path.join(os.path.dirname(__file__), 'token_meli.json')
 TEST_USER_FILE = os.path.join(os.path.dirname(__file__), 'test_user.json')
 
 # ========================= TOKENS ==========================
-
 def salvar_token(data):
     with open(TOKEN_FILE, 'w') as f:
         json.dump(data, f, indent=4)
@@ -61,7 +60,6 @@ def refresh_token(api_oauth, refresh_token):
     }
 
 # ========================= TEST USER ==========================
-
 def criar_usuario_teste_ml():
     nome_servico = 'thread_criar_usuario_teste_ml'
     tokens = carregar_token()
@@ -120,7 +118,6 @@ def gerar_token_usuario_teste():
         print_log("Token do usuário de teste salvo em token_meli.json", nome_servico)
 
 # ========================= ATUALIZA TOKEN ==========================
-
 def atualiza_mercadolivre():
     nome_servico = 'thread_atualiza_mercadolivre'
     configuration = meli.Configuration(host="https://api.mercadolibre.com")
@@ -157,7 +154,6 @@ def atualiza_mercadolivre():
                 salvar_token(tokens)
 
 # ========================= ENVIO PRODUTOS ==========================
-
 def enviar_produtos_ml():
     tokens = carregar_token()
     access_token = tokens.get('access_token')
@@ -238,7 +234,6 @@ def enviar_produtos_ml():
                 print_log(f"Erro ao enviar produto {codigo}: {e}", "MercadoLivre")
 
 # ========================= MAIN ==========================
-
 if __name__ == '__main__':
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
     if pode_executar(nome_script):

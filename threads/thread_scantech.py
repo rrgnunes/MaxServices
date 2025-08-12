@@ -198,7 +198,7 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
     cur_con.execute(f"""SELECT * FROM VENDAS_FPG VF
                         LEFT OUTER JOIN FORMA_PAGAMENTO FP
                         ON VF.ID_FORMA = FP.CODIGO
-                        WHERE VF.VENDAS_MASTER = {venda['FK_VENDA']} AND CNPJ_EMPRESA = '{cnpj}' """)
+                        WHERE VF.VENDAS_MASTER = {venda['FK_VENDA']} AND VF.CNPJ_EMPRESA = '{cnpj}' AND FP.CNPJ_EMPRESA = '{cnpj}' """)
     
     obj_formas_pagamentos = cur_con.fetchall()
     cur_con.close()        
@@ -231,7 +231,7 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
                 "bin": formas_pagamentos['BIN_TEF'],
                 "ultimosDigitosTarjeta": formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF'],
                 "numeroAutorizacion": formas_pagamentos['CODIGOTRANSACAO'],
-                "codigoTarjeta": str(formas_pagamentos['BIN_TEF']),                 
+                "codigoTarjeta": None,#str(formas_pagamentos['BIN_TEF']),                 
                 "detalleFinalizadora": formas_pagamentos['DESCRICAO']
             })             
 
@@ -320,7 +320,7 @@ def envia_vendas_scantech(CNPJEmpresa):
 def envia_fechamento_vendas_scantech_correcao():        
     print_log("Verifica se ainda tem que mandar fechamento hoje", nome_servico)
     
-    query_caixas_abertos = f"select * from CONTAS C where C.SITUACAO = 'A' AND CNPJ_EMPRESA = '{cnpj}' "
+    query_caixas_abertos = f"select * from CONTAS C where C.SITUACAO = 'A' AND C.CNPJ_EMPRESA = '{cnpj}' "
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
     cur_con.execute(query_caixas_abertos)
     result_caixas_abertos = cur_con.fetchall()
@@ -447,7 +447,7 @@ def envia_fechamento_vendas_scantech():
             AND CNPJ_EMPRESA = '{cnpj}' 
             AND ENVIADO_SCANTECH = 1
             AND FK_CAIXA = {caixa_aberto['CODIGO']}
-            AND CODIGO_GLOBAL > 457 """
+            AND CODIGO_GLOBAL >= 22277 """
         
 
         query_vendas_canceladas = f""" SELECT 
@@ -459,7 +459,7 @@ def envia_fechamento_vendas_scantech():
             AND CNPJ_EMPRESA = '{cnpj}' 
             AND ENVIADO_SCANTECH = 1
             AND FK_CAIXA = {caixa_aberto['CODIGO']}  
-            AND CODIGO_GLOBAL > 457
+            AND CODIGO_GLOBAL >= 22277
         """
 
         # Executar consultas
@@ -476,7 +476,7 @@ def envia_fechamento_vendas_scantech():
         valor_vendas_liquidas = result_vendas_liquidas["vendas_liquida"] or 0
         valor_vendas_canceladas = result_vendas_canceladas["vendas_canceladas"] or 0
         
-        if valor_vendas_liquidas == 0 and valor_vendas_canceladas ==0:
+        if valor_vendas_liquidas == 0 and valor_vendas_canceladas == 0:
             continue
 
         # Construir o JSON
@@ -543,11 +543,11 @@ if __name__ == "__main__":
                 parametros.URLBASESCANTECH = oEmpresa['URL_BASE_SCANTECH']
                 cnpj = oEmpresa['CNPJ']
 
-                #envia_fechamento_vendas_scantech()
+                envia_fechamento_vendas_scantech()
                 
                 #envia_fechamento_vendas_scantech_correcao()
 
-                envia_vendas_scantech(cnpj)
+                #envia_vendas_scantech(cnpj)
 
                 # promocoes = consulta_promocoes_crm('ACEPTADA')
                 # if 'erro' not in promocoes:
