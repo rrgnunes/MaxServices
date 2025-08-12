@@ -9,7 +9,7 @@ from credenciais import parametros
 from funcoes.funcoes import *
 
 def xmlcontador():
-    nome_servico = 'thread_xml_contador'
+    nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
     print_log("Carrega configurações", nome_servico)
     parametros.PATHDLL = verifica_dll_firebird()
     carregar_configuracoes()
@@ -330,6 +330,6 @@ if __name__ == '__main__':
         try:
             xmlcontador()
         except Exception as e:
-            print_log(f'Ocorreu um erro ao tentar executar - motivo: {e}')
+            print_log(f'Ocorreu um erro ao tentar executar - motivo: {e}', nome_script)
         finally:
             remover_bloqueio(nome_script)

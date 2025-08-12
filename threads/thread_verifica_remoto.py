@@ -85,7 +85,7 @@ def consulta_cnpj():
     return cnpjs
 
 def salva_json():
-    nome_servico = 'thread_verifica_remoto'
+    nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
     try:
         parametros.BASEMYSQL = 'maxservices'
         inicializa_conexao_mysql()
@@ -135,7 +135,9 @@ def salva_json():
                                             "timer_minutos_backup": str(row['timer_minutos_backup']),
                                             "ip": str(row['ip'])
                                             }
-
+        if not os.path.exists(os.path.join(parametros.SCRIPT_PATH, 'data')):
+            os.makedirs(os.path.join(parametros.SCRIPT_PATH, 'data'))
+            
         with open(os.path.join(parametros.SCRIPT_PATH, 'data', 'config.json'), 'w') as configfile:            
             json.dump(config, configfile, indent=2)
 

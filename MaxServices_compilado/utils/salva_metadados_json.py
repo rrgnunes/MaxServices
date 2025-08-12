@@ -19,7 +19,7 @@ def salvar_json_metadados_master():
         parametros.DATABASEFB = '/home/base/dados.fdb'
         parametros.USERFB = 'SYSDBA'
         parametros.PASSFB = 'masterkey'
-        parametros.PATHDLL = '/home/MaxServices/libs/libfbclient.so.2.5.9'
+        parametros.PATHDLL = '/home/MaxServices/libfbclient.so.2.5.9'
         inicializa_conexao_firebird()
 
         with parametros.FIREBIRD_CONNECTION as con:

@@ -11,7 +11,6 @@ from funcoes.funcoes import os, print_log, criar_bloqueio, remover_bloqueio, pod
 
 
 def atualiza_banco():
-    nome_servico = 'thread_atualiza_banco'
     pasta_metadados_local = os.path.join(parametros.SCRIPT_PATH, 'data', 'metadados_local')
     pasta_metadados_remoto = os.path.join(parametros.SCRIPT_PATH, 'data','metadados_remoto')
     buscar_estrutura_remota()
@@ -38,7 +37,7 @@ def atualiza_banco():
             config.read(caminho_ini)
 
             if ativo and sistema_em_uso == '1':
-                print_log(f'Verificando se pode ser atualizado -> {caminho_base_dados_maxsuport} CNPJ:{cnpj}', nome_servico)
+                print_log(f'Verificando se pode ser atualizado -> {caminho_base_dados_maxsuport} CNPJ:{cnpj}', nome_script)
                 atualiza_banco = 0
 
                 if ('manutencao' in config) and ('atualizabanco' in config['manutencao']):
@@ -46,11 +45,11 @@ def atualiza_banco():
 
                 if str(atualiza_banco) == '1':
 
-                    print_log('Salvando estrutura do banco de dados local...', nome_servico)
+                    print_log('Salvando estrutura do banco de dados local...', nome_script)
                     salva_json_metadados_local(caminho_base_dados_maxsuport)
 
                     if (os.path.exists(pasta_metadados_local)) and (os.path.exists(pasta_metadados_remoto)):
-                        print_log('Iniciando comparação de estrutura...', nome_servico)
+                        print_log('Iniciando comparação de estrutura...', nome_script)
                         script = comparar_metadados(pasta_metadados_remoto, pasta_metadados_local)
                         try:
                             parametros.DATABASEFB = caminho_base_dados_maxsuport
@@ -62,9 +61,9 @@ def atualiza_banco():
                             
                             permissoes_maxservices()
                             if erros:
-                                print_log('Erros ao executar o script:', nome_servico)
+                                print_log('Erros ao executar o script:', nome_script)
                                 for erro in erros:
-                                    print_log(erro, nome_servico)
+                                    print_log(erro, nome_script)
 
                             config['manutencao']['atualizabanco'] = '0'
                             with open(caminho_ini, 'w') as configfile:
@@ -79,24 +78,24 @@ def atualiza_banco():
                                         cursor.execute(f'EXECUTE PROCEDURE {procedure}')
                                         parametros.FIREBIRD_CONNECTION.commit()
                                     except Exception as e:
-                                        print_log(f'Não foi possível executar procedure "{procedure}", motivo: {e}')
+                                        print_log(f'Não foi possível executar procedure "{procedure}", motivo: {e}', nome_script)
                                         continue
                             except Exception as e:
-                                print_log(f'Não foi possivel executar procedures -> motivo: {e}')
+                                print_log(f'Não foi possivel executar procedures -> motivo: {e}', nome_script)
 
                         except Exception as e:
-                            print_log(f'Erro em conexão a banco de dados -> motivo: {e}')                    
+                            print_log(f'Erro em conexão a banco de dados -> motivo: {e}', nome_script)                    
                         finally:
                             if not parametros.FIREBIRD_CONNECTION.closed:
                                 parametros.FIREBIRD_CONNECTION.close()
                                 parametros.FIREBIRD_CONNECTION = None
                     else:                        
-                        print_log('Pasta metadados nao existe!', nome_servico)
+                        print_log('Pasta metadados nao existe!', nome_script)
 
 
 
     except Exception as e:
-        print_log(f'Nao foi possivel atualizar banco de dados -> motivo: {e}', nome_servico)
+        print_log(f'Nao foi possivel atualizar banco de dados -> motivo: {e}', nome_script)
 
 def permissoes_maxservices():
     try:
@@ -115,11 +114,11 @@ def permissoes_maxservices():
                 cur.execute(sql)
                 parametros.FIREBIRD_CONNECTION.commit()
             except Exception as e:
-                print(f"Erro ao dar permissão na tabela {tabela[0]}, motivo: {e}")
+                print(f"Erro ao dar permissão na tabela {tabela[0]}, motivo: {e}", nome_script)
                 parametros.FIREBIRD_CONNECTION.rollback()
 
     except Exception as e:
-        print_log(f'Erro ao realizar permissões do usuario -> motivo: {e}')
+        print_log(f'Erro ao realizar permissões do usuario -> motivo: {e}', nome_script)
 
 if __name__ == '__main__':
 

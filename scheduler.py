@@ -32,20 +32,21 @@ def run_script(script_path):
 
 def setup_schedules():
     scripts_directory = pathlib.Path(__file__).parent
+    scripts_directory = os.path.join(scripts_directory, 'threads')
 
     # Defina os scripts e seus agendamentos em segundos
     scripts = [
-        {'path': scripts_directory / 'thread_backup_local.py', 'interval': 3600},  # 1 hora
-        {'path': scripts_directory / 'thread_atualiza_banco.py', 'interval': 10},  # 10 segundos
-        {'path': scripts_directory / 'thread_IBPT_NCM_CEST.py', 'interval': 1800},  # 30 minutos
-        {'path': scripts_directory / 'thread_servidor_socket.py', 'interval': 0},  # Executa uma vez
-        {'path': scripts_directory / 'thread_api_maxsuport.py', 'interval': 0}, # Executa uma vez
-        {'path': scripts_directory / 'thread_verifica_remoto.py', 'interval': 15},  # 15 segundos
-        {'path': scripts_directory / 'thread_xml_contador.py', 'interval': 600},  # 10 minutos
-        {'path': scripts_directory / 'thread_zap_automato.py', 'interval': 60},  # 1 minuto
-        {'path': scripts_directory / 'thread_bloqueio.py', 'interval': 5},  # 5 segundos
-        {'path': scripts_directory / 'thread_replicador_envio.py', 'interval': 10}, # 10 segundos
-        {'path': scripts_directory / 'thread_replicador_retorno.py', 'interval': 10} # 10 segundos
+        {'path': os.path.join(scripts_directory, 'thread_backup_local.pyc'), 'interval': 3600},  # 1 hora
+        {'path': os.path.join(scripts_directory, 'thread_atualiza_banco.pyc'), 'interval': 10},  # 10 segundos
+        {'path': os.path.join(scripts_directory, 'thread_IBPT_NCM_CEST.pyc'), 'interval': 1800},  # 30 minutos
+        {'path': os.path.join(scripts_directory, 'thread_servidor_socket.pyc'), 'interval': 0},  # Executa uma vez
+        {'path': os.path.join(scripts_directory, 'thread_api_maxsuport.pyc'), 'interval': 0}, # Executa uma vez
+        {'path': os.path.join(scripts_directory, 'thread_verifica_remoto.pyc'), 'interval': 15},  # 15 segundos
+        {'path': os.path.join(scripts_directory, 'thread_xml_contador.pyc'), 'interval': 600},  # 10 minutos
+        {'path': os.path.join(scripts_directory, 'thread_zap_automato.pyc'), 'interval': 60},  # 1 minuto
+        {'path': os.path.join(scripts_directory, 'thread_bloqueio.pyc'), 'interval': 5},  # 5 segundos
+        {'path': os.path.join(scripts_directory, 'thread_replicador_envio.pyc'), 'interval': 10}, # 10 segundos
+        {'path': os.path.join(scripts_directory, 'thread_replicador_retorno.pyc'), 'interval': 10} # 10 segundos
     ]
 
     for script in scripts:

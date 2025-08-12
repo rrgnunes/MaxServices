@@ -5,7 +5,7 @@ def insert_NCMCEST(valores):
     consulta = select_NCMCEST(valores[0][0], valores[0][1])
     if len(consulta) > 0:
         return
-    query = """INSERT INTO ibpt_ncmcest (ncm, cest) VALUES (%s,%s)"""
+    query = """INSERT IGNORE INTO ibpt_ncmcest (ncm, cest) VALUES (%s,%s)"""
     if not oConexao.is_connected:
         oConexao.connect()
     oCursor = oConexao.cursor(buffered=True)

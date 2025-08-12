@@ -27,7 +27,9 @@ config.json
 *.mp3
 *.wav
 *.txt
+*.csv
 *.json
 caixa.txt
 Comanda.txt
 /data/
+/MaxServices_compilado/

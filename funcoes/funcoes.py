@@ -722,6 +722,7 @@ def retorna_pessoas_mensagemdiaria(conexao, envia_mensagem_diaria, dia_mensagem,
         dia_semana_hoje = datetime.datetime.now().isoweekday()
         dia_semana_hoje = 0 if dia_semana_hoje == 7 else dia_semana_hoje
         hora = data_hoje.time().replace(second=0,microsecond=0)
+        ultimo_envio = ultimo_envio if ultimo_envio else datetime.datetime.strptime("01/01/1900", "%d/%m/%Y")
         if ultimo_envio < data_hoje:
             if dia_mensagem == dia_semana_hoje:
                 if hora_mensagem == hora:
@@ -910,10 +911,10 @@ def pode_executar(nome_script:str):
                 return True
             
         except ValueError:
-            print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...", nome_script + '.txt')
+            print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...", nome_script)
             return True
     else:
-        print_log("Nenhum arquivo de bloqueio encontrado, permitido executar.", nome_script + '.txt')
+        print_log("Nenhum arquivo de bloqueio encontrado, permitido executar.", nome_script)
         return True
 
 # Função que cria o arquivo de bloqueio
@@ -990,7 +991,7 @@ def verifica_dll_firebird():
     try:
         arquitetura = platform.architecture()[0]
 
-        if os.path.exists('C:\\Windows\\System32\\FBCLIENT.DLLs'):
+        if os.path.exists('C:\\Windows\\System32\\FBCLIENT.DLL'):
             return 'C:\\Windows\\System32\\FBCLIENT.DLL'
         
         elif arquitetura == '64bit':

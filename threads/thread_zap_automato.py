@@ -11,19 +11,19 @@ from funcoes.funcoes import (
     atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
     salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
     insere_mensagem_zap, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio,
-    inicializa_conexao_firebird, inicializa_conexao_mysql
+    inicializa_conexao_firebird, inicializa_conexao_mysql, carrega_arquivo_config
     )
 
 
 def zapautomato():
     
-    nome_servico = 'thread_zap_automato'
+    nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
     #carrega config
     print_log(f'Iniciando', nome_servico)
     inicializa_conexao_mysql()
 
-    with open(f'{parametros.SCRIPT_PATH}/config.json', 'r') as j:
-        config = json.load(j)
+    carrega_arquivo_config()
+    config = parametros.CNPJ_CONFIG
     try:
         for cnpj in config['sistema']:
             try:
@@ -187,6 +187,6 @@ if __name__ == '__main__':
         try:
             zapautomato()
         except Exception as e:
-            print_log(f'Ocorreu um erro ao executar - motivo: {e}')
+            print_log(f'Ocorreu um erro ao executar - motivo: {e}', nome_script)
         finally:
             remover_bloqueio(nome_script)

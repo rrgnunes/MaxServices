@@ -340,6 +340,6 @@ if __name__ == '__main__':
             print_log('Finalizado o envio de dados.', nome_servico)
 
         except Exception as e:
-            print_log(f'Não foi possível executar serviço -> motivo: {e}', nome_servico)
+            print_log(f'Não foi possível executar serviço -> motivo: [{e.__class__.__name__}] : {e}', nome_servico)
         finally:
             remover_bloqueio(nome_servico)
