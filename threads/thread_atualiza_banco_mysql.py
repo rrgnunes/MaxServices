@@ -13,7 +13,7 @@ from funcoes.funcoes import (
 def atualiza_banco_mysql():
     nome_servico = 'thread_atualiza_banco_mysql'
     try:
-        print_log('Verificando se precisa atualizar banco remoto', nome_servico)
+        print_log('Verificando se precisa atualizar banco remoto', nome_script)
         try:
             fdb.load_api('/home/MaxServices/libs/libfbclient.so.2.5.9')
             server_origem = "maxsuportsistemas.com"
@@ -21,9 +21,9 @@ def atualiza_banco_mysql():
             path_origem = "/home/base/dados.fdb"
             dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
             conexao_origem_fb = fdb.connect(dsn=dsn_origem, user='SYSDBA', password='masterkey')
-            print_log('Conexao firebird estabelecida com sucesso', nome_servico)
+            print_log('Conexao firebird estabelecida com sucesso', nome_script)
         except Exception as a:
-            print_log(f'Nao foi possivel conectar em banco origem firebird: {a}', nome_servico)
+            print_log(f'Nao foi possivel conectar em banco origem firebird: {a}', nome_script)
 
         metadados_origem = extrair_metadados(conexao_origem_fb)
 
@@ -31,13 +31,13 @@ def atualiza_banco_mysql():
         conexao_destino_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
         metadados_destino = extrair_metadados_mysql(conexao_destino_mysql)
         scripts = gerar_scripts_diferentes_mysql(metadados_origem, metadados_destino)
-        erros = executar_scripts_mysql(conexao_destino_mysql, scripts, nome_servico)
+        erros = executar_scripts_mysql(conexao_destino_mysql, scripts, nome_script)
         for erro in erros:
             print_log(f"nao foi possivel executar: {erro}")
 
         parametros.MYSQL_CONNECTION_REPLICADOR.close()
     except Exception as e:
-        print_log(f'{e}', nome_servico)
+        print_log(f'{e}', nome_script)
 
 
 if __name__ == '__main__':

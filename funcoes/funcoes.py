@@ -13,7 +13,7 @@ import socket
 from pathlib import Path
 from mysql.connector import Error
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'funcoes')))
 
 from funcoes_zap import *
 from credenciais import parametros
@@ -911,10 +911,10 @@ def pode_executar(nome_script:str):
                 return True
             
         except ValueError:
-            print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...", nome_script + '.txt')
+            print_log("Formato de data inválido no arquivo de bloqueio, ignorando o bloqueio...", nome_script)
             return True
     else:
-        print_log("Nenhum arquivo de bloqueio encontrado, permitido executar.", nome_script + '.txt')
+        print_log("Nenhum arquivo de bloqueio encontrado, permitido executar.", nome_script)
         return True
 
 # Função que cria o arquivo de bloqueio

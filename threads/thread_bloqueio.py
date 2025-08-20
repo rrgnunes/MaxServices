@@ -17,7 +17,7 @@ from funcoes.funcoes import (
     )
 
 def verifica_dados_local():
-    nome_servico = 'thread_bloqueio'
+    nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
     try:
         inicializa_conexao_mysql()
         carrega_arquivo_config()

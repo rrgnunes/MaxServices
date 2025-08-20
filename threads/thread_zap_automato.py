@@ -17,7 +17,7 @@ from funcoes.funcoes import (
 
 def zapautomato():
     
-    nome_servico = 'thread_zap_automato'
+    nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
     #carrega config
     print_log(f'Iniciando', nome_servico)
     inicializa_conexao_mysql()
@@ -187,6 +187,6 @@ if __name__ == '__main__':
         try:
             zapautomato()
         except Exception as e:
-            print_log(f'Ocorreu um erro ao executar - motivo: {e}')
+            print_log(f'Ocorreu um erro ao executar - motivo: {e}', nome_script)
         finally:
             remover_bloqueio(nome_script)
