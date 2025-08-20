@@ -15,7 +15,7 @@ from mysql.connector import Error
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from .funcoes_zap import *
+from funcoes_zap import *
 from credenciais import parametros
 
 def print_log(mensagem, caminho_log='log.txt', max_tamanho=1048576):
