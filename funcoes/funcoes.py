@@ -1005,14 +1005,14 @@ def verifica_dll_firebird():
 def caminho_bd():
     try:
         caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
-        caminho_sistema = caminho_sistema.lower().replace('server','')
+        caminho_sistema = caminho_sistema.lower().replace('server','').replace('funcoes', '')
         caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
         config = configparser.ConfigParser()
         config.read(caminho_ini)
         caminho_banco_dados = config.get('BD', 'path')
         ip_banco_dados = config.get('BD', 'ip')        
     except:
-        return ''
+        return []
     return caminho_banco_dados, ip_banco_dados 
 
 def extrair_metadados_tabelas_firebird(conexao: fdb.Connection):
@@ -1438,8 +1438,6 @@ def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global
         
         dados = dict(dados)
         dados.pop('CNPJ_EMPRESA')
-
-        cursor.close()
 
         return dados
     except Exception as e:
