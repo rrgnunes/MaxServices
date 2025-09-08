@@ -5,7 +5,7 @@ import meli
 from meli.rest import ApiException
 
 # Adiciona a pasta pai ao sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'funcoes')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..','funcoes')))
 from funcoes import (
     print_log, criar_bloqueio, remover_bloqueio,
     pode_executar, selectfb, updatefb,
@@ -23,7 +23,6 @@ TOKEN_FILE = os.path.join(os.path.dirname(__file__), 'token_meli.json')
 TEST_USER_FILE = os.path.join(os.path.dirname(__file__), 'test_user.json')
 
 # ========================= TOKENS ==========================
-
 def salvar_token(data):
     with open(TOKEN_FILE, 'w') as f:
         json.dump(data, f, indent=4)
@@ -61,7 +60,6 @@ def refresh_token(api_oauth, refresh_token):
     }
 
 # ========================= TEST USER ==========================
-
 def criar_usuario_teste_ml():
     nome_servico = 'thread_criar_usuario_teste_ml'
     tokens = carregar_token()
@@ -120,7 +118,6 @@ def gerar_token_usuario_teste():
         print_log("Token do usuário de teste salvo em token_meli.json", nome_servico)
 
 # ========================= ATUALIZA TOKEN ==========================
-
 def atualiza_mercadolivre():
     nome_servico = 'thread_atualiza_mercadolivre'
     configuration = meli.Configuration(host="https://api.mercadolibre.com")
@@ -157,7 +154,6 @@ def atualiza_mercadolivre():
                 salvar_token(tokens)
 
 # ========================= ENVIO PRODUTOS ==========================
-
 def enviar_produtos_ml():
     tokens = carregar_token()
     access_token = tokens.get('access_token')
@@ -166,12 +162,12 @@ def enviar_produtos_ml():
         print_log("Access token não encontrado. Rode atualiza_mercadolivre primeiro.", "MercadoLivre")
         return
 
-    if HOMOLOGACAO:
-        if not carregar_usuario_teste():
-            criar_usuario_teste_ml()
-        gerar_token_usuario_teste()
-        tokens = carregar_token()
-        access_token = tokens.get('access_token')
+    # if HOMOLOGACAO:
+    #     if not carregar_usuario_teste():
+    #         criar_usuario_teste_ml()
+    #     gerar_token_usuario_teste()
+    #     tokens = carregar_token()
+    #     access_token = tokens.get('access_token')
 
     configuration = meli.Configuration(host="https://api.mercadolibre.com")
     with meli.ApiClient(configuration) as api_client:
@@ -186,9 +182,11 @@ def enviar_produtos_ml():
 
         produtos = selectfb(
             """
-            SELECT CODIGO, DESCRICAO, PR_VENDA, QTD_ATUAL
-            FROM PRODUTO
-            WHERE ENVIA_ML = 1 AND (CODIGO_ML IS NULL OR CODIGO_ML = '')
+            SELECT CODIGO, DESCRICAO, PR_VENDA, PE.ESTOQUE_ATUAL, CODIGO_ML
+            FROM PRODUTO PR
+            LEFT OUTER JOIN PRODUTO_ESTOQUE PE
+              ON PR.CODIGO = PE.PRODUTO
+            WHERE ENVIA_ML = 1
             """,
             []
         )
@@ -198,11 +196,11 @@ def enviar_produtos_ml():
             return
 
         for produto in produtos:
-            codigo, descricao, preco, quantidade = produto
+            codigo, descricao, preco, quantidade, codigo_ml = produto
 
             body = {
                 "site_id": "MLB",
-                "title": "Item de Teste – Por favor, NÃO OFERTAR!" if HOMOLOGACAO else descricao[:60],
+                "title": "Item de Teste - Por favor, NÃO OFERTAR!" if HOMOLOGACAO else descricao[:60],
                 "category_id": "MLB3530",
                 "price": str(preco),
                 "currency_id": "BRL",
@@ -210,19 +208,32 @@ def enviar_produtos_ml():
                 "buying_mode": "buy_it_now",
                 "listing_type_id": "bronze",
                 "condition": "new",
-                "description": descricao[:1000]
+                "description": descricao[:1000],
+                "attributes": [
+                    { "id": "BRAND", "value_name": "ACME" },
+                    { "id": "MODEL", "value_name": "X200" }
+                ],
+                "pictures": [
+                    { "source": "https://maxsuport.com/img/logo.webp" }
+                ]                
             }
 
             try:
-                api_response = api_instance.resource_post('items', access_token, body)
+                if codigo_ml:
+                    body = { "available_quantity": str(int(quantidade)),
+                             "price": str(preco)
+                           }
+                    api_response = api_instance.resource_put(f'items/{codigo_ml}', access_token, body)
+                else:
+                    api_response = api_instance.resource_post('items', access_token, body)
                 codigo_ml = api_response['id']
-                updatefb("UPDATE PRODUTO SET CODIGO_ML = ? WHERE CODIGO = ?", [codigo_ml, codigo])
+                perman_link = api_response['permalink']
+                updatefb("UPDATE PRODUTO SET CODIGO_ML = ?, ANUNCIO_ML=? WHERE CODIGO = ?", [codigo_ml, perman_link, codigo])
                 print_log(f"Produto {codigo} enviado ao Mercado Livre -> {codigo_ml}", "MercadoLivre")
             except ApiException as e:
                 print_log(f"Erro ao enviar produto {codigo}: {e}", "MercadoLivre")
 
 # ========================= MAIN ==========================
-
 if __name__ == '__main__':
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')
     if pode_executar(nome_script):
