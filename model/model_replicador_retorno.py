@@ -37,12 +37,10 @@ class ReplicadorRetorno(Replicador):
             sql_update = f'UPDATE {tabela} SET {campo_chave_primaria} = {valor_chave_primaria} WHERE CODIGO_GLOBAL = {codigo_global}'
             cursor.execute(sql_update)
 
-            self.conexao_remota.commit()
             self.logar(f'Valor de chave primaria retornado: {valor_chave_primaria}\n')
 
         except Exception as e:
             self.logar(f'Erro ao retornar valor de chave primaria -> motivo: {e}\n')
-            self.conexao_remota.rollback()
 
         finally:
             if cursor:
@@ -183,8 +181,9 @@ class ReplicadorRetorno(Replicador):
                 self.delete_referencia_replicador(tabela, acao, chave, codigo_global, cnpj)
 
 
-        self.conexao_local.commit()
-        self.conexao_remota.commit()
+            self.commit_pagina()
+
+        self.commit_conexao(True)
 
         self.remover_referencias_realizadas()
         self.logar('Finalizado recebimento de dados...')

@@ -15,8 +15,9 @@ class Replicador:
         self.conexao_local = conexao_local
         self.conexao_remota = conexao_remota
         self._nome_servico = ''
-        self.tipo_replicador = None
+        self.tipo_replicador = None # envio | receber
         self.empresas = []
+        self._tamanho_pagina = 50
         self._chaves_primarias = {}
         self._alteracoes = []
         self._alteracoes_processadas = []
@@ -32,14 +33,30 @@ class Replicador:
     @nome_servico.setter
     def nome_servico(self, nome):
         if not nome:
-            self.logar('O nome do servico nao pode ser vazio')
-            raise ValueError('O nome do servico nao pode ser vazio')
+            msg_erro = 'O nome do servico nao pode ser vazio'
+            self.logar(msg_erro)
+            raise ValueError(msg_erro)
         
         if isinstance(nome, str):
             self._nome_servico = nome
         else:
-            self.logar(f'O nome do servico deve ser uma string ao inves de {type(nome)}')
-            raise TypeError(f'O nome do servico deve ser uma string ao inves de {type(nome)}')
+            msg_erro = f'O nome do servico deve ser uma string ao inves de {type(nome)}'
+            self.logar(msg_erro)
+            raise TypeError(msg_erro)
+        
+    @property
+    def tamanho_pagina(self):
+        return self._tamanho_pagina
+    
+    @tamanho_pagina.setter
+    def tamanho_pagina(self, tamanho: int):
+
+        if not isinstance(tamanho, int):
+            msg_erro = f'Tamanho de paginacao deve ser numero e nao {type(tamanho)}'
+            self.logar(msg_erro)
+            raise TypeError(msg_erro)
+        
+        self._tamanho_pagina = tamanho
 
     def testar_conexao_local(self):
         cursor = None
@@ -314,6 +331,7 @@ class Replicador:
             valor_chave_estrangeira = dados.get(coluna_chave_estrangeira)
             return tabela_referenciada, valor_chave_estrangeira
         return None, None
+    
 
     def remover_referencias_repetidas(self):
         
@@ -329,6 +347,7 @@ class Replicador:
                     referencia.get('CHAVE', ''),
                     referencia.get('CODIGO_GLOBAL', '')
                 )
+        self.commit_conexao()
 
     def marcar_realizado(self, tabela: str, acao: str, valor_chave_primaria: any, codigo_global: int = None, cnpj: str = None):
         self._alteracoes_realizadas.append({
@@ -349,6 +368,7 @@ class Replicador:
                 referencia.get('CODIGO_GLOBAL', ''),
                 referencia.get('CNPJ', '')
             )
+        self.commit_conexao()
 
     def delete_referencia_replicador(self, tabela:str, acao:str, chave:str, codigo_global:str = 0, cnpj:str=''):
         cursor = None
@@ -385,12 +405,34 @@ class Replicador:
                 cursor = self.conexao_remota.cursor()
                 cursor.execute(sql_delete, valores)
 
-                self.conexao_remota.commit()
-
             except Exception as e:
                 self.logar(f"Erro ao deletar registros da tabela REPLICADOR: {e}\n")
-                self.conexao_remota.rollback()
 
             finally:
                 if cursor:
                     cursor.close()
+
+    def commit_conexao(self, both_connections: bool = False):
+
+        if both_connections:
+            self.conexao_local.commit()
+            self.conexao_remota.commit()
+            return
+
+        if self.tipo_replicador == 'envio':
+            self.conexao_local.commit()
+
+        elif self.tipo_replicador == 'receber':
+            self.conexao_remota.commit()
+
+    def commit_pagina(self):
+        qtd_alteracoes_realizadas = len(self._alteracoes_realizadas)
+
+        if not (qtd_alteracoes_realizadas % self._tamanho_pagina == 0):
+            return
+        
+        self.logar('Comitando registros ate o momento...\n')
+        self.commit_conexao(True)
+
+        self.remover_referencias_realizadas()
+        self._alteracoes_realizadas = []

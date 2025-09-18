@@ -20,11 +20,9 @@ class ReplicadorEnvio(Replicador):
 
             colunas = [coluna[0] for coluna in cursor.description]
             self._alteracoes = [dict(zip(colunas, linha)) for linha in alteracoes]
-            self.conexao_local.commit()
 
         except Exception as e:
             self.logar(f"Erro ao verificar alteracoes -> motivo: {e}\n")
-            self.conexao_local.rollback()
 
         finally:
             if cursor:
@@ -70,32 +68,29 @@ class ReplicadorEnvio(Replicador):
             sql_delete = f"DELETE FROM {tabela} WHERE {chave_estrageira} = {codigo}"
             cursor.execute(sql_delete)
 
-            self.conexao_remota.commit()
-
         except Exception as e:
             self.logar(f"Erro ao deletar registro da tabela {tabela} -> motivo: {e}\n")
-            self.conexao_remota.rollback()
 
         finally:
             if cursor:
                 cursor.close()
 
     def retornar_codigo_global(self, tabela: str, codigo_retornado: any, valor: any):
-        cursor_conexao_local = None
+        cursor = None
 
         try:
             campo_chave_primaria = self.buscar_nome_chave_primaria(tabela)
-            cursor_conexao_local = self.conexao_local.cursor()
+            cursor = self.conexao_local.cursor()
             sql_update_retorno = f'UPDATE {tabela} SET CODIGO_GLOBAL = {codigo_retornado} WHERE {campo_chave_primaria} = {valor}'
-            cursor_conexao_local.execute(sql_update_retorno)
+            cursor.execute(sql_update_retorno)
             self.logar(f'Retornou codigo global: {codigo_retornado}\n')
 
         except Exception as e:
             self.logar(f'Nao foi possivel retornar codigo global -> motivo: {e}\n')
 
         finally:
-            if cursor_conexao_local:
-                cursor_conexao_local.close()
+            if cursor:
+                cursor.close()
 
     def insert_registro_em_remoto(self, tabela: str, acao: str, dados: dict, valor_chave_primaria: any):
         cursor = None
@@ -199,7 +194,7 @@ class ReplicadorEnvio(Replicador):
             cursor = self.conexao_remota.cursor()
 
             if self.empresas:
-                cnpj = self.empresas[0][1]
+                cnpj = self.empresas[0]['CNPJ']
             chave_primaria = self.buscar_nome_chave_primaria(tabela)
 
             if not cnpj:
@@ -264,11 +259,12 @@ class ReplicadorEnvio(Replicador):
 
             else:
                 self.delete_referencia_replicador(tabela, acao, chave)
-        
-        self.conexao_remota.commit()
-        self.conexao_local.commit()
+            
+            self.commit_pagina()
         
         self.remover_referencias_realizadas()
+        self.commit_conexao(True)
+        
         self.logar('Finalizado envio dos dados...')
 
         self.conexao_local.close()
