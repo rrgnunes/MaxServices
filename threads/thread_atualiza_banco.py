@@ -7,7 +7,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from credenciais import parametros
 from utils.salva_metadados_json import salva_json_metadados_local
-from funcoes.funcoes import os, print_log, criar_bloqueio, remover_bloqueio, pode_executar, carrega_arquivo_config, buscar_estrutura_remota, comparar_metadados, executar_scripts_meta, inicializa_conexao_firebird, verifica_dll_firebird
+from funcoes.funcoes import (
+    os,
+    notificar,
+    print_log,
+    pode_executar,
+    criar_bloqueio,
+    remover_bloqueio,
+    comparar_metadados,
+    executar_scripts_meta,
+    carrega_arquivo_config,
+    buscar_estrutura_remota,
+    inicializa_conexao_firebird
+)
 
 
 def atualiza_banco():
@@ -21,11 +33,9 @@ def atualiza_banco():
             sistema_em_uso = dados_cnpj['sistema_em_uso_id']
             caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
 
-            # Pula para a proxima configuracao caso nao tenha o caminho do banco de dados
             if caminho_base_dados_maxsuport.lower() == 'none':
                 continue
             
-            # Pula para a proxima configuracao caso o banco de dados não exista
             if not os.path.exists(caminho_base_dados_maxsuport):
                 continue
 
@@ -45,6 +55,7 @@ def atualiza_banco():
 
                 if str(atualiza_banco) == '1':
 
+                    notificar('Atualizador de Banco', 'Iniciando autalização do banco de dados')
                     print_log('Salvando estrutura do banco de dados local...', nome_script)
                     salva_json_metadados_local(caminho_base_dados_maxsuport)
 
@@ -80,11 +91,13 @@ def atualiza_banco():
                                     except Exception as e:
                                         print_log(f'Não foi possível executar procedure "{procedure}", motivo: {e}', nome_script)
                                         continue
+                                    notificar('Atualizador de Banco', 'Banco de dados atualizado com sucesso!')
                             except Exception as e:
                                 print_log(f'Não foi possivel executar procedures -> motivo: {e}', nome_script)
 
                         except Exception as e:
-                            print_log(f'Erro em conexão a banco de dados -> motivo: {e}', nome_script)                    
+                            print_log(f'Erro em conexão a banco de dados -> motivo: {e}', nome_script)
+                            notificar('Atualizador de Banco', 'Erro ao tentar atualizar banco de dados! verifique logs.')          
                         finally:
                             if not parametros.FIREBIRD_CONNECTION.closed:
                                 parametros.FIREBIRD_CONNECTION.close()
