@@ -249,8 +249,8 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
     for detalhe in obj_detalhes:
         print_log(f"Produto {detalhe['DESCRICAO']}", nome_servico)            
         codigo_barra = detalhe['COD_BARRA']
-        if not len(codigo_barra) == 13:
-            codigo_barra = detalhe['CODIGO']        
+        if not len(codigo_barra) > 7:
+            codigo_barra = detalhe['CODIGO']
         detalles.append({
             "importe": detalhe['VALOR_ITEM'] - detalhe['VDESCONTO'],
             "recargo": 0,
@@ -545,11 +545,11 @@ if __name__ == "__main__":
                 parametros.URLBASESCANTECH = oEmpresa['URL_BASE_SCANTECH']
                 cnpj = oEmpresa['CNPJ']
 
-                envia_fechamento_vendas_scantech()
+                # envia_fechamento_vendas_scantech()
                 
                 #envia_fechamento_vendas_scantech_correcao()
 
-                # envia_vendas_scantech(cnpj)
+                envia_vendas_scantech(cnpj)
 
                 # promocoes = consulta_promocoes_crm('ACEPTADA')
                 # if 'erro' not in promocoes:
