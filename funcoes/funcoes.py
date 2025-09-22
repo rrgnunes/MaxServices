@@ -11,6 +11,7 @@ import unicodedata
 import platform
 import socket
 from pathlib import Path
+from winotify import Notification
 from mysql.connector import Error
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'funcoes')))
@@ -1005,14 +1006,14 @@ def verifica_dll_firebird():
 def caminho_bd():
     try:
         caminho_sistema = os.path.dirname(os.path.abspath(__file__)) + '/'
-        caminho_sistema = caminho_sistema.lower().replace('server','')
+        caminho_sistema = caminho_sistema.lower().replace('server','').replace('funcoes', '')
         caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
         config = configparser.ConfigParser()
         config.read(caminho_ini)
         caminho_banco_dados = config.get('BD', 'path')
         ip_banco_dados = config.get('BD', 'ip')        
     except:
-        return ''
+        return []
     return caminho_banco_dados, ip_banco_dados 
 
 def extrair_metadados_tabelas_firebird(conexao: fdb.Connection):
@@ -1409,233 +1410,7 @@ def configurar_pos_printer(modulo):
     return row[0]
 
 
-#====================================== funcoes replicador ====================================
-
-def buscar_elemento_mysql(tabela: str, codigo: int, cnpj: str ='', codigo_global = None, nome_servico:str = 'replicador'):
-    try:
-        
-        cursor = parametros.MYSQL_CONNECTION_REPLICADOR.cursor(dictionary=True)
-        if codigo_global:
-            sql_select = f"SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = %s"
-            cursor.execute(sql_select, (codigo_global,))
-        else:
-            chave_primaria = buscar_nome_chave_primaria(tabela)
-            if not chave_primaria:
-                print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
-                return None
-            if tabela.lower() == 'relatorios':
-                sql_select = f'SELECT * FROM {tabela} WHERE {chave_primaria} = %s'
-                cursor.execute(sql_select, (codigo,))
-            else:
-                sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = %s AND CNPJ_EMPRESA = %s"
-                cursor.execute(sql_select, (codigo, cnpj))
-
-        dados = cursor.fetchone()
-
-        if dados == None:
-            print_log(f'Não há elemento que possua esta chave no Mysql - chave: {codigo} ou este código global: {codigo_global}', nome_servico)
-            return None
-        
-        dados = dict(dados)
-        dados.pop('CNPJ_EMPRESA')
-
-        cursor.close()
-
-        return dados
-    except Exception as e:
-        print_log(f"Erro ao buscar elemento MySQL: {e}", nome_servico)
-        return None
-    finally:
-        if cursor:
-            cursor.close()
-
-def buscar_elemento_firebird(tabela:str, codigo:int, codigo_global: int = 0, nome_servico:str = 'replicador'):
-    try:
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
-
-        if codigo_global:
-            sql_select = f'SELECT * FROM {tabela} WHERE CODIGO_GLOBAL = {codigo_global}'
-            cursor.execute(sql_select)
-            dados = cursor.fetchone()
-
-            if not dados:
-                chave_primaria = buscar_nome_chave_primaria(tabela)
-                if not chave_primaria:
-                    print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
-                    return None
-                
-                if not codigo:
-                    return None
-
-                sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
-                cursor.execute(sql_select)
-                dados = cursor.fetchone()
-        else:
-            chave_primaria = buscar_nome_chave_primaria(tabela)
-
-            if not chave_primaria:
-                print_log(f"Chave primária não encontrada para a tabela {tabela}.", nome_servico)
-                return None
-            
-            sql_select = f"SELECT * FROM {tabela} WHERE {chave_primaria} = '{codigo}'"
-
-            cursor.execute(sql_select)
-
-            dados = cursor.fetchone()
-
-        if dados:
-            colunas = [desc[0] for desc in cursor.description]
-            dados = dict(zip(colunas, dados))
-        else:
-            print_log(f'Não há elemento Firebird com esta chave - chave: {codigo} (pode ter sido excluido ou precisa ser adicionado!)', nome_servico)
-
-        return dados
-
-    except Exception as e:
-        print_log(f"Erro ao buscar elemento no Firebird: {e}", nome_servico)
-        return None
-    finally:
-        if cursor:
-            cursor.close()
-
-def verifica_empresa_firebird(tabela:str, dados: dict, nome_servico:str = 'replicador'):
-    cursor = parametros.FIREBIRD_CONNECTION.cursor()
-    codigo_empresa = 0
-    if tabela == 'EMPRESA':
-        codigo_empresa = dados['CODIGO']
-    else:
-        for coluna, valor in dados.items():
-            if 'EMPRESA' in coluna.upper():
-                if isinstance(valor, int):
-                    codigo_empresa = valor
-                    break
-            elif 'EMITENTE' in coluna.upper():
-                if isinstance(valor, int):
-                    codigo_empresa = valor
-                    break
-    cnpj = ''
-    if codigo_empresa > 0:
-        try:
-            cursor.execute(f'SELECT CNPJ FROM EMPRESA WHERE CODIGO = {codigo_empresa}')
-            cnpj = cursor.fetchall()[0][0]
-        except Exception as e:
-            print_log(f'Nao foi possivel consultar empresa: {e}', nome_servico)
-
-    return codigo_empresa, cnpj
-
-def buscar_nome_chave_primaria(tabela: str, nome_servico:str = 'replicador'):
-    try:
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
-
-        query_codigo = f"""
-        SELECT TRIM(RDB$FIELD_NAME)
-        FROM RDB$RELATION_FIELDS
-        WHERE RDB$RELATION_NAME = '{tabela}' AND UPPER(RDB$FIELD_NAME) = 'CODIGO'
-        """
-        cursor.execute(query_codigo)
-        row_codigo = cursor.fetchone()
-        
-        if row_codigo:
-            return 'CODIGO' 
-        
-        # Verificar se há uma chave primária
-        query = f"""
-        SELECT TRIM(segments.RDB$FIELD_NAME)
-        FROM RDB$RELATION_CONSTRAINTS constraints
-        JOIN RDB$INDEX_SEGMENTS segments ON constraints.RDB$INDEX_NAME = segments.RDB$INDEX_NAME
-        WHERE constraints.RDB$RELATION_NAME = '{tabela}'
-          AND constraints.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
-        """
-        cursor.execute(query)
-        row = cursor.fetchone()
-        
-        if row:
-            return row[0]  # Retorna o nome da coluna da chave primária
-         
-        
-        # Se não encontrar chave primária nem campo 'codigo', retornar None
-        return None
-        
-    except Exception as e:
-        print_log(f"Erro ao buscar nome da chave primária no Firebird: {e}", nome_servico)
-        return None
-
-
-def verifica_valor_chave_primaria(tabela:str, codigo_global:str, chave_primaria:str):
-    elemento = buscar_elemento_firebird(tabela, None, codigo_global)
-    return elemento.get(chave_primaria, None)
-
-
-def consulta_cnpjs_local():
-    try:
-        cursor = parametros.FIREBIRD_CONNECTION.cursor()
-        cursor.execute('SELECT CODIGO, CNPJ FROM EMPRESA')
-        empresas = cursor.fetchall()
-        cursor.close()
-        if not empresas:
-            return None
-        return empresas
-    except Exception as e:
-        print_log(f'Erro ao consultar os cnpjs locais -> motivo: {e}')
-
-def tratar_valores(dados: dict):
-    valores = []
-    for key, valor in dados.items():
-        if isinstance(valor, fdb.fbcore.BlobReader):  # Verifica se o valor é BLOB
-            blob = valor.read()
-            valores.append(blob)
-            valor.close()
-
-        elif isinstance(valor, datetime.timedelta): # Converte tempo de segundos para hora : minuto : segundo
-            total_de_segundos = valor.total_seconds()
-            horas = int(total_de_segundos // 3600)
-            segundos_restantes = total_de_segundos % 3600
-            minutos = int(segundos_restantes // 60)
-            segundos_restantes = segundos_restantes % 60
-            valor = datetime.time(hour=horas, minute=minutos, second=int(segundos_restantes))
-            valores.append(valor)
-
-        else:
-            valores.append(valor)  # Adiciona os outros valores
-    return valores
-
-def delete_registro_replicador(tabela:str, acao:str, chave:str, codigo_global:str = 0, firebird:bool=True, nome_servico:str='replicador', cnpj:str=''):
-
-    if firebird:
-        try:
-            connection = parametros.FIREBIRD_CONNECTION
-            sql_delete = "DELETE FROM REPLICADOR WHERE chave = ? AND tabela = ? AND acao = ? ROWS 1;"
-            cursor = connection.cursor()
-            cursor.execute(sql_delete, (chave, tabela, acao,))
-
-            connection.commit()
-        except fdb.fbcore.DatabaseError as e:
-            print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
-            connection.rollback()
-        finally:
-            if cursor:
-                cursor.close()
-    else:
-        try:
-            connection = parametros.MYSQL_CONNECTION_REPLICADOR
-            if codigo_global:
-                sql_delete = "DELETE FROM REPLICADOR WHERE TABELA = %s AND ACAO = %s AND CODIGO_GLOBAL = %s LIMIT 1;"
-                valores = tabela, acao, codigo_global
-            else:
-                sql_delete = "DELETE FROM REPLICADOR WHERE CHAVE = %s AND TABELA = %s AND ACAO = %s AND CNPJ_EMPRESA = %s LIMIT 1;"
-                valores = chave, tabela, acao, cnpj
-
-            cursor = connection.cursor()
-            cursor.execute(sql_delete, valores)
-
-            connection.commit()
-        except Exception as e:
-            print_log(f"Erro ao deletar registros da tabela REPLICADOR: {e}", nome_servico)
-        finally:
-            if cursor:
-                cursor.close()
-
-def buscar_estrutura_remota(nome_servico = 'thread_atualiza_banco'):
+def buscar_estrutura_remota(nome_servico = 'thread_atualiza_bancoc'):
     print_log('Buscando dados da estrutura master...')
     url_base = 'https://dbjson.maxsuportsistemas.com/retorno'
     diretorio_metadados = os.path.join(parametros.SCRIPT_PATH, 'data', 'metadados_remoto')
@@ -2174,4 +1949,11 @@ def consultar_cobranca(txid):
             print(f"Erro ao realizar a requisição: {e}")
             return None, None
     else:
-        return None, None    
+        return None, None
+    
+def notificar(titulo_processo, msg):
+    notificacao = Notification(app_id='MAXSUPORT', title=titulo_processo)
+    notificacao.msg = msg
+    notificacao.duration = 'short'
+    notificacao.icon = os.path.join(parametros.SCRIPT_PATH, 'ico', 'ico.png')
+    notificacao.show()
