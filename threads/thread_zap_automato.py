@@ -13,6 +13,7 @@ from funcoes.funcoes import (
     insere_mensagem_zap, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio,
     inicializa_conexao_firebird, inicializa_conexao_mysql, carrega_arquivo_config
     )
+from data.thread_zap_automato.listas import selecionar_frase_diaria
 
 
 def zapautomato():
@@ -98,6 +99,7 @@ def zapautomato():
                     # MENSAGEM DIARIA
                     pessoas = retorna_pessoas_mensagemdiaria(conexao, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
                     for pessoa in pessoas:
+                        MENSAGEM_DIARIO = selecionar_frase_diaria()
                         MENSAGEM_DIARIO_FINAL = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
                         insere_mensagem_zap(conexao, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
                         print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}', nome_servico)

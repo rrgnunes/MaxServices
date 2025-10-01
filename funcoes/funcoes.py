@@ -11,7 +11,6 @@ import unicodedata
 import platform
 import socket
 from pathlib import Path
-from winotify import Notification
 from mysql.connector import Error
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'funcoes')))
@@ -1950,10 +1949,3 @@ def consultar_cobranca(txid):
             return None, None
     else:
         return None, None
-    
-def notificar(titulo_processo, msg):
-    notificacao = Notification(app_id='MAXSUPORT', title=titulo_processo)
-    notificacao.msg = msg
-    notificacao.duration = 'short'
-    notificacao.icon = os.path.join(parametros.SCRIPT_PATH, 'ico', 'ico.png')
-    notificacao.show()

@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import mysql.connector
+import random
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -55,7 +56,9 @@ def zapautomato():
                 salva_retorno(zap['codigo'], retorno_json['message'])
                 print_log(f"Erro ao enviar mensagem {zap['codigo']}: {retorno_json['message']}")
         ultimo_cnpj = zap['cliente_id']
-        time.sleep(10)
+        
+        segundos = random.randint(10, 60)  # tempo aleatório entre 1 e 10 segundos
+        time.sleep(segundos)
 
 
 if __name__ == '__main__':

@@ -225,6 +225,11 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
                 "detalleFinalizadora": formas_pagamentos['DESCRICAO']
             })        
         else:
+            numeroAuto = formas_pagamentos['CODIGOTRANSACAO']
+            if len(numeroAuto) < 7:
+                numeroAuto = str(numeroAuto).rjust(6,'0')
+            
+            
             pagos.append({
                 "importe": formas_pagamentos['VALOR'],
                 "cotizacion": 1,
@@ -232,7 +237,7 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
                 "codigoTipoPago": codigo_tipo_pagamento,                   
                 "bin": formas_pagamentos['BIN_TEF'],
                 "ultimosDigitosTarjeta": formas_pagamentos['ULTIMOS_DIGITOS_CARTAO_TEF'],
-                "numeroAutorizacion": formas_pagamentos['CODIGOTRANSACAO'],
+                "numeroAutorizacion": numeroAuto,
                 "codigoTarjeta": None,#str(formas_pagamentos['BIN_TEF']),                 
                 "detalleFinalizadora": formas_pagamentos['DESCRICAO']
             })             
