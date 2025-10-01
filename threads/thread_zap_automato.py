@@ -3,6 +3,7 @@ import sys
 import fdb
 import json
 import datetime
+import base64
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -11,7 +12,7 @@ from funcoes.funcoes import (
     atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
     salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
     insere_mensagem_zap, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio,
-    inicializa_conexao_firebird, inicializa_conexao_mysql, carrega_arquivo_config
+    inicializa_conexao_firebird, inicializa_conexao_mysql, carrega_arquivo_config,get_local_ip,get_local_name
     )
 from data.thread_zap_automato.listas import selecionar_frase_diaria
 
@@ -58,25 +59,18 @@ def zapautomato():
                     cur.execute("select cnpj from empresa where codigo = 1")
                     empresas = cur.fetchall()
                     empresa = [empresa[0] for empresa in empresas]
-
-                    if cnpj != empresa[0]:
-                        parametros.FIREBIRD_CONNECTION.close()
-                        parametros.FIREBIRD_CONNECTION = None
-                        continue
+                    
+                    if get_local_ip() != '192.168.10.115' and get_local_name() != 'SERVER-DEV':
+                        if cnpj != empresa[0]:
+                            parametros.FIREBIRD_CONNECTION.close()
+                            parametros.FIREBIRD_CONNECTION = None
+                            continue
                 except Exception as e:
                     print_log(f'Não foi possivel verificar a empresa 1: {e}', nome_servico)
                     return
 
                 if ativo == 1 and sistema_em_uso == '1':
-                    server = "localhost"
-                    port = porta_firebird_maxsuport
-                    path = caminho_base_dados_maxsuport
-                    user = parametros.USERFB
-                    password = parametros.PASSFB
-                    dsn = f"{server}/{port}:{path}"
-                    fdb.load_api(f'{caminho_gbak_firebird_maxsuport}/fbclient.dll')
-                    conexao = fdb.connect(dsn=dsn, user=user, password=password)
-                    cfg_zap = config_zap(conexao)
+                    cfg_zap = config_zap(parametros.FIREBIRD_CONNECTION)
 
                     ENVIAR_MENSAGEM_ANIVERSARIO = cfg_zap['ENVIAR_MENSAGEM_ANIVERSARIO'] = 1
                     ENVIAR_MENSAGEM_PROMOCAO    = cfg_zap['ENVIAR_MENSAGEM_PROMOCAO'] = 1
@@ -97,41 +91,42 @@ def zapautomato():
                     print_log(f'Dados da configuração recebidos', nome_servico)
 
                     # MENSAGEM DIARIA
-                    pessoas = retorna_pessoas_mensagemdiaria(conexao, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
+                    pessoas = retorna_pessoas_mensagemdiaria(parametros.FIREBIRD_CONNECTION, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
                     for pessoa in pessoas:
                         MENSAGEM_DIARIO = selecionar_frase_diaria()
                         MENSAGEM_DIARIO_FINAL = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
-                        insere_mensagem_zap(conexao, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
+                        MENSAGEM_DIARIO_FINAL = base64.b64encode(MENSAGEM_DIARIO_FINAL.encode("utf-8")).decode("utf-8")
+                        insere_mensagem_zap(parametros.FIREBIRD_CONNECTION, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
                         print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}', nome_servico)
 
-                    # MENSAGEM ANIVERSARIO
-                    pessoas = retorna_pessoas(conexao)
-                    for pessoa in pessoas:
-                        ano_atual = datetime.datetime.now().year
-                        if pessoa['ANO_ENVIO_MENSAGEM_ANIVERSARIO'] != ano_atual:
-                            MENSAGEM_ANIVERSARIO_FINAL = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
-                            insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
-                            atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
-                            print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}', nome_servico)
+                    # # MENSAGEM ANIVERSARIO
+                    # pessoas = retorna_pessoas(conexao)
+                    # for pessoa in pessoas:
+                    #     ano_atual = datetime.datetime.now().year
+                    #     if pessoa['ANO_ENVIO_MENSAGEM_ANIVERSARIO'] != ano_atual:
+                    #         MENSAGEM_ANIVERSARIO_FINAL = str(MENSAGEM_ANIVERSARIO).replace('@cliente',pessoa['FANTASIA'])
+                    #         insere_mensagem_zap(conexao, MENSAGEM_ANIVERSARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
+                    #         atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
+                    #         print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}', nome_servico)
                     
-                    # MENSAGEM DE PRE AGENDAMENTO
-                    pessoas = retorna_pessoas_preagendadas(conexao)
-                    for pessoa in pessoas:
-                        MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
-                        insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
-                        atualiza_agenda(conexao,pessoa['CODIGO'], 'pre_agendamento')
-                        print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}', nome_servico)     
+                    # # MENSAGEM DE PRE AGENDAMENTO
+                    # pessoas = retorna_pessoas_preagendadas(conexao)
+                    # for pessoa in pessoas:
+                    #     MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
+                    #     insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
+                    #     atualiza_agenda(conexao,pessoa['CODIGO'], 'pre_agendamento')
+                    #     print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}', nome_servico)     
 
-                    # MENSAGEM DE LEMBRETE 
-                    if ENVIAR_MENSAGEM_LEMBRETE == 1:
-                        pessoas = retorna_pessoas_lembrete(conexao, TIME_MENSAGEM_LEMBRETE)
-                        for pessoa in pessoas:
-                            data_agendada = pessoa['DATA']
-                            hora_agendada = data_agendada.time().replace(microsecond=0)
-                            mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO']).replace('@hora', str(hora_agendada))
-                            insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
-                            atualiza_agenda(conexao, pessoa['CODIGO'], 'lembrete')
-                            print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
+                    # # MENSAGEM DE LEMBRETE 
+                    # if ENVIAR_MENSAGEM_LEMBRETE == 1:
+                    #     pessoas = retorna_pessoas_lembrete(conexao, TIME_MENSAGEM_LEMBRETE)
+                    #     for pessoa in pessoas:
+                    #         data_agendada = pessoa['DATA']
+                    #         hora_agendada = data_agendada.time().replace(microsecond=0)
+                    #         mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO']).replace('@hora', str(hora_agendada))
+                    #         insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
+                    #         atualiza_agenda(conexao, pessoa['CODIGO'], 'lembrete')
+                    #         print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
                     
                     # Salva mensagem em banco remoto e altera status em banco local
                     try:
