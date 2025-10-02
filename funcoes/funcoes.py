@@ -11,7 +11,6 @@ import unicodedata
 import platform
 import socket
 from pathlib import Path
-from winotify import Notification
 from mysql.connector import Error
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'funcoes')))
@@ -98,7 +97,7 @@ def inicializa_conexao_mysql():
 def inicializa_conexao_firebird():
     try:
         if get_local_ip() == '192.168.10.115':
-            parametros.HOSTFB = 'localhost'
+            parametros.HOSTFB = 'MAXSUPORT-09'
             parametros.USERFB = 'MAXSUPORT'
             parametros.PATHDLL = 'C:\\Program Files\\Firebird\\Firebird_2_5\\bin\\fbclient.dll'
             parametros.DATABASEFB = 'c:\\maxsuport\\dados\\dados.fdb'
@@ -111,7 +110,7 @@ def inicializa_conexao_firebird():
                 database=parametros.DATABASEFB,
                 user=parametros.USERFB,
                 password=parametros.PASSFB,
-                port=int(parametros.PORTFB)                
+                port=int(parametros.PORTFB)       
             )
         print_log(f"Conexão com Firebird estabelecida com sucesso. Host: {parametros.HOSTFB}, Banco: {parametros.DATABASEFB}")
     except fdb.fbcore.DatabaseError as err:
@@ -1956,6 +1955,17 @@ def executar_scripts_meta(scritps: dict, connection:fdb.Connection):
             cursor.close()
 
     return erros
+
+def get_local_name():
+    # tenta as opções mais comuns
+    nome = socket.gethostname()
+    if nome:
+        return nome
+    nome = platform.node()
+    if nome:
+        return nome
+    nome = os.environ.get('COMPUTERNAME') or os.environ.get('HOSTNAME') or ''
+    return nome
 
 def get_local_ip():
     """

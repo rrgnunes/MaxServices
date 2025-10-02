@@ -169,7 +169,6 @@ def receber_mensagem(session):
         "Authorization": f"Bearer {parametros.TOKEN_ZAP}",
         "Content-Type": "application/json"
     }
-
     response = requests.get(enpoint, headers=headers)
     response = retorna_json(response)       
     return response 
@@ -191,13 +190,13 @@ def gera_qrcode(data_qrcode):
     qr_img_data = base64.b64decode(data_qrcode)
     if parametros.LAST_IMAGE != data_qrcode:
        parametros.LAST_IMAGE = data_qrcode
-       os.remove("c:\maxsuport\qr_code_with_border.png")
+       os.remove("c:/maxsuport/qr_code_with_border.png")
     # Cria uma imagem a partir dos dados decodificados
     image = Image.open(BytesIO(qr_img_data))
     # Adiciona uma borda à imagem
     bordered_image = add_border_to_image(image, border=10, color='white')
     # Salva a imagem com borda
-    bordered_image.save("c:\maxsuport\qr_code_with_border.png")
+    bordered_image.save("c:/maxsuport/qr_code_with_border.png")
 
 def qrcode_session(session):
     enpoint = f'{url}/api/{session}/qrcode-session'
