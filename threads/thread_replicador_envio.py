@@ -1,7 +1,5 @@
 import os
-import re
 import sys
-import mysql.connector
 from mysql.connector import Error
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

@@ -166,6 +166,37 @@ def salva_json_metadados_local(caminho_base_dados:str):
     except Exception as e:
         print_log(f'Erro ao salvar arquivo JSON da estrutura banco local -> motivo: {e}')
 
+def salva_metadados_mysql(banco):
+
+    print_log(f'Salvando metadados para banco -> {banco}')
+
+    try:
+        parametros.BASEMYSQL_REP = banco
+        parametros.MYSQL_CONNECTION_REPLICADOR = None
+        inicializa_conexao_mysql_replicador()
+
+    except Exception as e:
+        print_log(f'Erro em tentativa de conexao -> motivo: {e}')
+
+    pasta_metadados_mysql = os.path.join(parametros.SCRIPT_PATH, 'data', f'metadados_mysql_{banco}')
+
+    try:
+        if not os.path.exists(pasta_metadados_mysql):
+            os.makedirs(pasta_metadados_mysql)
+
+        with parametros.MYSQL_CONNECTION_REPLICADOR as conn:
+
+            metadados_tabelas = extrair_metadados_tabelas_mysql(conn)
+            if metadados_tabelas:
+                with open(os.path.join(pasta_metadados_mysql, 'banco.json'), 'w') as j:
+                    json.dump(metadados_tabelas, j, indent=2)
+                print_log(f'Arquivo de tabelas salvo com sucesso\n', 'salva_metadados_json')
+            else:
+                print_log(f'Falha ao salvar arquivo', 'salva_metadados_json')
+
+    except Exception as e:
+        print_log(f'Erro ao salvar jsons -> motivo: {e}')
+
 if __name__ == '__main__':
 
-    salvar_json_metadados_master()
+    salva_metadados_mysql()
