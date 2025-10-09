@@ -264,6 +264,7 @@ def imp_pedido_grupo(mesa, empresa):
         aImpressao.append(f"[b]-{nome_empresa[0]}[/b]")
         aImpressao.append("[ls]")
         aImpressao.append("[b][c]*** IMPRESSAO GRUPO ***[/c][/b]")
+        aImpressao.append(f"[c]{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}[/c]")
         aImpressao.append(f"MESA.....:{mesa}")
         aImpressao.append("[ld]")
 
@@ -448,6 +449,7 @@ def imprime_consumo_mesa(mesa, empresa):
     aImpressao.append(f"[e][b]-{empresa[0]}[/b][/e]")
     aImpressao.append("[ls]")
     aImpressao.append(f"[c][b]**** PEDIDO MESA No. {mesa} ***[/b][/c]")
+    aImpressao.append(f"[c]{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}[/c]")
     aImpressao.append("[ls]")
 
     titulo_base = "|COD |PRODUTO".ljust(colunas - 24) + "| QTD|"
@@ -568,6 +570,7 @@ def imprime_pedido_mesa(mesa, empresa):
     aImpressao.append(f"[e][b]-{empresa[0]}[/b][/e]")
     aImpressao.append("[ls]")
     aImpressao.append(f"[c][b]**** PEDIDO MESA No. {mesa} ***[/b][/c]")
+    aImpressao.append(f"[c]{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}[/c]")
     aImpressao.append("[ls]")
 
     titulo_base = "|COD |PRODUTO".ljust(colunas - 24) + "| QTD|  VALOR|  TOTAL|"
