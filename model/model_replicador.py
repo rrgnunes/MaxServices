@@ -428,6 +428,9 @@ class Replicador:
     def commit_pagina(self):
         qtd_alteracoes_realizadas = len(self._alteracoes_realizadas)
 
+        if (qtd_alteracoes_realizadas <= 0):
+            return
+        
         if not (qtd_alteracoes_realizadas % self._tamanho_pagina == 0):
             return
         

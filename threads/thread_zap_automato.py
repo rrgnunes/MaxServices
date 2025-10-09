@@ -91,13 +91,13 @@ def zapautomato():
                     print_log(f'Dados da configuração recebidos', nome_servico)
 
                     # MENSAGEM DIARIA
-                    pessoas = retorna_pessoas_mensagemdiaria(parametros.FIREBIRD_CONNECTION, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
-                    for pessoa in pessoas:
-                        MENSAGEM_DIARIO = selecionar_frase_diaria()
-                        MENSAGEM_DIARIO_FINAL = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
-                        MENSAGEM_DIARIO_FINAL = base64.b64encode(MENSAGEM_DIARIO_FINAL.encode("utf-8")).decode("utf-8")
-                        insere_mensagem_zap(parametros.FIREBIRD_CONNECTION, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
-                        print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}', nome_servico)
+                    # pessoas = retorna_pessoas_mensagemdiaria(parametros.FIREBIRD_CONNECTION, ENVIAR_MENSAGEM_DIARIO, DIA_MENSAGEM_DIARIA, TIME_MENSAGEM_DIARIA, ULTIMO_ENVIO_DIARIO)
+                    # for pessoa in pessoas:
+                    #     MENSAGEM_DIARIO = selecionar_frase_diaria()
+                    #     MENSAGEM_DIARIO_FINAL = str(MENSAGEM_DIARIO).replace('@cliente',pessoa['FANTASIA'])
+                    #     MENSAGEM_DIARIO_FINAL = base64.b64encode(MENSAGEM_DIARIO_FINAL.encode("utf-8")).decode("utf-8")
+                    #     insere_mensagem_zap(parametros.FIREBIRD_CONNECTION, MENSAGEM_DIARIO_FINAL, pessoa['CELULAR1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
+                    #     print_log(f'Registro de mesagem diaria criado para {pessoa["FANTASIA"]}', nome_servico)
 
                     # # MENSAGEM ANIVERSARIO
                     # pessoas = retorna_pessoas(conexao)
@@ -109,24 +109,24 @@ def zapautomato():
                     #         atualiza_ano_cliente(conexao,pessoa['CODIGO'],ano_atual)
                     #         print_log(f'Registro de aniversário criado para {pessoa["FANTASIA"]}', nome_servico)
                     
-                    # # MENSAGEM DE PRE AGENDAMENTO
-                    # pessoas = retorna_pessoas_preagendadas(conexao)
-                    # for pessoa in pessoas:
-                    #     MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
-                    #     insere_mensagem_zap(conexao, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
-                    #     atualiza_agenda(conexao,pessoa['CODIGO'], 'pre_agendamento')
-                    #     print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}', nome_servico)     
+                    # MENSAGEM DE PRE AGENDAMENTO
+                    pessoas = retorna_pessoas_preagendadas(parametros.FIREBIRD_CONNECTION)
+                    for pessoa in pessoas:
+                        MENSAGEM_PREAGENDAMENTO_FINAL = str(MENSAGEM_PREAGENDAMENTO).replace('@cliente',pessoa['FANTASIA']).replace('@qtddias',str(pessoa['DIAS_RETORNO'])).replace('@servico',pessoa['DESCRICAO'])
+                        insere_mensagem_zap(parametros.FIREBIRD_CONNECTION, MENSAGEM_PREAGENDAMENTO_FINAL , pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
+                        atualiza_agenda(parametros.FIREBIRD_CONNECTION,pessoa['CODIGO'], 'pre_agendamento')
+                        print_log(f'Registro de pré agendamento criado para {pessoa["FANTASIA"]}', nome_servico)     
 
-                    # # MENSAGEM DE LEMBRETE 
-                    # if ENVIAR_MENSAGEM_LEMBRETE == 1:
-                    #     pessoas = retorna_pessoas_lembrete(conexao, TIME_MENSAGEM_LEMBRETE)
-                    #     for pessoa in pessoas:
-                    #         data_agendada = pessoa['DATA']
-                    #         hora_agendada = data_agendada.time().replace(microsecond=0)
-                    #         mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO']).replace('@hora', str(hora_agendada))
-                    #         insere_mensagem_zap(conexao, mensagem_lembrete_final, pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
-                    #         atualiza_agenda(conexao, pessoa['CODIGO'], 'lembrete')
-                    #         print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
+                    # MENSAGEM DE LEMBRETE 
+                    if ENVIAR_MENSAGEM_LEMBRETE == 1:
+                        pessoas = retorna_pessoas_lembrete(parametros.FIREBIRD_CONNECTION, TIME_MENSAGEM_LEMBRETE)
+                        for pessoa in pessoas:
+                            data_agendada = pessoa['DATA']
+                            hora_agendada = data_agendada.time().replace(microsecond=0)
+                            mensagem_lembrete_final = str(MENSAGEM_LEMBRETE).replace('@cliente', pessoa['FANTASIA']).replace('@servico', pessoa['DESCRICAO']).replace('@hora', str(hora_agendada))
+                            insere_mensagem_zap(parametros.FIREBIRD_CONNECTION, mensagem_lembrete_final, pessoa['TELEFONE1'].replace('(','').replace(')','').replace('-','').replace(' ',''))
+                            atualiza_agenda(parametros.FIREBIRD_CONNECTION, pessoa['CODIGO'], 'lembrete')
+                            print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
                     
                     # Salva mensagem em banco remoto e altera status em banco local
                     try:

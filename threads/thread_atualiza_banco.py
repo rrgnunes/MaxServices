@@ -6,7 +6,7 @@ import configparser
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from credenciais import parametros
-from Utils.salva_metadados_json import salva_json_metadados_local
+from utils.salva_metadados_json import salva_json_metadados_local
 from funcoes.funcoes import (
     os,
     print_log,
