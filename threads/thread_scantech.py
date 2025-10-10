@@ -25,7 +25,7 @@ def converte_base_64():
     except Exception as ex:
         return "Erro"
 
-def salva_promocoes(promocoes, codigo_empresa):
+def salva_promocoes(promocoes, codigo_empresa, ativo):
     try:
         cursor = parametros.MYSQL_CONNECTION.cursor()
         print_log('Encontrei promoções' )
@@ -53,74 +53,75 @@ def salva_promocoes(promocoes, codigo_empresa):
                 # Atualiza promoção existente
                 cursor.execute("""
                     UPDATE PROMOCOES
-                    SET TITULO = %s, DESCRICAO = %s, LIMITETICKET = %s, TIPO = %s, QUANTIDADE_TOTAL = %s, PAGA = %s, VIGENCIA_DESDE = %s, VIGENCIA_HASTA = %s, CNPJ_EMPRESA = %s
+                    SET TITULO = %s, DESCRICAO = %s, LIMITETICKET = %s, TIPO = %s, QUANTIDADE_TOTAL = %s, PAGA = %s, VIGENCIA_DESDE = %s, VIGENCIA_HASTA = %s, CNPJ_EMPRESA = %s, ATIVO =%s
                     WHERE CODIGO = %s
-                """, (titulo, descricao, limite_ticket, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj, codigo))
+                """, (titulo, descricao, limite_ticket, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj, codigo, ativo))
             else:
                 print_log('Inserindo a promoção ' + str(codigo))
                 # Insere nova promoção
                 cursor.execute("""
-                    INSERT INTO PROMOCOES (CODIGO, CODIGO_EMPRESA, TITULO, DESCRICAO, LIMITETICKET, TIPO, QUANTIDADE_TOTAL, PAGA, VIGENCIA_DESDE, VIGENCIA_HASTA, CNPJ_EMPRESA)
+                    INSERT INTO PROMOCOES (CODIGO, CODIGO_EMPRESA, TITULO, DESCRICAO, LIMITETICKET, TIPO, QUANTIDADE_TOTAL, PAGA, VIGENCIA_DESDE, VIGENCIA_HASTA, CNPJ_EMPRESA,ATIVO)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (codigo, codigo_empresa, titulo, descricao, limite_ticket, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj))
+                """, (codigo, codigo_empresa, titulo, descricao, limite_ticket, tipo, quantidade_total, paga, vigencia_desde, vigencia_hasta, cnpj, ativo))
 
-            # Insere ou atualiza produtos da promoção
-            print_log('Adicionando os produtos da promoção')
-            for item in promocao['detalles']['condiciones']['items']:
-                quantidade_item = item['cantidad']
-                for produto in item['articulos']:
-                    codigo_barras = produto['codigoBarras']
-                    nome = produto['nombre']
+            if ativo == 1:
+                # Insere ou atualiza produtos da promoção
+                print_log('Adicionando os produtos da promoção')
+                for item in promocao['detalles']['condiciones']['items']:
+                    quantidade_item = item['cantidad']
+                    for produto in item['articulos']:
+                        codigo_barras = produto['codigoBarras']
+                        nome = produto['nombre']
 
-                    cursor.execute("SELECT COUNT(*) FROM PRODUTO_PROMOCOES WHERE CODIGO_PROMOCAO = %s AND CODIGO_BARRAS = %s", (codigo, codigo_barras))
-                    produto_existe = cursor.fetchone()[0]
-                    print_log('Inserindo ou atualizando o produto ' + codigo_barras + ' - ' + nome)
-                    if produto_existe > 0:
-                        # Atualiza produto existente
-                        cursor.execute("""
-                            UPDATE PRODUTO_PROMOCOES
-                            SET NOME = %s, QUANTIDADE = %s, PRECO = %s, DESCONTO = %s, CNPJ_EMPRESA = %s
-                            WHERE CODIGO_PROMOCAO = %s AND CODIGO_BARRAS = %s
-                        """, (nome, quantidade_item, preco, desconto, cnpj, codigo, codigo_barras))
-                    else:
-                        # Insere novo produto
-                        cursor.execute("""
-                            INSERT INTO PRODUTO_PROMOCOES (CODIGO_PROMOCAO, CODIGO_BARRAS, NOME, QUANTIDADE, PRECO, DESCONTO, CNPJ_EMPRESA)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
-                        """, (codigo, codigo_barras, nome, quantidade_item, preco, desconto, cnpj))
-                        
-            # Insere ou atualiza bines da promocao        
-            print_log('Adicionando os bines da promoção')
-            formas_pagamento = promocao['detalles']['condiciones'].get('formasPago', [])
-            if formas_pagamento:               
-                for forma in formas_pagamento:
-                    descricao_forma  = forma['descripcion']
-                    codigo_tipo_pgto = str(forma['codigoTipoPago'])
-                    bines = forma.get('bines', [])
+                        cursor.execute("SELECT COUNT(*) FROM PRODUTO_PROMOCOES WHERE CODIGO_PROMOCAO = %s AND CODIGO_BARRAS = %s", (codigo, codigo_barras))
+                        produto_existe = cursor.fetchone()[0]
+                        print_log('Inserindo ou atualizando o produto ' + codigo_barras + ' - ' + nome)
+                        if produto_existe > 0:
+                            # Atualiza produto existente
+                            cursor.execute("""
+                                UPDATE PRODUTO_PROMOCOES
+                                SET NOME = %s, QUANTIDADE = %s, PRECO = %s, DESCONTO = %s, CNPJ_EMPRESA = %s
+                                WHERE CODIGO_PROMOCAO = %s AND CODIGO_BARRAS = %s
+                            """, (nome, quantidade_item, preco, desconto, cnpj, codigo, codigo_barras))
+                        else:
+                            # Insere novo produto
+                            cursor.execute("""
+                                INSERT INTO PRODUTO_PROMOCOES (CODIGO_PROMOCAO, CODIGO_BARRAS, NOME, QUANTIDADE, PRECO, DESCONTO, CNPJ_EMPRESA)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (codigo, codigo_barras, nome, quantidade_item, preco, desconto, cnpj))
+                            
+                # Insere ou atualiza bines da promocao        
+                print_log('Adicionando os bines da promoção')
+                formas_pagamento = promocao['detalles']['condiciones'].get('formasPago', [])
+                if formas_pagamento:               
+                    for forma in formas_pagamento:
+                        descricao_forma  = forma['descripcion']
+                        codigo_tipo_pgto = str(forma['codigoTipoPago'])
+                        bines = forma.get('bines', [])
 
-                    for bin_valor in bines:
-                        cursor.execute("""
-                            SELECT COUNT(*) FROM PROMOCOES_BINES 
-                            WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
-                        """, (codigo, codigo_tipo_pgto, bin_valor))
-                        bin_existe = cursor.fetchone()[0]
+                        for bin_valor in bines:
+                            cursor.execute("""
+                                SELECT COUNT(*) FROM PROMOCOES_BINES 
+                                WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
+                            """, (codigo, codigo_tipo_pgto, bin_valor))
+                            bin_existe = cursor.fetchone()[0]
 
-                        try:
-                            if bin_existe > 0:
-                                print_log(f'Atualizando BIN {bin_valor} da promoção {codigo}')
-                                cursor.execute("""
-                                    UPDATE PROMOCOES_BINES
-                                    SET DESCRICAO = %s
-                                    WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
-                                """, (descricao_forma, codigo, codigo_tipo_pgto, bin_valor))
-                            else:
-                                print_log(f'Inserindo BIN {bin_valor} da promoção {codigo}')
-                                cursor.execute("""
-                                    INSERT INTO PROMOCOES_BINES (CODIGO_TIPO_PGTO, CODIGO_PROMOCAO, DESCRICAO, BIN, CNPJ_EMPRESA)
-                                    VALUES (%s, %s, %s, %s, %s)
-                                """, (codigo_tipo_pgto, codigo, descricao_forma, bin_valor, cnpj))       
-                        except Exception as e:
-                            print_log(f"Erro ao salvar promoções: {e}")       
+                            try:
+                                if bin_existe > 0:
+                                    print_log(f'Atualizando BIN {bin_valor} da promoção {codigo}')
+                                    cursor.execute("""
+                                        UPDATE PROMOCOES_BINES
+                                        SET DESCRICAO = %s
+                                        WHERE CODIGO_PROMOCAO = %s AND CODIGO_TIPO_PGTO = %s AND BIN = %s
+                                    """, (descricao_forma, codigo, codigo_tipo_pgto, bin_valor))
+                                else:
+                                    print_log(f'Inserindo BIN {bin_valor} da promoção {codigo}')
+                                    cursor.execute("""
+                                        INSERT INTO PROMOCOES_BINES (CODIGO_TIPO_PGTO, CODIGO_PROMOCAO, DESCRICAO, BIN, CNPJ_EMPRESA)
+                                        VALUES (%s, %s, %s, %s, %s)
+                                    """, (codigo_tipo_pgto, codigo, descricao_forma, bin_valor, cnpj))       
+                            except Exception as e:
+                                print_log(f"Erro ao salvar promoções: {e}")       
                         
         print_log('Tudo comitado')
         # Confirma as alterações no banco
@@ -419,6 +420,13 @@ def envia_fechamento_vendas_scantech_correcao():
             print_log(f"Enviado fechamento do dia {datetime.datetime.now().strftime('%Y-%m-%d')} da empresa {cnpj}")
         except requests.exceptions.RequestException as e:
             print_log(f"Erro enviando cupom Web Service Scanntech: {e}")
+            
+def efetua_promocoes():
+    promocoes = consulta_promocoes_crm('ACEPTADA')
+    if 'erro' not in promocoes:
+       salva_promocoes(promocoes, int(oEmpresa['CODIGO']),1)
+    else:
+       print("Erro na consulta de promoções:", promocoes['erro'])             
     
 def envia_fechamento_vendas_scantech():
     print_log("Verifica se ainda tem que mandar fechamento hoje", nome_servico)
@@ -529,16 +537,17 @@ def envia_fechamento_vendas_scantech():
 if __name__ == "__main__":
     try:
         print_log('Iniciando serviço scantech', nome_servico)
+
         try:
-            database = parametros.BASEMYSQL = 'dados'   
-            parametros.USERMYSQL = 'maxsuport'         
+            parametros.BASEMYSQL = 'dados'
+            parametros.USERMYSQL = 'maxsuport'
             carregar_configuracoes()
             inicializa_conexao_mysql()
 
             print_log("Pega dados local", nome_servico)
 
             cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-            cur_con.execute(f'SELECT * FROM EMPRESA WHERE ATIVA_INTEGRACAO_SCANTECH = 1')
+            cur_con.execute('SELECT * FROM EMPRESA WHERE ATIVA_INTEGRACAO_SCANTECH = 1')
             obj_empresas = cur_con.fetchall()
             cur_con.close()
 
@@ -550,17 +559,14 @@ if __name__ == "__main__":
                 parametros.URLBASESCANTECH = oEmpresa['URL_BASE_SCANTECH']
                 cnpj = oEmpresa['CNPJ']
 
-                # envia_fechamento_vendas_scantech()
-                
-                #envia_fechamento_vendas_scantech_correcao()
+                if "fechamento" in sys.argv:
+                    envia_fechamento_vendas_scantech()
 
-                envia_vendas_scantech(cnpj)
+                if "vendas" in sys.argv:
+                    envia_vendas_scantech(cnpj)
 
-                # promocoes = consulta_promocoes_crm('ACEPTADA')
-                # if 'erro' not in promocoes:
-                #    salva_promocoes(promocoes, int(oEmpresa['CODIGO']))
-                # else:
-                #    print("Erro na consulta de promoções:", promocoes['erro'])             
+                if "promocoes" in sys.argv:
+                    efetua_promocoes()
 
         except Exception as e:
             if parametros.MYSQL_CONNECTION.is_connected():

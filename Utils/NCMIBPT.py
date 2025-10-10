@@ -12,6 +12,8 @@ import requests
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from credenciais import parametros
 
 logging.basicConfig(handlers=[logging.FileHandler(filename="logibpt.log",
                                                   encoding='utf-8', mode='a+')],
@@ -40,7 +42,7 @@ def ImportaTabelasIBPT():
     print('---Inicia importação de tabelas IBPT---')
     logging.info('---Inicia importação de tabelas IBPT---')
 
-    pasta_arquivos = "Utils/lista_ibpt"
+    pasta_arquivos = os.path.join(parametros.SCRIPT_PATH, "Utils/lista_ibpt")
     arquivos = os.listdir(pasta_arquivos)
 
     for arquivo in arquivos:
@@ -160,7 +162,7 @@ def AtualizaExcelIBPT():
     base_url = "https://www.minf.com.br/baixar.php"
 
     # Pasta destino
-    pasta_destino = "Utils/lista_ibpt"
+    pasta_destino = os.path.join(parametros.SCRIPT_PATH, "Utils/lista_ibpt")
     os.makedirs(pasta_destino, exist_ok=True)
 
     # Buscar HTML da página
