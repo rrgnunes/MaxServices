@@ -323,7 +323,7 @@ def envia_vendas_scantech(CNPJEmpresa):
     cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
     #cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE NM.DATA_EMISSAO BETWEEN DATE_SUB(NOW(), INTERVAL 2 DAY) AND NOW() AND SITUACAO IN ('T', 'O', 'C', 'I') AND CNPJ_EMPRESA = '{cnpj}' AND ENVIADO_SCANTECH IS NULL")
 
-    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE ENVIADO_SCANTECH = 0 AND CNPJ_EMPRESA='{CNPJEmpresa}'")
+    cur_con.execute(f"SELECT * FROM NFCE_MASTER NM WHERE SITUACAO <> 'G' AND ENVIADO_SCANTECH = 0 AND CNPJ_EMPRESA='{CNPJEmpresa}'")
     obj_vendas = cur_con.fetchall()
     cur_con.close()
 
@@ -573,14 +573,19 @@ if __name__ == "__main__":
                 parametros.URLBASESCANTECH = oEmpresa['URL_BASE_SCANTECH']
                 cnpj = oEmpresa['CNPJ']
                 
+                envia_vendas_scantech(cnpj)
+                
                 if "fechamento" in sys.argv:
                     envia_fechamento_vendas_scantech()
+                    print_log("Finalizado de fechamento", nome_servico)
 
                 if "vendas" in sys.argv:
                     envia_vendas_scantech(cnpj)
+                    print_log("Finalizado envio de vendas", nome_servico)
 
                 if "promocoes" in sys.argv:
                     efetua_promocoes()
+                    print_log("Finalizado envio de promocoes", nome_servico)
 
         except Exception as e:
             if parametros.MYSQL_CONNECTION.is_connected():
