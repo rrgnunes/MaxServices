@@ -288,7 +288,8 @@ class Replicador:
                 return None
             
             dados = dict(dados)
-            dados.pop('CNPJ_EMPRESA')
+            if 'CNPJ_EMPRESA' in dados:
+                dados.pop('CNPJ_EMPRESA')
 
             return dados
         except Exception as e:
@@ -335,18 +336,43 @@ class Replicador:
 
     def remover_referencias_repetidas(self):
         
-        for referencia in self._alteracoes:
+        # for referencia in self._alteracoes:
 
-            if referencia not in self._alteracoes_processadas:
-                self._alteracoes_processadas.append(referencia)
+        #     if referencia not in self._alteracoes_processadas:
+        #         self._alteracoes_processadas.append(referencia)
 
-            else:
-                self.delete_referencia_replicador(
-                    referencia.get('TABELA', ''),
-                    referencia.get('ACAO', ''),
-                    referencia.get('CHAVE', ''),
-                    referencia.get('CODIGO_GLOBAL', '')
-                )
+        #     else:
+        #         self.delete_referencia_replicador(
+        #             referencia.get('TABELA', ''),
+        #             referencia.get('ACAO', ''),
+        #             referencia.get('CHAVE', ''),
+        #             referencia.get('CODIGO_GLOBAL', '')
+        #         )
+        # self.commit_conexao()
+
+        ultimas = {}
+        for i, ref in enumerate(self._alteracoes):
+            k = (ref.get('TABELA', ''), ref.get('CHAVE', ''))
+            ultimas[k] = (i, ref)
+
+        redundantes = []
+        for i, ref in enumerate(self._alteracoes):
+            k = (ref.get('TABELA', ''), ref.get('CHAVE', ''))
+
+            if i != ultimas[k][0]:
+                redundantes.append(ref)
+
+        for r in redundantes:
+            self.delete_referencia_replicador(
+                r.get('TABELA', ''),
+                r.get('ACAO', ''),
+                r.get('CHAVE', ''),
+                r.get('CODIGO_GLOBAL', '')
+            )
+
+        finais = [pair[1] for pair in sorted(ultimas.values(), key=lambda x: x[0])]
+        self._alteracoes_processadas = finais
+
         self.commit_conexao()
 
     def marcar_realizado(self, tabela: str, acao: str, valor_chave_primaria: any, codigo_global: int = None, cnpj: str = None):

@@ -128,7 +128,7 @@ class ReplicadorEnvio(Replicador):
                 tabela_referenciada, valor_chave_estrangeira = self.extrair_detalhes_chave_estrangeira(e, dados)
 
                 if tabela_referenciada and valor_chave_estrangeira:
-                    elemento_firebird = self.buscar_elemento_firebird(tabela_referenciada, valor_chave_estrangeira)
+                    elemento_firebird = self.buscar_registro_local(tabela_referenciada, valor_chave_estrangeira)
                     self.insert_registro_em_remoto(tabela_referenciada, elemento_firebird)
                     self.insert_registro_em_remoto(tabela, dados, valor_chave_primaria)
 
@@ -142,7 +142,9 @@ class ReplicadorEnvio(Replicador):
         try:
             cursor = self.conexao_remota.cursor()
             codigo_global = dados['CODIGO_GLOBAL']
-            dados.pop('CODIGO_GLOBAL')
+            if 'CODIGO_GLOBAL' in dados:
+                dados.pop('CODIGO_GLOBAL')
+
             set_clause = ', '.join([f"{coluna} = %s" for coluna in dados.keys()])
             valores = self.tratar_valores(dados)
             cnpj = self.verifica_empresa_local(tabela, dados)
@@ -179,9 +181,9 @@ class ReplicadorEnvio(Replicador):
                 return
 
             if tabela_referenciada and valor_chave_estrangeira:            
-                elemento_firebird = self.buscar_elemento_firebird(tabela_referenciada, valor_chave_estrangeira)
-                self.insert_registro_mysql(tabela_referenciada, elemento_firebird)
-                self.update_registro_mysql(tabela, valor_chave_primaria, dados)
+                elemento_firebird = self.buscar_registro_local(tabela_referenciada, valor_chave_estrangeira)
+                self.insert_registro_em_remotol(tabela_referenciada, elemento_firebird)
+                self.update_registro_em_remoto(tabela, valor_chave_primaria, dados)
 
         finally:
             if cursor:
@@ -201,8 +203,8 @@ class ReplicadorEnvio(Replicador):
                 return
 
             self.logar(f"Delete na tabela {tabela} -> chave: {valor_chave_primaria}\n")
-            sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = {valor_chave_primaria} and CNPJ_EMPRESA={cnpj}"
-            cursor.execute(sql_delete)
+            sql_delete = f"DELETE FROM {tabela} WHERE {chave_primaria} = %s and CNPJ_EMPRESA= %s"
+            cursor.execute(sql_delete, (valor_chave_primaria, cnpj))
 
             self.marcar_realizado(tabela, acao, valor_chave_primaria)
 
@@ -236,8 +238,11 @@ class ReplicadorEnvio(Replicador):
                 self.delete_referencia_replicador(tabela, acao, chave)
                 continue
 
+            if acao == 'D' and registro_local:
+                acao == 'U'
+
             if registro_local is None:
-                cnpj = self.empresas[0]['CODIGO']
+                cnpj = self.empresas[0]['CNPJ']
                 registro_remoto = self.buscar_registro_remoto(tabela, chave, cnpj)
             
             else:

@@ -34,7 +34,7 @@ if __name__ == '__main__':
             rep = ReplicadorEnvio(params.FIREBIRD_CONNECTION, params.MYSQL_CONNECTION_REPLICADOR)
             rep.nome_servico = nome_servico
             rep.replicar_alteracoes()
-            
+
         except Exception as e:
             print_log(f'Não foi possível executar serviço -> motivo: [{e.__class__.__name__}] : {e}', nome_servico)
         finally:

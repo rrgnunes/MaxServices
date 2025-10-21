@@ -32,4 +32,7 @@ if __name__ == '__main__' :
     inicializa_conexao_firebird()
     inicializa_conexao_mysql_replicador()
 
-    receber()
+    rep = ReplicadorEnvio(params.FIREBIRD_CONNECTION, params.MYSQL_CONNECTION_REPLICADOR)
+    rep.nome_servico = 'teste_replicador'
+    rep.buscar_alteracoes_local()
+    rep.remover_referencias_repetidas()
