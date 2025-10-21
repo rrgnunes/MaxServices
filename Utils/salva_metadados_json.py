@@ -199,4 +199,4 @@ def salva_metadados_mysql(banco):
 
 if __name__ == '__main__':
 
-    salva_metadados_mysql()
+    salvar_json_metadados_master()
