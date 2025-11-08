@@ -1,3 +1,4 @@
+import fdb
 from model.model_replicador import Replicador
 
 class ReplicadorEnvio(Replicador):
@@ -80,9 +81,12 @@ class ReplicadorEnvio(Replicador):
 
         try:
             campo_chave_primaria = self.buscar_nome_chave_primaria(tabela)
-            cursor = self.conexao_local.cursor()
+            transation = self.conexao_local.trans()
+            cursor = transation.cursor()
+            # cursor = self.conexao_local.cursor()
             sql_update_retorno = f'UPDATE {tabela} SET CODIGO_GLOBAL = {codigo_retornado} WHERE {campo_chave_primaria} = {valor}'
             cursor.execute(sql_update_retorno)
+            transation.commit()
             self.logar(f'Retornou codigo global: {codigo_retornado}\n')
 
         except Exception as e:
@@ -94,7 +98,6 @@ class ReplicadorEnvio(Replicador):
 
     def insert_registro_em_remoto(self, tabela: str, acao: str, dados: dict, valor_chave_primaria: any):
         cursor = None
-
         try:
             cursor = self.conexao_remota.cursor()
             dados.pop('CODIGO_GLOBAL')

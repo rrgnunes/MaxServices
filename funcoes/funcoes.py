@@ -110,7 +110,7 @@ def inicializa_conexao_firebird():
                 database=parametros.DATABASEFB,
                 user=parametros.USERFB,
                 password=parametros.PASSFB,
-                port=int(parametros.PORTFB)       
+                port=int(parametros.PORTFB)
             )
         print_log(f"Conexão com Firebird estabelecida com sucesso. Host: {parametros.HOSTFB}, Banco: {parametros.DATABASEFB}")
     except fdb.fbcore.DatabaseError as err:
@@ -135,8 +135,8 @@ def atualizar_conexoes_firebird():
             continue
         caminho_gbak_firebird_maxsuport = dados['caminho_gbak_firebird_maxsuport']
         parametros.PATHDLL = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
-        parametros.DATABASEFB = dados['caminho_base_dados_maxsuport'] 
-        parametros.PORTFB = dados['porta_firebird_maxsuport'] 
+        parametros.DATABASEFB = dados['caminho_base_dados_maxsuport']
+        parametros.PORTFB = dados['porta_firebird_maxsuport']
         inicializa_conexao_firebird()
 
 def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):
@@ -1825,6 +1825,7 @@ def gerar_diferancas_metas_mysql(arquivo_origem, arquivo_destino, tipo):
         "CODIGO_GLOBAL" : "INT",
         "CNPJ_EMPRESA" : "VARCHAR(20)"
     }
+
     sqls_drop = []
     sqls_create = []
     sqls_alter = []
@@ -1919,7 +1920,9 @@ def gerar_diferancas_metas_mysql(arquivo_origem, arquivo_destino, tipo):
                         sqls_alter.append(sql_alter_default)
                     
                     if sql_comment:
-                        sqls_comment.append(sql_comment)                
+                        sqls_comment.append(sql_comment)
+    
+    return sqls_create, sqls_drop, sqls_alter, sqls_grant, sqls_comment
 
 def executar_scripts_meta(scritps: dict, connection:fdb.Connection):
     tipos = ['create', 'drop', 'alter', 'comment', 'grant']
