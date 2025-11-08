@@ -261,10 +261,16 @@ def envia_vendas_scantech_codigo_global(codigo_global, prefixo, foi_cancelado):
     # Lista de detalhes    
     detalles = []
     for detalhe in obj_detalhes:
-        print_log(f"Produto {detalhe['DESCRICAO']}", nome_servico)            
-        codigo_barra = detalhe['COD_BARRA']
-        if not len(codigo_barra) > 7:
+        print_log(f"Produto {detalhe['DESCRICAO']}", nome_servico)
+
+        if str(detalhe['COD_BARRA']).startswith('2'):
             codigo_barra = detalhe['CODIGO']
+        else:
+            codigo_barra = detalhe['COD_BARRA']
+
+        if not len(str(codigo_barra)) > 7:
+            codigo_barra = detalhe['CODIGO']
+
         detalles.append({
             "importe": detalhe['VALOR_ITEM'] - detalhe['VDESCONTO'],
             "recargo": 0,
@@ -351,17 +357,19 @@ def envia_fechamento_vendas_scantech_correcao():
         FROM NFCE_MASTER NM 
         WHERE SITUACAO IN ('T', 'O','C') 
             AND CNPJ_EMPRESA = '19775656000104' 
-            AND CODIGO_GLOBAL > 457 and CODIGO_GLOBAL <=  486 """
+            AND ENVIADO_SCANTECH = 1
+            AND NM.NUMERO >= 42086 and NM.NUMERO <= 42140
+ """
         
 
-        query_vendas_canceladas = f""" SELECT 
-            SUM(TOTAL) as vendas_canceladas, 
-            COUNT(CODIGO) as qtd_vendas_canceladas 
-        FROM NFCE_MASTER NM 
-        WHERE SITUACAO IN ('C') 
-            AND CNPJ_EMPRESA = '19775656000104' 
-            AND CODIGO_GLOBAL > 457 and CODIGO_GLOBAL <=  486
-        """
+        # query_vendas_canceladas = f""" SELECT 
+        #     SUM(TOTAL) as vendas_canceladas, 
+        #     COUNT(CODIGO) as qtd_vendas_canceladas 
+        # FROM NFCE_MASTER NM 
+        # WHERE SITUACAO IN ('C') 
+        #     AND CNPJ_EMPRESA = '19775656000104' 
+        #     AND CODIGO_GLOBAL > 457 and CODIGO_GLOBAL <=  486
+        # """
         
 
         # Executar consultas
@@ -370,35 +378,35 @@ def envia_fechamento_vendas_scantech_correcao():
         result_vendas_liquidas = cur_con.fetchone()
         cur_con.close()    
         
-        cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
-        cur_con.execute(query_vendas_canceladas)
-        result_vendas_canceladas = cur_con.fetchone()
-        cur_con.close()    
+        # cur_con = parametros.MYSQL_CONNECTION.cursor(dictionary=True)
+        # cur_con.execute(query_vendas_canceladas)
+        # result_vendas_canceladas = cur_con.fetchone()
+        # cur_con.close()    
         
         valor_vendas_liquidas = result_vendas_liquidas["vendas_liquida"] or 0
-        valor_vendas_canceladas = result_vendas_canceladas["vendas_canceladas"] or 0
+        # valor_vendas_canceladas = result_vendas_canceladas["vendas_canceladas"] or 0
         
-        if valor_vendas_liquidas == 0 and valor_vendas_canceladas ==0:
+        if valor_vendas_liquidas == 0: #and valor_vendas_canceladas ==0:
             continue
 
         # Construir o JSON
-        # dados_principais = {
-        #     "montoVentaLiquida": valor_vendas_liquidas - valor_vendas_canceladas or 0,
-        #     "montoCancelaciones": valor_vendas_canceladas or 0,
-        #     "cantidadMovimientos": result_vendas_liquidas["qtd_vendas_liquida"] or 0,
-        #     "fechaVentas": "2025-02-21", #datetime.datetime.now().strftime("%Y-%m-%d"),
-        #     "cantidadCancelaciones": result_vendas_canceladas["qtd_vendas_canceladas"] or 0
-        # }    
-        
         dados_principais = {
-            "montoVentaLiquida": 0,
-            "montoCancelaciones":  0,
-            "cantidadMovimientos": 0,
-            "fechaVentas": "2025-02-25", #datetime.datetime.now().strftime("%Y-%m-%d"),
+            "montoVentaLiquida": valor_vendas_liquidas ,
+            "montoCancelaciones": 0,
+            "cantidadMovimientos": result_vendas_liquidas["qtd_vendas_liquida"] or 0,
+            "fechaVentas": "2025-10-27", #datetime.datetime.now().strftime("%Y-%m-%d"),
             "cantidadCancelaciones": 0
-        }            
+        }    
+        
+        # dados_principais = {
+        #     "montoVentaLiquida": 0,
+        #     "montoCancelaciones":  0,
+        #     "cantidadMovimientos": 0,
+        #     "fechaVentas": "2025-02-25", #datetime.datetime.now().strftime("%Y-%m-%d"),
+        #     "cantidadCancelaciones": 0
+        # }            
 
-        url = f"http://br.homo.apipdv.scanntech.com/api-minoristas/api/v2/minoristas/{parametros.IDEMPRESASCANTECH}/locales/{parametros.IDLOCALSCANTECH}/cajas/3/cierresDiarios"
+        url = f"http://br.homo.apipdv.scanntech.com/api-minoristas/api/v2/minoristas/{parametros.IDEMPRESASCANTECH}/locales/{parametros.IDLOCALSCANTECH}/cajas/18/cierresDiarios"
 
         autorizacao = converte_base_64()
         if autorizacao != "Erro":
@@ -476,8 +484,8 @@ def envia_fechamento_vendas_scantech():
             AND CNPJ_EMPRESA = '{cnpj}' 
             AND ENVIADO_SCANTECH = 1
             AND FK_CAIXA = {caixa_aberto['CODIGO']}
-            AND CODIGO_GLOBAL >= 22226 """
-        
+            AND CODIGO_GLOBAL >= 95319 """
+ 
 
         query_vendas_canceladas = f""" SELECT 
             SUM(TOTAL) as vendas_canceladas, 
@@ -488,7 +496,7 @@ def envia_fechamento_vendas_scantech():
             AND CNPJ_EMPRESA = '{cnpj}' 
             AND ENVIADO_SCANTECH = 1
             AND FK_CAIXA = {caixa_aberto['CODIGO']}  
-            AND CODIGO_GLOBAL >= 22226
+            AND CODIGO_GLOBAL >= 95319
         """
 
         # Executar consultas
@@ -573,7 +581,7 @@ if __name__ == "__main__":
                 parametros.URLBASESCANTECH = oEmpresa['URL_BASE_SCANTECH']
                 cnpj = oEmpresa['CNPJ']
                 
-                envia_vendas_scantech(cnpj)
+                envia_fechamento_vendas_scantech()
                 
                 if "fechamento" in sys.argv:
                     envia_fechamento_vendas_scantech()
@@ -586,6 +594,11 @@ if __name__ == "__main__":
                 if "promocoes" in sys.argv:
                     efetua_promocoes()
                     print_log("Finalizado envio de promocoes", nome_servico)
+                    
+                if "correcao" in sys.argv:
+                    envia_fechamento_vendas_scantech_correcao()
+                    print_log("Finalizado correcao de fechamento", nome_servico)                    
+                    
 
         except Exception as e:
             if parametros.MYSQL_CONNECTION.is_connected():
