@@ -61,7 +61,7 @@ def start_server():
 if __name__ == "__main__":
     host = get_local_ip()  # Obtém o IP local da máquina
     if host == '192.168.10.115':
-        parametros.HOSTFB = '192.168.10.242'
+        parametros.HOSTFB = '192.168.10.236'
 
     parametros.PATHDLL = verifica_dll_firebird()
     inicializa_conexao_firebird()

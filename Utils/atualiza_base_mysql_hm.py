@@ -15,10 +15,10 @@ def atualiza_banco_mysql():
     try:
         print_log('Verificando se precisa atualizar banco remoto', nome_script)
         try:
-            fdb.load_api('/home/MaxServices/libs/libfbclient.so.2.5.9')
-            server_origem = "maxsuportsistemas.com"
+            # fdb.load_api('/home/MaxServices/libs/libfbclient.so.2.5.9')
+            server_origem = "localhost"
             port_origem = 3050
-            path_origem = "/home/base/dados.fdb"
+            path_origem = "C:\\MaxSuport\\Dados\\Dados.fdb"
             dsn_origem = f"{server_origem}/{port_origem}:{path_origem}"
             conexao_origem_fb = fdb.connect(dsn=dsn_origem, user='SYSDBA', password='masterkey')
             print_log('Conexao firebird estabelecida com sucesso', nome_script)
@@ -26,6 +26,7 @@ def atualiza_banco_mysql():
             print_log(f'Nao foi possivel conectar em banco origem firebird: {a}', nome_script)
 
         metadados_origem = extrair_metadados(conexao_origem_fb)
+        parametros.BASEMYSQL_REP = 'DADOSHM'
         inicializa_conexao_mysql_replicador()
         conexao_destino_mysql = parametros.MYSQL_CONNECTION_REPLICADOR
         metadados_destino = extrair_metadados_mysql(conexao_destino_mysql)

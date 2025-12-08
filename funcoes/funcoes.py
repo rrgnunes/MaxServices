@@ -1037,10 +1037,17 @@ def caminho_bd():
         config = configparser.ConfigParser()
         config.read(caminho_ini)
         caminho_banco_dados = config.get('BD', 'path')
-        ip_banco_dados = config.get('BD', 'ip')        
-    except:
+        ip_banco_dados = config.get('BD', 'ip')
+        homologacao = '0'
+
+        if config.has_section('manutencao'):
+            if config.has_option('manutencao', 'homologacao'):
+                homologacao = config.get('manutencao', 'homologacao')
+
+    except Exception as e:
+        print_log(f'Não foi possível pegar as informações do banco.ini -> motivo: {e}')
         return []
-    return caminho_banco_dados, ip_banco_dados 
+    return caminho_banco_dados, ip_banco_dados, homologacao
 
 def extrair_metadados_tabelas_firebird(conexao: fdb.Connection):
     sql = """ select

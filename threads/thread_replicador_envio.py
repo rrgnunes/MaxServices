@@ -25,8 +25,12 @@ if __name__ == '__main__':
     if pode_executar(nome_servico):
         criar_bloqueio(nome_servico)
         try:
+            banco_ini_info = caminho_bd()
             params.PATHDLL = verifica_dll_firebird()
-            params.DATABASEFB = caminho_bd()[0]
+            params.DATABASEFB = banco_ini_info[0]
+
+            if banco_ini_info[2] == '1':
+                params.BASEMYSQL_REP = 'DADOSHM'
 
             inicializa_conexao_firebird()
             inicializa_conexao_mysql_replicador()

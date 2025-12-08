@@ -27,6 +27,7 @@ def backup():
         conn = parametros.MYSQL_CONNECTION
 
         print_log("Pega dados local", nome_script)
+        banco_ini_info = caminho_bd()
         bases_backupedas = []
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
 
@@ -180,6 +181,9 @@ def backup():
                 os.remove(arquivo_backup)
                 if arquivo_bck_existe:
                     os.remove(arquivo_bd)
+
+                if (banco_ini_info[2] == '1') and (cnpj == '19775656000104'):
+                    continue
 
                 # Envia arquivo para Dropbox
                 pasta_sistema = 'maxsuport' if sistema_em_uso == '1' else 'gfil'
