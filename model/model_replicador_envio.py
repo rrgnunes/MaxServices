@@ -106,8 +106,13 @@ class ReplicadorEnvio(Replicador):
 
             if cnpj:
                 colunas = ', '.join(dados.keys())
-                colunas += ', CNPJ_EMPRESA'
-                placeholders = ', '.join(["%s"] * (len(dados) + 1))
+                qtd_colunas_adicionadas = 0
+                
+                if 'CNPJ_EMPRESA' not in colunas:
+                    colunas += ', CNPJ_EMPRESA'
+                    qtd_colunas_adicionadas +=1 
+
+                placeholders = ', '.join(["%s"] * (len(dados) + qtd_colunas_adicionadas))
                 valores.append(cnpj)
 
             else:
@@ -273,7 +278,7 @@ class ReplicadorEnvio(Replicador):
         self.remover_referencias_realizadas()
         self.commit_conexao(True)
         
-        self.logar('Finalizado envio dos dados...')
+        self.logar('Finalizado envio dos dados...\n')
 
         self.conexao_local.close()
         self.conexao_remota.close()

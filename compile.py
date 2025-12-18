@@ -8,6 +8,7 @@ pasta_funcoes = os.path.join(pasta_raiz, 'funcoes')
 pasta_threads = os.path.join(pasta_raiz, 'threads')
 pasta_credenciais = os.path.join(pasta_raiz, 'credenciais')
 pasta_model = os.path.join(pasta_raiz, 'model')
+pasta_thread_zap_automato = os.path.join(pasta_raiz, 'data', 'thread_zap_automato')
 
 pasta_final = os.path.join(pasta_raiz, 'SERVER')
 
@@ -32,7 +33,10 @@ def compilar():
     copiar_arquivos_compilados(pasta_threads)
 
     verificar_e_compilar_arquivos(pasta_model)
-    copiar_arquivos_compilados(pasta_model)    
+    copiar_arquivos_compilados(pasta_model)
+
+    verificar_e_compilar_arquivos(pasta_thread_zap_automato)
+    copiar_arquivos_compilados(pasta_thread_zap_automato)
 
     copiar_dependencias()
 
@@ -54,11 +58,13 @@ def verificar_e_compilar_arquivos(item):
         print(f'Compilando o arquivo: {item}')
         py_compile.compile(item)
 
-def copiar_arquivos_compilados(pasta_origem):
+def copiar_arquivos_compilados(pasta_origem: str):
     print('Copiando arquivos compilados para pasta de destino.')
     pasta_cache = os.path.join(pasta_origem, '__pycache__')
     arquivos_compilados = os.listdir(pasta_cache)
-    pasta_destino = criar_pasta_destino(os.path.basename(pasta_origem))
+    pastas = pasta_origem.split('\\')[3:]
+    pasta_base = '\\'.join(pasta for pasta in pastas)
+    pasta_destino = criar_pasta_destino(pasta_base)
 
     for arquivo in arquivos_compilados:
         if not '__init__' in arquivo:

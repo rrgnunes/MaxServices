@@ -364,7 +364,8 @@ def inicializa_conexao_mysql_replicador():
                 user=parametros.USERMYSQL,
                 password=parametros.PASSMYSQL,
                 database=parametros.BASEMYSQL_REP,
-                auth_plugin='mysql_native_password'
+                auth_plugin='mysql_native_password',
+                connection_timeout=15
             )
         print_log(f"Conexão com MySQL estabelecida com sucesso. Host: {parametros.HOSTMYSQL_REP}, Banco: {parametros.BASEMYSQL_REP}")
     except mysql.connector.Error as err:
@@ -2167,3 +2168,53 @@ def consultar_cobranca(txid):
             return None, None
     else:
         return None, None
+    
+def obter_dados_ini(arquivo_ini: any = None):
+
+    if not arquivo_ini:
+        return {}
+    
+    if not os.path.exists(arquivo_ini):
+        return {}
+
+    caminho_banco = ''
+    ip = 'localhost'
+    porta = 3050
+    servidor = False
+    atualiza_banco = False
+    homologacao = False
+
+    config = configparser.ConfigParser()
+    config.read(arquivo_ini)
+    
+    if config.has_section('BD'):
+
+        if config.has_option('BD', 'path'):
+            caminho_banco =  config.get('BD', 'path')
+
+        if config.has_option('BD', 'ip'):
+            ip = config.get('BD', 'ip')
+
+    if config.has_section('adicionais'):
+
+        if config.has_option('adicionais', 'servidor'):
+            servidor = config.getboolean('adicionais', 'servidor')
+
+    if config.has_section('manutencao'):
+
+        if config.has_option('manutencao', 'atualizabanco'):
+            atualiza_banco = config.getboolean('manutencao', 'atualizabanco')
+
+        if config.has_option('manutencao', 'homologacao'):
+            homologacao = config.getboolean('manutencao', 'homologacao')
+
+    dados = {
+        "caminho_banco" : caminho_banco,
+        "ip" : ip,
+        "porta" : porta,
+        "servidor" : servidor,
+        "atualiza_banco" : atualiza_banco,
+        "homologacao" : homologacao
+    }
+
+    return dados

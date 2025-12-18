@@ -308,8 +308,8 @@ def trigger(conn):
 
 def column(conn):
     try:
-        column = 'CNPJ_EMPRESA'
-        column_type = 'varchar(20)'
+        column = 'CODIGO_GLOBAL'
+        column_type = 'INT'
         params = ''
         tables = get_tables_without_column(conn, "DADOSHM", column)
 
@@ -328,7 +328,7 @@ if __name__ == '__main__':
 
     # trigger(conn)
 
-    # column(conn)
+    column(conn)
 
     # drop_triggers(conn)
 
