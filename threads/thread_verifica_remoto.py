@@ -25,6 +25,12 @@ def iterar_cnpjs(cnpjs: list, con: fdb.Connection, sistema: str = 'max'):
     for result in results:
         if result[0] not in cnpjs:
             cnpjs.append(result[0])
+            datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-4)))
+            if sistema == 'max':
+                cursorupdate = con.cursor()  
+                cursorupdate.execute(f"update empresa set ULTIMA_EXEC_SERVICO = '{datahoraagora}' where cnpj in ('{result[0]}')")     
+                cursorupdate.close()   
+                con.commit()    
 
     cursor.close()
 
