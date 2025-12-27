@@ -12,6 +12,7 @@ from funcoes.funcoes import (
     print_log,
     pode_executar,
     criar_bloqueio,
+    obter_dados_ini,
     remover_bloqueio,
     comparar_metadados,
     executar_scripts_meta,
@@ -24,7 +25,13 @@ from funcoes.funcoes import (
 def atualiza_banco():
     pasta_metadados_local = os.path.join(parametros.SCRIPT_PATH, 'data', 'metadados_local')
     pasta_metadados_remoto = os.path.join(parametros.SCRIPT_PATH, 'data','metadados_remoto')
-    buscar_estrutura_remota()
+
+    caminho_ini_execucao = os.path.join(parametros.SCRIPT_PATH.lower().replace('server', ''), 'banco.ini')
+    banco_ini_info = obter_dados_ini(caminho_ini_execucao)    
+    homologacao = banco_ini_info['homologacao']
+    print_log(f'Execução em hambiente de homologacao: {homologacao}', nome_script)
+
+    buscar_estrutura_remota(homologacao)
     carrega_arquivo_config()
     try:
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
@@ -38,9 +45,8 @@ def atualiza_banco():
             if not os.path.exists(caminho_base_dados_maxsuport):
                 continue
 
-            caminho_sistema = caminho_base_dados_maxsuport.lower().replace('\\dados\\dados.fdb', '')
-            caminho_ini = os.path.join(caminho_sistema, 'banco.ini')
-        
+            caminho_sistema = caminho_base_dados_maxsuport.lower().split('\\')
+            caminho_ini = os.path.join(f'{caminho_sistema[0]}\\{caminho_sistema[1]}', 'banco.ini')
 
             config = configparser.ConfigParser()
             config.read(caminho_ini)

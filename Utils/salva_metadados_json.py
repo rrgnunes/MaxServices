@@ -81,7 +81,7 @@ def salvar_json_metadados_master():
     except Exception as e:
         print_log(f'Erro ao salvar JSONs -> motivo: {e.__class__.__name__}-{e}')
 
-def salva_json_metadados_local(caminho_base_dados:str):
+def salva_json_metadados_local(caminho_base_dados:str, caminho_savar_estrutura:str = None):
 
     try:
         
@@ -94,7 +94,11 @@ def salva_json_metadados_local(caminho_base_dados:str):
         print_log(f'Nao foi possivel conectar ao banco de dados -> motivo: {e}', 'salva_metadados_json')
 
     try:
-        pasta_metadados = os.path.join(parametros.SCRIPT_PATH, 'data', 'metadados_local')
+        if not caminho_savar_estrutura:
+            pasta_metadados = os.path.join(parametros.SCRIPT_PATH, 'data', 'metadados_local')
+        else:
+            pasta_metadados = os.path.join(caminho_savar_estrutura, 'data', 'metadados_local')
+            
         if not os.path.exists(pasta_metadados):
             os.makedirs(pasta_metadados)
 

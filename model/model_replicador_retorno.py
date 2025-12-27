@@ -186,7 +186,7 @@ class ReplicadorRetorno(Replicador):
         self.commit_conexao(True)
 
         self.remover_referencias_realizadas()
-        self.logar('Finalizado recebimento de dados...')
+        self.logar('Finalizado recebimento de dados...\n')
         
         self.conexao_remota.close()
         self.conexao_local.close()

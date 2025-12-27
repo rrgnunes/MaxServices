@@ -13,13 +13,12 @@ declare variable TIPOCOLUMN varchar(50);
 BEGIN
     FOR SELECT RDB$RELATION_NAME
         FROM RDB$RELATIONS
-        WHERE RDB$SYSTEM_FLAG = 0 
+        WHERE RDB$SYSTEM_FLAG = 0
           AND RDB$RELATION_NAME != 'REPLICADOR'
         INTO :TABLENAME
     DO
     BEGIN
         UPPERTABLENAME = TRIM(UPPER(TABLENAME));
-
         FOR SELECT TRIM(RDB$FIELD_NAME)
             FROM RDB$INDEX_SEGMENTS
             WHERE RDB$INDEX_NAME = (
@@ -75,18 +74,24 @@ BEGIN
                 IF (TIPOCOLUMN = 'INTEGER' OR (TIPOCOLUMN = 'SMALLINT') OR(TIPOCOLUMN = 'BIGINT')) THEN
                 BEGIN
                     GENERATORNAME    = 'GEN_' || UPPERTABLENAME || '_ID';
+                    if (char_length(GENERATORNAME) > 30) then
+                    begin
+                     upperTableName = substring(trim(upperTableName) from 1 for 20);
+                     GENERATORNAME    = 'GEN_' || UPPERTABLENAME || '_ID';
+                     upperTableName = trim(upper(tableName));
+                    end
                     GENERATOREXISTS  = 0;
-                    
-                    SELECT COUNT(*)
+
+                    SELECT first 1 count(*)
                     FROM RDB$GENERATORS
                     WHERE RDB$GENERATOR_NAME = :GENERATORNAME
                     INTO :GENERATOREXISTS;
-                    
+
                     IF (GENERATOREXISTS = 0) THEN
                     BEGIN
                         SQLGENERATORTEXT  = 'CREATE SEQUENCE ' || GENERATORNAME || ';';
                         EXECUTE STATEMENT :SQLGENERATORTEXT;
-                    END 
+                    END
                 END
         END
     END
@@ -96,5 +101,6 @@ SET TERM ; ^
 
 /* Existing privileges on this procedure */
 
-GRANT EXECUTE ON PROCEDURE CREATE_TRIGGERS_GENERATOR TO MAXSUPORT;
 GRANT EXECUTE ON PROCEDURE CREATE_TRIGGERS_GENERATOR TO MAXSERVICES;
+GRANT EXECUTE ON PROCEDURE CREATE_TRIGGERS_GENERATOR TO MAXSUPORT;
+GRANT EXECUTE ON PROCEDURE CREATE_TRIGGERS_GENERATOR TO SYSDBA;
