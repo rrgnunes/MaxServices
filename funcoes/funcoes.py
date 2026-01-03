@@ -1154,9 +1154,6 @@ def extrair_metadados_tabelas_firebird(conexao: fdb.Connection):
 
             if not tabela in metadados:
                 metadados[tabela] = {}
-
-            if isinstance(valor_padrao, str):
-                valor_padrao = valor_padrao.replace("'", "")
                 
             metadados[tabela][campo] = {
                                         'TIPO': tipo_campo,
@@ -1432,14 +1429,15 @@ def extrair_metadados_indices(conn: fdb.Connection):
 def extrair_metadados_tabelas_mysql(conexao):
     cursor = None
     select_sql = '''select 
-                        c.TABLE_NAME as TABELA,
-                        c.COLUMN_NAME as COLUNA,
-                        c.COLUMN_TYPE as TIPO,
-                        c.IS_NULLABLE as NULO,
-                        c.COLUMN_DEFAULT as VALOR_PADRAO,
+                        UPPER(c.TABLE_NAME) as TABELA,
+                        UPPER(c.COLUMN_NAME) as COLUNA,
+                        UPPER(c.COLUMN_TYPE) as TIPO,
+                        UPPER(c.IS_NULLABLE) as NULO,
+                        UPPER(c.COLUMN_DEFAULT) as VALOR_PADRAO,
                         c.COLUMN_COMMENT as COMENTARIO,
-                        c.CHARACTER_SET_NAME as CHARSET,
-                        c.COLLATION_NAME as COLLATION
+                        UPPER(c.CHARACTER_SET_NAME) as CHARSET,
+                        UPPER(c.COLLATION_NAME) as COLLATION,
+                        upper(c.EXTRA) as EXTRA
                     from 
                         information_schema.`COLUMNS` c
                     where c.TABLE_SCHEMA = database()'''
@@ -1459,14 +1457,40 @@ def extrair_metadados_tabelas_mysql(conexao):
                 metadados[registro['TABELA']][registro['COLUNA']] = {}
 
             if registro['VALOR_PADRAO']:
-                try:
-                    registro['VALOR_PADRAO'] = str(int(registro['VALOR_PADRAO']))
-                except Exception as e:
-                    if 'invalid literal for int() with base 10' in str(e):
-                        try:
-                            registro['VALOR_PADRAO'] = str(int(float(registro['VALOR_PADRAO'])))
-                        except Exception as er:
-                            ...
+
+                if 'CURDATE()' in registro['VALOR_PADRAO']:
+                    registro['VALOR_PADRAO'] = 'CURRENT_DATE'
+                elif 'NOW()' in registro['VALOR_PADRAO']:
+                    registro['VALOR_PADRAO'] = 'CURRENT_TIMESTAMP'
+
+                if 'DECIMAL' in registro['TIPO']:
+                    registro['VALOR_PADRAO'] = str(int(float(registro['VALOR_PADRAO'])))
+
+                elif 'VARCHAR' in registro['TIPO']:
+                    if registro['VALOR_PADRAO'] == '':
+                        registro['VALOR_PADRAO'] = "''"
+
+                    registro['VALOR_PADRAO'] = f"'{registro['VALOR_PADRAO']}'"
+
+                elif 'CHAR' in registro['TIPO']:
+                    if registro['VALOR_PADRAO'] == '':
+                        registro['VALOR_PADRAO'] = "''"
+                        
+                    registro['VALOR_PADRAO'] = f"'{registro['VALOR_PADRAO']}'"
+
+                # try:
+                #     registro['VALOR_PADRAO'] = str(int(registro['VALOR_PADRAO']))
+                # except Exception as e:
+                #     if 'invalid literal for int() with base 10' in str(e):
+                #         try:
+                #             registro['VALOR_PADRAO'] = str(int(float(registro['VALOR_PADRAO'])))
+                #         except Exception as er:
+                #             valor_padrao = registro['VALOR_PADRAO']
+                #             registro['VALOR_PADRAO'] = f"'{valor_padrao}'"
+
+            elif not registro['VALOR_PADRAO'] == None:
+                registro['VALOR_PADRAO'] = "''" if registro['VALOR_PADRAO'] == '' else registro['VALOR_PADRAO']
+
             
             if not registro['COMENTARIO']:
                 registro['COMENTARIO'] = None
@@ -1477,12 +1501,52 @@ def extrair_metadados_tabelas_mysql(conexao):
                             'VALOR_PADRAO': registro['VALOR_PADRAO'],
                             'DESCRICAO': registro['COMENTARIO'],
                             'CHARSET': registro['CHARSET'],
-                            'COLLATION': registro['COLLATION']
+                            'COLLATION': registro['COLLATION'],
+                            'EXTRA': registro['EXTRA']
                             }
     
     except Exception as e:
         print_log(f'Erro ao extrair metadados -> motivo: {e}')
     
+    finally:
+        if cursor:
+            cursor.close()
+
+    return metadados
+
+def extrair_metadados_chaves_primarias_mysql(conn: mysql.connector.MySQLConnection):
+
+    sql_select = """SELECT 
+                TABLE_SCHEMA, 
+                TABLE_NAME, 
+                COLUMN_NAME, 
+                CONSTRAINT_NAME 
+            FROM 
+                information_schema.KEY_COLUMN_USAGE k
+            WHERE 
+                k.TABLE_SCHEMA = database();"""
+    
+    cursor = None
+    metadados = {}
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(sql_select)
+        registros = cursor.fetchall()
+        for registro in registros:
+            tabela = registro['TABLE_NAME']
+            coluna = registro['COLUMN_NAME']
+            constraint = registro['CONSTRAINT_NAME']
+
+            if not tabela in metadados:
+                metadados[tabela] = {}
+
+            if not coluna in metadados[tabela]:
+                metadados[tabela][coluna] = []
+
+            metadados[tabela][coluna].append(constraint)
+
+    except Exception as e:
+        print_log(f'Erro ao extrair metadados das chaves -> motivo: {e}')
     finally:
         if cursor:
             cursor.close()
@@ -1510,7 +1574,7 @@ def configurar_pos_printer(modulo):
     return row[0]
 
 
-def buscar_estrutura_remota(homologacao, nome_servico = 'thread_atualiza_bancoc'):
+def buscar_estrutura_remota(homologacao = None, nome_servico = 'thread_atualiza_bancoc'):
     print_log('Buscando dados da estrutura master...', nome_servico)
 
     if homologacao:
@@ -1539,9 +1603,9 @@ def buscar_estrutura_remota(homologacao, nome_servico = 'thread_atualiza_bancoc'
             print_log(f'Falha ao buscar {arquivo}: ' + str(response.status_code), nome_servico)
             
 
-def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str):
+def comparar_metadados(caminho_meta_origem: str, caminho_meta_destino: str, troca_de_versao: bool = False):
     arquivos_origem = os.listdir(caminho_meta_origem)
-    arquivos_local = os.listdir(caminho_meta_local)
+    arquivos_local = os.listdir(caminho_meta_destino)
     scripts = {"create": [], "drop": [], "alter": [], "comment": [], "grant": []}
 
     for arquivo in arquivos_origem:
@@ -1549,7 +1613,7 @@ def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str):
 
         if arquivo in arquivos_local:
             origem = os.path.join(caminho_meta_origem, arquivo)
-            destino = os.path.join(caminho_meta_local, arquivo)
+            destino = os.path.join(caminho_meta_destino, arquivo)
 
             if arquivo == 'banco.json':
                 diferencas = gerar_diferancas_metas(origem, destino, 'tabelas')
@@ -1564,7 +1628,7 @@ def comparar_metadados(caminho_meta_origem: str, caminho_meta_local: str):
                 scripts['alter'].extend(diferencas[2])
                 scripts['grant'].extend(diferencas[4])
 
-            elif arquivo == 'triggers.json':
+            elif (arquivo == 'triggers.json') and (not troca_de_versao):
                 diferencas = gerar_diferancas_metas(origem, destino, 'triggers')
                 scripts['create'].extend(diferencas[1])
                 scripts['alter'].extend(diferencas[2])
@@ -1747,10 +1811,6 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
                     if metadados_origem[tabela][pk].sort() != metadados_destino[tabela][pk].sort():
                         sql_drop = f'ALTER TABLE {tabela} DROP CONSTRAINT {pk};'
                         sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"
-                        
-                    # elif chaves not in metadados_destino[tabela][pk]:
-                    #     sql_drop = f'ALTER TABLE {tabela} DROP CONSTRAINT {pk};'
-                    #     sql_alter = f"ALTER TABLE {tabela} ADD CONSTRAINT {pk} PRIMARY KEY ({chaves});"
 
                 if sql_alter:
                     sqls_alter.append(sql_alter)
@@ -1852,9 +1912,7 @@ def comparar_metadados_mysql(pasta_origem: str, pasta_destino: str):
             if arquivo == 'banco.json':
                 diferencas = gerar_diferancas_metas_mysql(origem, destino, 'tabelas')
                 scripts['create'].extend(diferencas[0])
-                scripts['drop'].extend(diferencas[1])
-                scripts['alter'].extend(diferencas[2])
-                scripts['comment'].extend(diferencas[3])
+                scripts['alter'].extend(diferencas[1])
 
     return scripts
 
@@ -1870,7 +1928,7 @@ def gerar_diferancas_metas_mysql(arquivo_origem, arquivo_destino, tipo):
             "TIPO": "INT",
             "NULO": "NOT NULL",
             "VALOR_PADRAO": None,
-            "DESCRICAO" : "",
+            "DESCRICAO" : None,
             "CHARSET": None,
             "COLLATION": None
         },
@@ -1878,123 +1936,191 @@ def gerar_diferancas_metas_mysql(arquivo_origem, arquivo_destino, tipo):
             "TIPO" : "VARCHAR(20)",
             "NULO": None,
             "VALOR_PADRAO": None,
-            "DESCRICAO": "",
+            "DESCRICAO": None,
             "CHARSET": "utf8mb4",
             "COLLATION": "utf8mb4_0900_ai_ci"
         }
     }
 
     sqls_create = []
-    sqls_drop = []
     sqls_alter = []
-    sqls_comment = []
 
     if tipo == 'tabelas':
-        
-        for tabela in metadados_origem.keys():
+        try:
+            for tabela in metadados_origem.keys():
             
-            if tabela not in metadados_destino.keys():
-                sql_create = f'CREATE TABLE {tabela} ('
-                declaracao_colunas = ''
+                if tabela not in metadados_destino.keys():
+                    sql_create = f'CREATE TABLE {tabela} ('
+                    declaracao_colunas = ''
 
-                for coluna, propriedades in metadados_origem[tabela].items():
-                    declaracao_colunas += f', {coluna}' if declaracao_colunas else coluna
-
-                    if coluna in colunas_padroes_mysql.keys():
-                        propriedades['TIPO'] = colunas_padroes_mysql[coluna]['TIPO']
-                        propriedades['TIPO'] += f" {colunas_padroes_mysql[coluna]['NULO']}" if colunas_padroes_mysql[coluna]['NULO'] else ""
-
-                    for propriedade in propriedades.keys():
-
-                        if not propriedades[propriedade]:
-                            continue
-                        
-                        if propriedade.lower() == 'descricao':
-                            sql_comment = ''
-                            comentario = unicodedata.normalize('NFD', propriedades[propriedade].replace("'", '"')).encode('ascii', 'ignore').decode('utf-8')
-                            sql_comment = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {propriedades['TIPO']} COMMENT '{comentario}'" if comentario else ''
-                            if sql_comment:
-                                sqls_comment.append(sql_comment)
-                            continue
-
-                        if propriedade.lower() == 'valor_padrao':
-                            sql_alter_default = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {propriedades['TIPO']} DEFAULT {propriedades[propriedade]};"
-                            continue
-                        
-                        if propriedade == 'NULO':
-                            continue
-                        else:
-                            tipo_coluna = mapear_tipo_firebird_para_msql(nome_tipo=propriedades[propriedade]) if propriedades[propriedade] != 'NONE' else ''
-                        declaracao_colunas += f" {tipo_coluna}"
-
-                for coluna_padrao in colunas_padroes_mysql.keys():
-
-                    if coluna_padrao not in declaracao_colunas:
-                        declaracao_colunas += f", {coluna_padrao} {colunas_padroes_mysql[coluna_padrao]['TIPO']}"
-                        declaracao_colunas += f" {colunas_padroes_mysql[coluna_padrao]['NULO']}" if colunas_padroes_mysql[coluna_padrao]['NULO'] else ""
-
-                sql_create += declaracao_colunas + ');'
-                sqls_create.append(sql_create)
-
-                sql_alter = f"ALTER TABLE {tabela} ADD PRIMARY KEY (CODIGO_GLOBAL);"
-                sql_alter_idx = f"CREATE INDEX IDX_{tabela.upper()} ON {tabela} (CNPJ_EMPRESA);"
-                sqls_alter.append(sql_alter_idx)
-                sqls_alter.append(sql_alter)
-
-                if sql_alter_default:
-                    sqls_alter.append(sql_alter_default)
-            
-            else:
-
-                for coluna_padrao in colunas_padroes_mysql.keys():
-
-                    if coluna_padrao not in metadados_origem[tabela].keys():
-                        metadados_origem[tabela][coluna_padrao] = colunas_padroes_mysql[coluna_padrao]
-
-                for coluna in metadados_origem[tabela].keys():
-                    sql_alter = ''
-                    sql_alter_default = ''
-                    sql_comment = ''
-                    tipo_coluna = mapear_tipo_firebird_para_msql(nome_tipo= metadados_origem[tabela][coluna]['TIPO'])
-
-                    if not coluna in metadados_destino[tabela].keys():
-                        sql_alter = f"ALTER TABLE {tabela} ADD {coluna} {tipo_coluna}"
-                        sql_alter_default = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna} DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']};" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
-
-                        sql_alter += ';'
-                        comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
-                        sql_comment = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna} COMMENT '{comentario}';" if comentario else ''
-
-                    else:
+                    for coluna, propriedades in metadados_origem[tabela].items():
+                        declaracao_colunas += f', {coluna}' if declaracao_colunas else coluna
 
                         if coluna in colunas_padroes_mysql.keys():
-                            continue
+                            propriedades['TIPO'] = colunas_padroes_mysql[coluna]['TIPO']
+                            propriedades['TIPO'] += f" {colunas_padroes_mysql[coluna]['NULO']}" if colunas_padroes_mysql[coluna]['NULO'] else ""
 
-                        if tipo_coluna != metadados_destino[tabela][coluna]['TIPO'].upper():
-                            sql_alter = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna}"
+                        for propriedade in propriedades.keys():
 
-                        if metadados_origem[tabela][coluna]['VALOR_PADRAO'] != metadados_destino[tabela][coluna]['VALOR_PADRAO']:
-                            if not sql_alter:
-                                sql_alter = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna}"
-                            sql_alter += f" DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']}" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
-                            comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if metadados_origem[tabela][coluna]['DESCRICAO'] else ''
-                            sql_alter += f" COMMENT '{comentario}';" if comentario else ''
+                            if not propriedades[propriedade]:
+                                continue
 
-                        if metadados_origem[tabela][coluna]['DESCRICAO'] != metadados_destino[tabela][coluna]['DESCRICAO']:
-                            if not sql_alter:
-                                sql_alter = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna}"
-                                sql_alter += f" DEFAULT {metadados_origem[tabela][coluna]['VALOR_PADRAO']}" if metadados_origem[tabela][coluna]['VALOR_PADRAO'] else ''
-                            comentario = unicodedata.normalize('NFD', metadados_origem[tabela][coluna]['DESCRICAO']).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if metadados_origem[tabela][coluna]['DESCRICAO'] else ''                    
-                            sql_alter += f" COMMENT '{comentario}';" if comentario else ''
+                            if propriedade == 'TIPO':
+                                tipo_coluna = mapear_tipo_firebird_para_msql(nome_tipo=propriedades[propriedade]) if propriedades[propriedade] != 'NONE' else ''
+                                declaracao_colunas += f" {tipo_coluna}"
+                            
+                            if propriedade == 'VALOR_PADRAO':
 
-                    if sql_alter:
-                        sqls_alter.append(sql_alter)
+                                if propriedades[propriedade] == 'CURRENT_DATE':
+                                    propriedades[propriedade] = '(CURDATE())'
 
-    
-    return sqls_create, sqls_drop, sqls_alter, sqls_comment
+                                elif propriedades[propriedade] == 'NOW':
+                                    propriedades[propriedade] = '(NOW())'
+
+                                elif 'CURRENT_TIMESTAMP' in propriedades[propriedade]:
+                                    propriedades[propriedade] = '(NOW())'
+
+                                declaracao_colunas += f" DEFAULT {propriedades[propriedade]}" if propriedades[propriedade] else ""
+
+                            if propriedade == 'DESCRICAO':
+                                comentario = unicodedata.normalize('NFD', propriedades[propriedade].replace("'", '"')).encode('ascii', 'ignore').decode('utf-8')
+                                declaracao_colunas += f" COMMENT '{comentario}'" if comentario else ""                                                
+
+                    for coluna_padrao in colunas_padroes_mysql.keys():
+
+                        if coluna_padrao not in declaracao_colunas:
+                            declaracao_colunas += f", {coluna_padrao} {colunas_padroes_mysql[coluna_padrao]['TIPO']}"
+                            declaracao_colunas += f" {colunas_padroes_mysql[coluna_padrao]['NULO']}" if colunas_padroes_mysql[coluna_padrao]['NULO'] else ""
+
+                    sql_create += declaracao_colunas + ');'
+                    sqls_create.append(sql_create)
+
+                    sql_alter = f"ALTER TABLE {tabela} ADD PRIMARY KEY (CODIGO_GLOBAL);"
+                    sql_alter_increment = f"ALTER TABLE {tabela} MODIFY COLUMN CODIGO_GLOBAL INT AUTO_INCREMENT NOT NULL;"
+                    sql_alter_idx = f"CREATE INDEX IDX_{tabela.upper()} ON {tabela} (CNPJ_EMPRESA);"
+                    sqls_alter.append(sql_alter)
+                    sqls_alter.append(sql_alter_idx)
+                    sqls_alter.append(sql_alter_increment)
+                
+                else:
+
+                    for coluna_padrao in colunas_padroes_mysql.keys():
+                        metadados_origem[tabela][coluna_padrao] = colunas_padroes_mysql[coluna_padrao]
+
+                    for coluna in metadados_origem[tabela].keys():
+                        sql_alter = ''
+                        sql_alter_chave = ''
+                        sql_alter_increment = ''
+
+                        tipo_coluna_origem = mapear_tipo_firebird_para_msql(nome_tipo= metadados_origem[tabela][coluna]['TIPO'])
+                        valor_padrao_origem = metadados_origem[tabela][coluna]['VALOR_PADRAO']
+                        descricao_origem = metadados_origem[tabela][coluna]['DESCRICAO']                
+
+                        if not coluna in metadados_destino[tabela].keys():
+                            sql_alter = f"ALTER TABLE {tabela} ADD {coluna} {tipo_coluna_origem}"
+
+                            if valor_padrao_origem:
+
+                                if valor_padrao_origem == 'CURRENT_DATE':
+                                    valor_padrao_origem = '(CURDATE())'
+
+                                elif valor_padrao_origem == 'NOW':
+                                    valor_padrao_origem = '(NOW())'
+
+                                elif 'CURRENT_TIMESTAMP' in valor_padrao_origem:
+                                    valor_padrao_origem = '(NOW())'
+
+                            sql_alter += f" DEFAULT {valor_padrao_origem}" if valor_padrao_origem else ""
+                            sql_alter += f" {colunas_padroes_mysql[coluna]['NULO']}" if coluna == "CODIGO_GLOBAL" else ""
+
+                            comentario = unicodedata.normalize('NFD', descricao_origem).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if descricao_origem else ''                    
+                            sql_alter += f" COMMENT '{comentario}'" if comentario else ""
+                            sql_alter += ';'
+
+                            if coluna == "CODIGO_GLOBAL":
+                                sql_alter_chave = f"ALTER TABLE {tabela} ADD CONSTRAINT {tabela}_PK PRIMARY KEY (CODIGO_GLOBAL);"
+                                sql_alter_increment = f'ALTER TABLE {tabela} MODIFY COLUMN CODIGO_GLOBAL {tipo_coluna_origem} AUTO_INCREMENT NOT NULL;'
+
+                        else:
+
+                            tipo_coluna_destino = metadados_destino[tabela][coluna]['TIPO'].upper()
+                            valor_padrao_destino = metadados_destino[tabela][coluna]['VALOR_PADRAO']
+                            descricao_destino = metadados_destino[tabela][coluna]['DESCRICAO']
+                            opcao_extra = metadados_destino[tabela][coluna]['EXTRA']
+
+                            if coluna == 'CODIGO_GLOBAL':
+
+                                if tipo_coluna_destino != 'INT':
+                                    sql_alter = f'ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna_origem} NOT NULL;'
+                                    sql_alter_chave = f"ALTER TABLE {tabela} ADD CONSTRAINT {tabela}_PK PRIMARY KEY (CODIGO_GLOBAL);"
+                                    sql_alter_increment = f'ALTER TABLE {tabela} MODIFY COLUMN CODIGO_GLOBAL {tipo_coluna_origem} AUTO_INCREMENT NOT NULL;'
+
+                                elif opcao_extra != 'AUTO_INCREMENT':
+                                    sql_alter = f'ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna_origem} NOT NULL;'
+                                    sql_alter_chave = f"ALTER TABLE {tabela} ADD CONSTRAINT {tabela}_PK PRIMARY KEY (CODIGO_GLOBAL);"
+                                    sql_alter_increment = f'ALTER TABLE {tabela} MODIFY COLUMN CODIGO_GLOBAL {tipo_coluna_origem} AUTO_INCREMENT NOT NULL;'
+
+                                elif metadados_destino[tabela][coluna]['NULO'] != 'NOT NULL':
+                                    sql_alter_chave = f"ALTER TABLE {tabela} ADD CONSTRAINT {tabela}_PK PRIMARY KEY (CODIGO_GLOBAL);"
+                                    sql_alter = f'ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna_origem} AUTO_INCREMENT NOT NULL;'
+                            
+                            else:
+
+                                if tipo_coluna_origem != tipo_coluna_destino:
+
+                                    if coluna == 'CODIGO_GLOBAL':
+                                        tipo_coluna_origem += f" {colunas_padroes_mysql[coluna]['NULO']}"
+
+                                    sql_alter = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna_origem}"                            
+
+                                if valor_padrao_origem != valor_padrao_destino:
+                                    if not sql_alter:
+                                        if coluna == 'CODIGO_GLOBAL':
+                                            tipo_coluna_origem += f" {colunas_padroes_mysql[coluna]['NULO']}"
+
+                                        sql_alter = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna_origem}"
+
+                                    if valor_padrao_origem:
+                                        if valor_padrao_origem == 'CURRENT_DATE':
+                                            valor_padrao_origem = '(CURDATE())'
+
+                                        elif valor_padrao_origem == 'NOW':
+                                            valor_padrao_origem = '(NOW())'
+
+                                        elif 'CURRENT_TIMESTAMP' in valor_padrao_origem:
+                                            valor_padrao_origem = '(NOW())'
+
+                                    sql_alter += f" DEFAULT {valor_padrao_origem}" if valor_padrao_origem else ''
+                                    comentario = unicodedata.normalize('NFD', descricao_origem).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if descricao_origem else ''
+                                    sql_alter += f" COMMENT '{comentario}';" if comentario else ''
+
+                                if descricao_origem != descricao_destino:
+                                    if not sql_alter:
+
+                                        if coluna == 'CODIGO_GLOBAL':
+                                            tipo_coluna_origem += f" {colunas_padroes_mysql[coluna]['NULO']}"
+
+                                        sql_alter = f"ALTER TABLE {tabela} MODIFY COLUMN {coluna} {tipo_coluna_origem}"
+                                        sql_alter += f" DEFAULT {valor_padrao_origem}" if valor_padrao_origem else ''
+                                    comentario = unicodedata.normalize('NFD', descricao_origem).encode('ascii', 'ignore').decode('utf-8').replace("'", "") if descricao_origem else ''                    
+                                    sql_alter += f" COMMENT '{comentario}';" if comentario else ''
+
+                        if sql_alter:
+                            sqls_alter.append(sql_alter)
+
+                        if sql_alter_chave:
+                            sqls_alter.append(sql_alter_chave)
+                        
+                        if sql_alter_increment:
+                            sqls_alter.append(sql_alter_increment)
+
+        except Exception as e:
+            print(f"Erro ao gerar scripts -> motivo: {e}")
+        
+    return sqls_create, sqls_alter
 
 def executar_scripts_meta_mysql(scripts: dict, con: mysql.connector.MySQLConnection):
-    tipos = ['create', 'drop', 'alter', 'comment', 'grant']
+    tipos = ['create', 'alter']
     cursor = ''
     erros = []
     
@@ -2005,9 +2131,13 @@ def executar_scripts_meta_mysql(scripts: dict, con: mysql.connector.MySQLConnect
                 try:
                     print(script)
                     cursor.execute(script)
+                    con.commit()
                 except Exception as e:
+                    if 'Out of range value for column' in str(e):
+                        continue
+                    if 'Multiple primary key defined' in str(e):
+                        continue
                     erros.append(f"COMANDO: {script} -> ERRO: {str(e)}")
-            con.commit()
     except Exception as e:
         print_log(f"Erro ao tentar executar scripts -> erro: {e}", "thread_atualiza_banco_mysql")
         if con.is_connected():
@@ -2269,3 +2399,15 @@ def obter_dados_ini(arquivo_ini: any = None):
     }
 
     return dados
+
+
+def apagar_itens_pasta(pasta):
+    if not os.path.exists(pasta):
+        return
+    
+    itens = os.listdir(pasta)
+    for item in itens:
+        caminho_item = os.path.join(pasta, item)
+        if os.path.exists(caminho_item):
+            if os.path.isfile(caminho_item):
+                os.remove(caminho_item)

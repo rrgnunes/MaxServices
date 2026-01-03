@@ -97,7 +97,7 @@ def salva_json_metadados_local(caminho_base_dados:str, caminho_savar_estrutura:s
         if not caminho_savar_estrutura:
             pasta_metadados = os.path.join(parametros.SCRIPT_PATH, 'data', 'metadados_local')
         else:
-            pasta_metadados = os.path.join(caminho_savar_estrutura, 'data', 'metadados_local')
+            pasta_metadados = caminho_savar_estrutura
             
         if not os.path.exists(pasta_metadados):
             os.makedirs(pasta_metadados)
@@ -166,7 +166,8 @@ def salva_json_metadados_local(caminho_base_dados:str, caminho_savar_estrutura:s
                 print_log('Arquivo de indices salvo com sucesso', 'salva_metadados_json')
             else:
                 print_log('Falha ao salvar sql dos indices.', 'salva_metadados_json')
-
+                
+        parametros.FIREBIRD_CONNECTION = None
     except Exception as e:
         print_log(f'Erro ao salvar arquivo JSON da estrutura banco local -> motivo: {e}')
 
@@ -177,6 +178,7 @@ def salva_metadados_mysql(banco):
     try:
         parametros.BASEMYSQL_REP = banco
         parametros.MYSQL_CONNECTION_REPLICADOR = None
+        parametros.HOSTMYSQL_REP = 'localhost'
         inicializa_conexao_mysql_replicador()
 
     except Exception as e:
@@ -197,6 +199,14 @@ def salva_metadados_mysql(banco):
                 print_log(f'Arquivo de tabelas salvo com sucesso\n', 'salva_metadados_json')
             else:
                 print_log(f'Falha ao salvar arquivo', 'salva_metadados_json')
+
+            metadados_chaves_primarias = extrair_metadados_chaves_primarias_mysql(conn)
+            if metadados_chaves_primarias:
+                with open(os.path.join(pasta_metadados_mysql, 'chaves_primarias.json'), 'w') as j:
+                    json.dumb(metadados_chaves_primarias, j, indent=2)
+                print_log('Arquivo de chaves primarias salvo com sucesso\n', 'salva_metadados_json')
+            else:
+                print_log('Falha ao salvar chaves primarias', 'salva_metadados_json')
 
     except Exception as e:
         print_log(f'Erro ao salvar jsons -> motivo: {e}')

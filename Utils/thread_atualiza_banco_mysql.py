@@ -11,18 +11,12 @@ from funcoes.funcoes import (
     criar_bloqueio,
     obter_dados_ini,
     remover_bloqueio,
+    apagar_itens_pasta,
     inicializa_conexao_mysql,
     comparar_metadados_mysql,
-    executar_scripts_meta_mysql
+    executar_scripts_meta_mysql,
 )
 
-def apagar_itens_pasta(pasta):
-    itens = os.listdir(pasta)
-    for item in itens:
-        caminho_item = os.path.join(pasta, item)
-        if os.path.exists(caminho_item):
-            if os.path.isfile(caminho_item):
-                os.remove(caminho_item)
 
 def atualiza_banco_mysql(banco):
 
@@ -46,14 +40,15 @@ def atualiza_banco_mysql(banco):
     scripts = comparar_metadados_mysql(metadados_origem, metadados_destino)
 
     params.BASEMYSQL = banco
+    params.HOSTMYSQL = 'localhost'
     inicializa_conexao_mysql()
 
     erros = executar_scripts_meta_mysql(scripts, params.MYSQL_CONNECTION)
 
-    print_log(f"Erros durante ocorridos durante atualização:", nome_script)
-
-    for erro in erros:
-        print_log(erro, nome_script)
+    if erros:
+        print_log(f"Erros durante ocorridos durante atualização:", nome_script)
+        for erro in erros:
+            print_log(erro, nome_script)
 
     if params.MYSQL_CONNECTION:
         if params.MYSQL_CONNECTION.is_connected():

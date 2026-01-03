@@ -39,7 +39,7 @@ def iniciar_replicacao():
         banco_ini_info = os.path.join(caminho_sistema, 'banco.ini')
 
         if not os.path.exists(banco_ini_info):
-            print('Caminho de arquivo .ini não existe. Pulando...\n')
+            print_log('Caminho de arquivo .ini não existe. Pulando...\n', nome_servico)
             continue
 
         info = obter_dados_ini(banco_ini_info)

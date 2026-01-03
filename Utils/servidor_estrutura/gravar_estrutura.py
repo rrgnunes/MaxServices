@@ -11,7 +11,7 @@ def gravar():
 
     params.DATABASEFB = 'C:\\MaxSuport\\Dados\\Dados.fdb'
     params.PATHDLL = verifica_dll_firebird()
-    caminho_destino = os.path.abspath(os.path.join(__file__, '..'))
+    caminho_destino = os.path.abspath(os.path.join(__file__, '..', 'metadados_local', 'data'))
 
     salva_json_metadados_local(params.DATABASEFB, caminho_destino)
 

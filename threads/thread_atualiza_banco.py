@@ -16,6 +16,7 @@ from funcoes.funcoes import (
     remover_bloqueio,
     comparar_metadados,
     executar_scripts_meta,
+    verifica_dll_firebird,
     carrega_arquivo_config,
     buscar_estrutura_remota,
     inicializa_conexao_firebird
@@ -72,11 +73,12 @@ def atualiza_banco():
                             parametros.USERFB = 'MAXSUPORT'
                             inicializa_conexao_firebird()
 
-                            erros = executar_scripts_meta(script, parametros.FIREBIRD_CONNECTION)
+                            erros = remover_triggers_e_generators()
+                            erros += executar_scripts_meta(script, parametros.FIREBIRD_CONNECTION)
                             
                             permissoes_maxservices()
                             if erros:
-                                print_log('Erros ao executar o script:', nome_script)
+                                print_log('Erros ao executar atualização:', nome_script)
                                 for erro in erros:
                                     print_log(erro, nome_script)
 
@@ -123,7 +125,7 @@ def permissoes_maxservices():
         cur:fdb.Cursor = parametros.FIREBIRD_CONNECTION.cursor()
         cur.execute(select_sql)
         tabelas = cur.fetchall()
-        print_log('Executando permissções...', nome_script)
+        print_log('Executando permissões...', nome_script)
         for tabela in tabelas:
             try:
                 sql = f"GRANT ALL ON {tabela[0]} TO MAXSERVICES WITH GRANT OPTION;"
@@ -136,6 +138,98 @@ def permissoes_maxservices():
 
     except Exception as e:
         print_log(f'Erro ao realizar permissões do usuario -> motivo: {e}', nome_script)
+
+def consulta_generators():
+    sql_select = """SELECT
+                    TRIM(G.RDB$GENERATOR_NAME) AS NOME_GENERATOR
+                FROM RDB$GENERATORS G
+                WHERE
+                    G.RDB$SYSTEM_FLAG = 0"""
+    
+    cursor = None
+    generators = []
+    try:
+        cursor: fdb.Cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        cursor.execute(sql_select)
+        registros = cursor.fetchall()
+        for registro in registros:
+            if registro[0].startswith('GEN_') and registro[0].endswith('_ID'):
+                generators.append(registro[0])
+
+    except Exception as e:
+        print_log(f'Não foi possível consultar generators -> motivo: {e}', nome_script)
+        return generators
+    finally:
+        if cursor:
+            cursor.close()
+
+    return generators
+
+def consulta_triggers():
+    sql_select = """SELECT
+                    TRIM(rt.rdb$trigger_name) AS nome_trigger
+                FROM
+                    rdb$triggers rt
+                WHERE
+                    rt.rdb$system_flag = 0
+                """
+    
+    cursor = None
+    triggers = []
+    try:
+        cursor: fdb.Cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        cursor.execute(sql_select)
+        registros = cursor.fetchall()
+        for registro in registros:
+            if registro[0].startswith('TR_'):
+                triggers.append(registro[0])
+    except Exception as e:
+        print_log(f'Não foi possível consultar as triggers -> motivo: {e}', nome_script)
+        return triggers
+    finally:
+        if cursor:
+            cursor.close()
+
+    return triggers
+
+def remover_triggers_e_generators():
+    print_log('Removendo triggers e generators padrões...', nome_script)
+
+    generators = consulta_generators()
+    triggers = consulta_triggers()
+
+    erros = []
+    cursor = None
+    try:
+        cursor = parametros.FIREBIRD_CONNECTION.cursor()
+        for trigger in triggers:
+            try:
+                sql_delete = f"DROP TRIGGER {trigger};"
+                cursor.execute(sql_delete)
+            except Exception as e:
+                erros.append(f"Erro ao apagar trigger={trigger} -> {str(e)}")
+                continue
+
+        for generator in generators:
+            try:
+                sql_delete = f"DROP SEQUENCE {generator};"
+                cursor.execute(sql_delete)
+            except Exception as e:
+                erros.append(f"Erro ao apagar generator={generator} -> {str(e)}")
+                continue
+
+        parametros.FIREBIRD_CONNECTION.commit()
+    except Exception as e:
+        print_log(f"Não foi possível remover triggers e generators -> motivo: {e}")
+        parametros.FIREBIRD_CONNECTION.rollback()
+    
+    finally:
+        if cursor:
+            cursor.close()
+
+    return erros
+
+
 
 if __name__ == '__main__':
 
