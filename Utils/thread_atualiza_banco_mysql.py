@@ -40,7 +40,7 @@ def atualiza_banco_mysql(banco):
     scripts = comparar_metadados_mysql(metadados_origem, metadados_destino)
 
     params.BASEMYSQL = banco
-    params.HOSTMYSQL = 'localhost'
+    # params.HOSTMYSQL = 'localhost'
     inicializa_conexao_mysql()
 
     erros = executar_scripts_meta_mysql(scripts, params.MYSQL_CONNECTION)

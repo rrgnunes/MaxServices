@@ -326,9 +326,9 @@ def column(conn):
 if __name__ == '__main__':
     print('Iniciando')
 
-    # trigger(conn)
+    trigger(conn)
 
-    column(conn)
+    # column(conn)
 
     # drop_triggers(conn)
 

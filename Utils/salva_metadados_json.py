@@ -178,7 +178,7 @@ def salva_metadados_mysql(banco):
     try:
         parametros.BASEMYSQL_REP = banco
         parametros.MYSQL_CONNECTION_REPLICADOR = None
-        parametros.HOSTMYSQL_REP = 'localhost'
+        # parametros.HOSTMYSQL_REP = 'localhost'
         inicializa_conexao_mysql_replicador()
 
     except Exception as e:

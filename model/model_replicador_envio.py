@@ -114,7 +114,7 @@ class ReplicadorEnvio(Replicador):
 
                 placeholders = ', '.join(["%s"] * (len(dados) + qtd_colunas_adicionadas))
                 valores.append(cnpj)
-
+                
             else:
                 colunas = ', '.join(dados.keys())
                 placeholders = ', '.join(["%s"] * len(dados))
@@ -247,7 +247,7 @@ class ReplicadorEnvio(Replicador):
                 continue
 
             if acao == 'D' and registro_local:
-                acao == 'U'
+                acao = 'U'
 
             if registro_local is None:
                 cnpj = self.empresas[0]['CNPJ']

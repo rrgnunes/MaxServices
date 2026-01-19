@@ -40,9 +40,15 @@ def atualiza_banco():
     inicializa_conexao_firebird()
 
     try:
-        executar_scripts_meta(scripts, params.FIREBIRD_CONNECTION)
+        erros = executar_scripts_meta(scripts, params.FIREBIRD_CONNECTION)
+        
+        if erros:
+            print_log("Erros que ocorreram durante a atualização:\n", nome_script)
+            for erro in erros:
+                print_log(erro, nome_script)
+
     except Exception as e:
-        print_log(f"Não foi possível atualizar bando master -> motivo: {e}")
+        print_log(f"Não foi possível atualizar bando master -> motivo: {e}", nome_script)
     
 
 if __name__ == '__main__':

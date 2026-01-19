@@ -1667,7 +1667,11 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
 
         for tabela in metadados_origem.keys():
 
+            if tabela == 'LOG_AUDIT_TMP':
+                continue
+
             if not tabela in metadados_destino.keys():
+                
                 sql_create = f'CREATE TABLE {tabela} ('
                 declaracao_colunas = ''
 
@@ -1688,6 +1692,7 @@ def gerar_diferancas_metas(arquivo_origem: str, arquivo_destino: str, tipo: str)
 
                         if propriedade.lower() == 'valor_padrao':
                             sql_alter = f'ALTER TABLE {tabela} ALTER COLUMN {coluna} SET DEFAULT {propriedades[propriedade]};'
+                            sqls_alter.append(sql_alter)
                             continue
 
                         declaracao_colunas += f' {propriedades[propriedade]}' if propriedades[propriedade] != 'NONE' else ''
@@ -1948,6 +1953,9 @@ def gerar_diferancas_metas_mysql(arquivo_origem, arquivo_destino, tipo):
     if tipo == 'tabelas':
         try:
             for tabela in metadados_origem.keys():
+
+                if tabela == 'REPLICADOR':
+                    continue
             
                 if tabela not in metadados_destino.keys():
                     sql_create = f'CREATE TABLE {tabela} ('
