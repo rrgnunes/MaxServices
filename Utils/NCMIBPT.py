@@ -42,7 +42,7 @@ def ImportaTabelasIBPT():
     print('---Inicia importação de tabelas IBPT---')
     logging.info('---Inicia importação de tabelas IBPT---')
 
-    pasta_arquivos = os.path.join(parametros.SCRIPT_PATH, "Utils/lista_ibpt")
+    pasta_arquivos = os.path.join(parametros.SCRIPT_PATH, "utils/lista_ibpt")
     arquivos = os.listdir(pasta_arquivos)
 
     for arquivo in arquivos:
@@ -204,6 +204,7 @@ if __name__ == '__main__':
     args = sys.argv[1:]
        
     funcao = args[0]
+
     
     if funcao == 'IBPT':
         ImportaTabelasIBPT()

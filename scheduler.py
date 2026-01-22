@@ -42,11 +42,11 @@ def setup_schedules():
         {'path': os.path.join(scripts_directory, 'thread_servidor_socket.pyc'), 'interval': 0},  # Executa uma vez
         {'path': os.path.join(scripts_directory, 'thread_api_maxsuport.pyc'), 'interval': 0}, # Executa uma vez
         {'path': os.path.join(scripts_directory, 'thread_verifica_remoto.pyc'), 'interval': 15},  # 15 segundos
-        {'path': os.path.join(scripts_directory, 'thread_xml_contador.pyc'), 'interval': 600},  # 10 minutos
         {'path': os.path.join(scripts_directory, 'thread_zap_automato.pyc'), 'interval': 60},  # 1 minuto
         {'path': os.path.join(scripts_directory, 'thread_bloqueio.pyc'), 'interval': 5},  # 5 segundos
         {'path': os.path.join(scripts_directory, 'thread_replicador_envio.pyc'), 'interval': 10}, # 10 segundos
-        {'path': os.path.join(scripts_directory, 'thread_replicador_retorno.pyc'), 'interval': 10} # 10 segundos
+        {'path': os.path.join(scripts_directory, 'thread_replicador_retorno.pyc'), 'interval': 10}, # 10 segundos
+        {'path': os.path.join(scripts_directory, 'thread_usuario.pyc'), 'interval': 10} # 10 segundos
     ]
 
     for script in scripts:

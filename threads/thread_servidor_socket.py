@@ -113,7 +113,7 @@ def servidor_socket():
         print_log("Pega dados local", "servidor_socket")
 
         if host == '192.168.10.115':
-            parametros.HOSTFB = '192.168.10.242'
+            parametros.HOSTFB = '192.168.10.236'
 
         carregar_configuracoes()
 

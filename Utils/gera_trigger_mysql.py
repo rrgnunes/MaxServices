@@ -6,12 +6,10 @@ import mysql.connector
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from credenciais import parametros
-
 def connection_aux() -> fdb.Connection:
     fdb.load_api('C:/Program Files/Firebird/firebird_2_5/bin/fbclient.dll')
     conn = fdb.connect(host='localhost',
-                       database='C:/MaxSuport_Rian/Dados/Dados.fdb',
+                       database='C:/MaxSuport/Dados/Dados.fdb',
                        user='SYSDBA',
                        password='masterkey',
                        port=3050)
@@ -281,12 +279,11 @@ def add_column_to_tables(conn: mysql.connector.MySQLConnection, column:str, colu
     return erros
 
 # Conectar ao banco de dados MySQL
-banco_mysql = 'dados'
 conn = mysql.connector.connect(
-    host=parametros.HOSTMYSQL,
-    user=parametros.USERMYSQL,
-    password=parametros.PASSMYSQL,
-    database=banco_mysql
+    host="maxsuportsistemas.com",
+    user="maxservices",
+    password="oC8qUsDp",
+    database="DADOSHM"
 )
 
 def trigger(conn):
@@ -311,10 +308,10 @@ def trigger(conn):
 
 def column(conn):
     try:
-        column = 'CNPJ_EMPRESA'
-        column_type = 'varchar(20)'
+        column = 'CODIGO_GLOBAL'
+        column_type = 'INT'
         params = ''
-        tables = get_tables_without_column(conn, banco_mysql, column)
+        tables = get_tables_without_column(conn, "DADOSHM", column)
 
         erros = add_column_to_tables(conn, column, column_type, tables, params)
 
@@ -328,6 +325,7 @@ def column(conn):
 
 if __name__ == '__main__':
     print('Iniciando')
+
     trigger(conn)
 
     # column(conn)

@@ -336,20 +336,6 @@ class Replicador:
 
     def remover_referencias_repetidas(self):
         
-        # for referencia in self._alteracoes:
-
-        #     if referencia not in self._alteracoes_processadas:
-        #         self._alteracoes_processadas.append(referencia)
-
-        #     else:
-        #         self.delete_referencia_replicador(
-        #             referencia.get('TABELA', ''),
-        #             referencia.get('ACAO', ''),
-        #             referencia.get('CHAVE', ''),
-        #             referencia.get('CODIGO_GLOBAL', '')
-        #         )
-        # self.commit_conexao()
-
         ultimas = {}
         for i, ref in enumerate(self._alteracoes):
             k = (ref.get('TABELA', ''), ref.get('CHAVE', ''))

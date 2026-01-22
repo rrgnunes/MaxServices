@@ -12,7 +12,7 @@ from funcoes.funcoes import (
     atualiza_agenda, retorna_pessoas_mensagemdiaria, retorna_pessoas_preagendadas,
     salva_mensagem_remota, altera_mensagem_local, atualiza_ano_cliente, print_log, config_zap, retorna_pessoas,
     insere_mensagem_zap, retorna_pessoas_lembrete, pode_executar, criar_bloqueio, remover_bloqueio,
-    inicializa_conexao_firebird, inicializa_conexao_mysql, carrega_arquivo_config,get_local_ip,get_local_name
+    inicializa_conexao_firebird, inicializa_conexao_mysql, carrega_arquivo_config,get_local_ip,get_local_name, caminho_bd
     )
 from data.thread_zap_automato.listas import selecionar_frase_diaria
 
@@ -22,6 +22,13 @@ def zapautomato():
     nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
     #carrega config
     print_log(f'Iniciando', nome_servico)
+    banco_ini_info = caminho_bd()
+
+    if banco_ini_info[2] == '1':
+        parametros.BASEMYSQL = 'DADOSHM'
+
+    parametros.USERFB = 'maxsuport'
+
     inicializa_conexao_mysql()
 
     carrega_arquivo_config()
@@ -128,40 +135,37 @@ def zapautomato():
                             atualiza_agenda(parametros.FIREBIRD_CONNECTION, pessoa['CODIGO'], 'lembrete')
                             print_log(f'Registro de lembrete criado para {pessoa["FANTASIA"]}', nome_servico)
                     
-                    # Salva mensagem em banco remoto e altera status em banco local
-                    try:
-                        con_fb = parametros.FIREBIRD_CONNECTION
-                        cursor = con_fb.cursor()
-                        cursor.execute("select mz.codigo, mz.data, mz.hora, mz.mensagem, mz.fone from mensagem_zap mz where mz.status = 'PENDENTE'")
-                        rowsMSGs = cursor.fetchall()
-                        rows_dict_msg = [dict(zip([column[0] for column in cursor.description], rowmsg)) for rowmsg in rowsMSGs]
-                        for row_msg in rows_dict_msg:
-                            cod_mensagem = row_msg['CODIGO']
-                            data = row_msg['DATA']
-                            hora = row_msg['HORA']
-                            data_hora = datetime.datetime.combine(data, hora)
-                            mensagem = row_msg['MENSAGEM']
-                            fone = row_msg['FONE']
-                            status = 'PENDENTE'
-                            cliente_id = cnpj
-                            retorno = 'Mensagem Gravada'
+                    # # Salva mensagem em banco remoto e altera status em banco local
+                    # try:
+                    #     con_fb = parametros.FIREBIRD_CONNECTION
+                    #     cursor = con_fb.cursor()
+                    #     cursor.execute("select mz.codigo, mz.data, mz.hora, mz.mensagem, mz.fone from mensagem_zap mz where mz.status = 'PENDENTE'")
+                    #     rowsMSGs = cursor.fetchall()
+                    #     rows_dict_msg = [dict(zip([column[0] for column in cursor.description], rowmsg)) for rowmsg in rowsMSGs]
+                    #     for row_msg in rows_dict_msg:
+                    #         cod_mensagem = row_msg['CODIGO']
+                    #         data = row_msg['DATA']
+                    #         hora = row_msg['HORA']
+                    #         data_hora = datetime.datetime.combine(data, hora)
+                    #         mensagem = row_msg['MENSAGEM']
+                    #         fone = row_msg['FONE']
+                    #         status = 'PENDENTE'
+                    #         cliente_id = cnpj
+                    #         retorno = 'Mensagem Gravada'
 
-                            if salva_mensagem_remota(con_mysql, data_hora, mensagem, fone, status, cliente_id, nome_servico, retorno):
-                                altera_mensagem_local(con_fb, cod_mensagem, nome_servico)
+                    #         if salva_mensagem_remota(con_mysql, data_hora, mensagem, fone, status, cliente_id, nome_servico, retorno):
+                    #             altera_mensagem_local(con_fb, cod_mensagem, nome_servico)
 
-                        print_log('Mensagens salvas em servidor remoto', nome_servico)
-                    except Exception as e:
-                        print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
-                        raise e
-                    finally:
-                        if not con_fb.closed:
-                            con_fb.close()
-                            parametros.FIREBIRD_CONNECTION = None
+                    #     print_log('Mensagens salvas em servidor remoto', nome_servico)
+                    # except Exception as e:
+                    #     print_log(f'Não foi possivel consultar mensagens no banco: {e}', nome_servico)
+                    #     raise e
+                    # finally:
+                    #     if not con_fb.closed:
+                    #         con_fb.close()
+                    #         parametros.FIREBIRD_CONNECTION = None
             except Exception as a:
-                try:
-                    if con_fb:
-                        con_fb.rollback()
-                        con_fb.close()
+                try:                    
                     if con_mysql:
                         con_mysql.rollback()
                         con_mysql.close()

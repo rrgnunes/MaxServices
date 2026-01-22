@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from credenciais import parametros
 from funcoes.funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio, verifica_dll_firebird
 
-def gerar_conexao(servidor='localhost', porta='3050', usuario='sysdba', senha='masterkey', pasta_banco=''):
+def gerar_conexao(servidor='localhost', porta='3050', usuario='maxsuport', senha='oC8qUsDp', pasta_banco=''):
     con = fdb.connect(host=f'{servidor}/{porta}', user=usuario, password=senha, database=pasta_banco)
     return con
 
@@ -25,6 +25,12 @@ def iterar_cnpjs(cnpjs: list, con: fdb.Connection, sistema: str = 'max'):
     for result in results:
         if result[0] not in cnpjs:
             cnpjs.append(result[0])
+            datahoraagora = datetime.datetime.now().replace(microsecond=0)
+            if sistema == 'max':
+                cursorupdate = con.cursor()  
+                cursorupdate.execute(f"update empresa set ULTIMA_EXEC_SERVICO = '{datahoraagora}' where cnpj in ('{result[0]}')")     
+                cursorupdate.close()   
+                con.commit()    
 
     cursor.close()
 
@@ -113,10 +119,10 @@ def salva_json():
         print_log(f"Consultou remoto cnpj's {cnpj}" , nome_servico)
 
         datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-4)))
-        cursor = conn.cursor()
-        cursor.execute(f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
-        print_log(f"Executou update remoto" , nome_servico)
-        conn.commit()
+        # cursor = conn.cursor()
+        # cursor.execute(f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
+        # print_log(f"Executou update remoto" , nome_servico)
+        # conn.commit()
         conn.close()
 
         config = {}

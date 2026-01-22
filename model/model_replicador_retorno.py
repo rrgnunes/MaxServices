@@ -58,6 +58,18 @@ class ReplicadorRetorno(Replicador):
                 codigo = cursor.fetchone()[0]
                 dados['FKVENDA'] = codigo
 
+            if tabela.lower() == 'vendas_fpg':
+                codigo_master = dados['CODIGO_GLOBAL_MASTER']
+                cursor.execute(f'select codigo from vendas_master where codigo_global = {codigo_master}')
+                codigo = cursor.fetchone()[0]
+                dados['VENDAS_MASTER'] = codigo
+
+            if tabela.lower() == 'pedido_detalhe':
+                codigo_master = dados['CODIGO_GLOBAL_MASTER']
+                cursor.execute(f'select codigo from pedido_master where codigo_global = {codigo_master}')
+                codigo = cursor.fetchone()[0]
+                dados['FKPEDIDO'] = codigo
+
             colunas = ', '.join(dados.keys())
             placeholders = ', '.join(['?'] * len(dados))
             valores = self.tratar_valores(dados)
@@ -148,6 +160,33 @@ class ReplicadorRetorno(Replicador):
             if cursor:
                 cursor.close()
 
+    def remover_referencias_repetidas(self):
+        
+        ultimas = {}
+        for i, ref in enumerate(self._alteracoes):
+            k = (ref.get('TABELA', ''), ref.get('CODIGO_GLOBAL', ''))
+            ultimas[k] = (i, ref)
+
+        redundantes = []
+        for i, ref in enumerate(self._alteracoes):
+            k = (ref.get('TABELA', ''), ref.get('CODIGO_GLOBAL', ''))
+
+            if i != ultimas[k][0]:
+                redundantes.append(ref)
+
+        for r in redundantes:
+            self.delete_referencia_replicador(
+                r.get('TABELA', ''),
+                r.get('ACAO', ''),
+                r.get('CHAVE', ''),
+                r.get('CODIGO_GLOBAL', '')
+            )
+
+        finais = [pair[1] for pair in sorted(ultimas.values(), key=lambda x: x[0])]
+        self._alteracoes_processadas = finais
+
+        self.commit_conexao()
+
     def replicar_alteracoes(self):
         self.buscar_alteracoes_replicador_remoto()
         self.remover_referencias_repetidas()
@@ -186,7 +225,7 @@ class ReplicadorRetorno(Replicador):
         self.commit_conexao(True)
 
         self.remover_referencias_realizadas()
-        self.logar('Finalizado recebimento de dados...')
+        self.logar('Finalizado recebimento de dados...\n')
         
         self.conexao_remota.close()
         self.conexao_local.close()
