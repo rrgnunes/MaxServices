@@ -2419,3 +2419,30 @@ def apagar_itens_pasta(pasta):
         if os.path.exists(caminho_item):
             if os.path.isfile(caminho_item):
                 os.remove(caminho_item)
+
+def fechar_conexao_mysql():
+
+    try:
+        print_log("Fechando conexão mysql")
+        if parametros.MYSQL_CONNECTION:
+
+            if parametros.MYSQL_CONNECTION.is_connected():
+                parametros.MYSQL_CONNECTION.close()
+            
+            parametros.MYSQL_CONNECTION = None
+    except Exception as e:
+        print_log(f"Erro ao fechar conexão mysql - motivo: {e}")
+
+
+def fechar_conexao_firebird():
+
+    try:
+        print_log("Fechando conexão firebird")
+        if parametros.FIREBIRD_CONNECTION:
+
+            if not parametros.FIREBIRD_CONNECTION.closed:
+                parametros.FIREBIRD_CONNECTION.close()
+
+            parametros.FIREBIRD_CONNECTION = None
+    except Exception as e:
+        print_log(f"Erro ao fechar conexão firebird -> motivo: {e}")
