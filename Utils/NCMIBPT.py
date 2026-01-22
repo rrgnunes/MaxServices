@@ -155,11 +155,18 @@ def AtualizaCEST():
         i += 1
     print('---Finaliza Atualização dos CEST''s---')
     logging.info('---Finaliza Atualização dos CEST''s---')
+    
+def limpa_pasta_destino(pasta):
+    itens = os.listdir(pasta)
+    for item in itens:
+        caminho_item = os.path.join(pasta, item)
+        if os.path.isfile(caminho_item):
+            os.unlink(caminho_item)
 
 def AtualizaExcelIBPT():
     # Página inicial
     url_pagina = "https://www.minf.com.br/link.php"
-    base_url = "https://www.minf.com.br/baixar.php"
+    base_url = "https://www.minf.com.br/baixar2.php"
 
     # Pasta destino
     pasta_destino = os.path.join(parametros.SCRIPT_PATH, "Utils/lista_ibpt")
@@ -168,6 +175,11 @@ def AtualizaExcelIBPT():
     # Buscar HTML da página
     resp = requests.get(url_pagina)
     soup = BeautifulSoup(resp.text, 'html.parser')
+    
+    if resp.status_code != 200:
+        return
+    
+    limpa_pasta_destino(pasta_destino)
 
     # Procurar links com padrão ibpt/TabelaIBPTax
     for a_tag in soup.find_all('a', href=True):
@@ -198,4 +210,4 @@ if __name__ == '__main__':
     if funcao == 'NCMCEST':
         AtualizaCEST()
     if funcao == 'EXCELIBPT':
-        AtualizaExcelIBPT()        
+        AtualizaExcelIBPT()
