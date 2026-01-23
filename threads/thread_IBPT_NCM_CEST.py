@@ -60,10 +60,10 @@ def IBPTNCMCEST():
         print_log("Pega dados local", nome_script)
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
-            sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
-            porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+            sistema_em_uso = dados_cnpj['sistema_em_uso']
+            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados']
+            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird']
+            porta_firebird_maxsuport = dados_cnpj['porta_firebird']
 
             if ativo:
                 if sistema_em_uso == '1':  # maxsuport

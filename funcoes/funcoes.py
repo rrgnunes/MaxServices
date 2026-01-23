@@ -131,12 +131,12 @@ def carregar_configuracoes():
 
 def atualizar_conexoes_firebird():
     for cnpj, dados in parametros.CNPJ_CONFIG['sistema'].items():
-        if (dados['caminho_base_dados_maxsuport'] == None) or (dados['caminho_base_dados_maxsuport'] == 'None'):
+        if (dados['caminho_base_dados'] == None) or (dados['caminho_base_dados'] == 'None'):
             continue
-        caminho_gbak_firebird_maxsuport = dados['caminho_gbak_firebird_maxsuport']
+        caminho_gbak_firebird_maxsuport = dados['caminho_gbak_firebird']
         parametros.PATHDLL = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
-        parametros.DATABASEFB = dados['caminho_base_dados_maxsuport']
-        parametros.PORTFB = dados['porta_firebird_maxsuport']
+        parametros.DATABASEFB = dados['caminho_base_dados']
+        parametros.PORTFB = dados['porta_firebird']
         inicializa_conexao_firebird()
 
 def SalvaNota(conn, numero, chave, tipo_nota, serie, data_nota, xml, xml_cancelamento, cliente_id, contador_id, cliente_ie):

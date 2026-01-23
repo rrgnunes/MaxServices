@@ -39,10 +39,10 @@ def zapautomato():
 
                 dados_cnpj = config['sistema'][cnpj]
                 ativo = dados_cnpj['sistema_ativo'] == '1'
-                sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-                caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-                porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
-                caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
+                sistema_em_uso = dados_cnpj['sistema_em_uso']
+                caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados']
+                porta_firebird_maxsuport = dados_cnpj['porta_firebird']
+                caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird']
                 data_hora = datetime.datetime.now()
 
                 print_log(f'Vou validar para enviar mensagem em empresa cnpj: {cnpj}', nome_servico)

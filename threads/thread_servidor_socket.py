@@ -118,11 +118,7 @@ def servidor_socket():
         carregar_configuracoes()
 
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
-            ativo = dados_cnpj['sistema_ativo'] == '1'
-            sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird_maxsuport']
-            porta_firebird_maxsuport = dados_cnpj['porta_firebird_maxsuport']
+            caminho_gbak_firebird_maxsuport = dados_cnpj['caminho_gbak_firebird']
             path_fbclient = f'{caminho_gbak_firebird_maxsuport}\\fbclient.dll'
 
             sql = f'SELECT IMPRESSAO_GRUPO FROM EMPRESA WHERE CNPJ = {cnpj}'
