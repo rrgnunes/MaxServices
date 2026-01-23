@@ -41,10 +41,10 @@ def atualiza_banco():
     try:
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
             ativo = dados_cnpj['sistema_ativo'] == '1'
-            sistema_em_uso = dados_cnpj['sistema_em_uso_id']
-            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
+            sistema_em_uso = dados_cnpj['sistema_em_uso']
+            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados']
 
-            if caminho_base_dados_maxsuport.lower() == 'none':
+            if not(caminho_base_dados_maxsuport) or caminho_base_dados_maxsuport.lower() == 'none':
                 continue
             
             if not os.path.exists(caminho_base_dados_maxsuport):

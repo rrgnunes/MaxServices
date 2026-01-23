@@ -16,11 +16,11 @@ except:
     print_log('erro ao importar dropbox', 'backuplocal')
 
 def backup():
-    nome_servico = 'thread_backup_local'
     print_log("Carrega configurações da thread",nome_script)
     try:
         
         carrega_arquivo_config()
+        parametros.BASEMYSQL = 'dados'
         inicializa_conexao_mysql()
         
         print_log("Efetua conexão remota" , nome_script)
@@ -32,26 +32,26 @@ def backup():
         for cnpj, dados_cnpj in parametros.CNPJ_CONFIG['sistema'].items():
 
             # Verifica se conexao esta ativa, se não estiver, conecta novamente
-            if not parametros.MYSQL_CONNECTION.is_connected():
-                parametros.MYSQL_CONNECTION.connect()
-                conn = parametros.MYSQL_CONNECTION
+            if not conn.is_connected():
+                conn.connect()
             
             ativo = dados_cnpj['sistema_ativo'] == '1'
-            sistema_em_uso = dados_cnpj['sistema_em_uso_id']
+            sistema_em_uso = dados_cnpj.get('sistema_em_uso', '1')
             pasta_compartilhada_backup = dados_cnpj['pasta_compartilhada_backup']
-            caminho_base_dados_maxsuport = dados_cnpj['caminho_base_dados_maxsuport']
-            caminho_base_dados_gfil = dados_cnpj['caminho_base_dados_gfil']
+            caminho_base_dados = dados_cnpj['caminho_base_dados']
             data_hora = datetime.datetime.now()
             data_hora_formatada = data_hora.strftime('%Y_%m_%d_%H_%M_%S')
-            timer_minutos_backup = dados_cnpj['timer_minutos_backup']
+
+            if not (sistema_em_uso) or sistema_em_uso.lower() == 'none':
+                continue
 
             if ativo:
                 if sistema_em_uso == '1':  # maxsuport
 
-                    if not os.path.exists(caminho_base_dados_maxsuport):
+                    if not os.path.exists(caminho_base_dados):
                         continue
 
-                    if pasta_compartilhada_backup and caminho_base_dados_maxsuport:
+                    if pasta_compartilhada_backup and caminho_base_dados:
                         path = os.path.join(pasta_compartilhada_backup, 'maxsuport', cnpj)
                     
                         if parametros.FIREBIRD_CONNECTION:
@@ -61,9 +61,8 @@ def backup():
                         
                         parametros.USERFB = 'maxsuport'
                         parametros.PASSFB = 'oC8qUsDp'
-                        parametros.DATABASEFB = caminho_base_dados_maxsuport
+                        parametros.DATABASEFB = caminho_base_dados
                         parametros.PORTFB = 3050
-
 
                         if parametros.DATABASEFB == 'None':
                             continue
@@ -74,17 +73,19 @@ def backup():
                         cursor_fb = conn_fb.cursor()
 
                         caminho_arquivo_backup = path
-                        comando = f'copy "{caminho_base_dados_maxsuport}" "{caminho_arquivo_backup}"'.replace('/', '\\')
+                        comando = f'copy "{caminho_base_dados}" "{caminho_arquivo_backup}"'.replace('/', '\\')
 
                         cursor_fb.execute('select cnpj from empresa')
                         results = cursor_fb.fetchall()
                         result = [result[0] for result in results]
+
                         if cnpj in result:
-                            if caminho_base_dados_maxsuport.lower() in bases_backupedas:
+                            if caminho_base_dados.lower() in bases_backupedas:
                                 continue
-                            bases_backupedas.append(caminho_base_dados_maxsuport.lower())
+
+                            bases_backupedas.append(caminho_base_dados.lower())
                             print_log("Inicia backup", nome_script)
-                            os.makedirs(path, exist_ok=True)
+                            os.makedirs(caminho_arquivo_backup, exist_ok=True)
                         else:
                             continue
                     else:
@@ -92,15 +93,15 @@ def backup():
 
                 elif sistema_em_uso == '2':  # gfil
 
-                    if not os.path.exists(caminho_base_dados_gfil):
+                    if not os.path.exists(caminho_base_dados):
                         continue
 
-                    if pasta_compartilhada_backup and caminho_base_dados_gfil:
+                    if pasta_compartilhada_backup and caminho_base_dados:
                         path = os.path.join(pasta_compartilhada_backup, 'gfil', cnpj)
 
                         parametros.USERFB = 'GFILMASTER'
                         parametros.PASSFB = 'b32@m451'
-                        parametros.DATABASEFB = caminho_base_dados_gfil
+                        parametros.DATABASEFB = caminho_base_dados
                         parametros.PORTFB = 3050
 
                         parametros.PATHDLL = verifica_dll_firebird()
@@ -109,7 +110,7 @@ def backup():
                         cursor_fb = conn_fb.cursor()
 
                         caminho_arquivo_backup = path
-                        comando = f'copy "{caminho_base_dados_gfil}" "{caminho_arquivo_backup}"'.replace('/', '\\')
+                        comando = f'copy "{caminho_base_dados}" "{caminho_arquivo_backup}"'.replace('/', '\\')
 
                         cursor_fb.execute(f'select filial, cnpj  from diversos where cnpj = {cnpj} and filial = 1')
                         result = cursor_fb.fetchall()
@@ -173,7 +174,8 @@ def backup():
 
                 datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3)))
                 cursor = conn.cursor()
-                cursor.execute(f"UPDATE cliente_cliente set data_hora_ultimo_backup = '{datahoraagora}' where cnpj = '{cnpj}'")
+                # cursor.execute(f"UPDATE cliente_cliente set data_hora_ultimo_backup = '{datahoraagora}' where cnpj = '{cnpj}'")
+                cursor.execute(f"UPDATE PESSOA SET ULTIMO_BACKUP = '{datahoraagora}' WHERE CNPJ = '{cnpj}' AND CNPJ_EMPRESA = '19775656000104'")
                 print_log("Executou update remoto", nome_script)
                 conn.commit()
                 conn.close()
@@ -190,6 +192,8 @@ def backup():
                 diretorio_remoto = f'/{cnpj}/backup/{pasta_sistema}'
 
                 try:
+                    parametros.BASEMYSQL = 'maxservices'
+                    inicializa_conexao_mysql()
                     arquivo_local = f'{caminho_arquivo_backup}\\{nome_arquivo_compactado}'
                     arquivo_remoto = f'{diretorio_remoto}/{nome_arquivo_compactado}'
 
@@ -215,7 +219,7 @@ def backup():
 
                     print_log(f"Arquivo {arquivo_local} enviado para o Dropbox em {arquivo_remoto}", nome_script)
 
-                    num_arquivos_a_manter = int(timer_minutos_backup)
+                    num_arquivos_a_manter = 30
                     extensao = '.xz'
                     arquivos = glob.glob(os.path.join(caminho_arquivo_backup, '*' + extensao))
                     arquivos.sort(key=lambda arquivo: os.path.getmtime(arquivo))
@@ -233,6 +237,7 @@ def backup():
                 finally:
                     print_log(f'Finalizado {data_hora_formatada}', nome_script)
                     obj_dropbox.close()
+                    fechar_conexao_mysql()
     except Exception as e:
         print_log(f'Erro ao gerar backup {e}', nome_script)
 

@@ -82,6 +82,8 @@ def consulta_cnpj():
                                 iterar_cnpjs(cnpjs, con, 'gfil')
                             except Exception as er:
                                 print_log(f'Erro ao consultar cnpjs em segunda tentativa -> motivo: {er}', nome_script)
+                    elif 'Your user name and password' in str(e):
+                        continue
                     else:
                         print_log(f'Erro ao verificar pastas -> motivo: {e.__class__.__name__}:{e}', nome_script)
                 finally:
@@ -93,7 +95,7 @@ def consulta_cnpj():
 def salva_json():
     nome_servico = os.path.basename(sys.argv[0]).replace('.py', '')
     try:
-        parametros.BASEMYSQL = 'maxservices'
+        parametros.BASEMYSQL = 'dados'
         inicializa_conexao_mysql()
         
         print_log("Efetua conexão remota" , nome_servico)
@@ -103,52 +105,99 @@ def salva_json():
         cnpj_list = consulta_cnpj()
         cnpj = ''
         for s in cnpj_list:
+
+            if len(s) == 11:
+                s = formata_cpf(s)
+
+            elif len(s) == 14:
+                s = formata_cnpj(s)
+
             if (cnpj != ''):
                 cnpj += ','
             cnpj += '"' + s + '"'
 
         # Consulta ao banco de dados
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            f"""SELECT nome, cnpj, cidade, uf, ativo, sistema_ativo, sistema_em_uso_id, pasta_compartilhada_backup, 
-                    caminho_base_dados_maxsuport, caminho_gbak_firebird_maxsuport, porta_firebird_maxsuport, 
-                    caminho_base_dados_gfil,caminho_gbak_firebird_gfil,alerta_bloqueio,timer_minutos_backup, porta_firebird_gfil, 
-                    ip
-            FROM cliente_cliente where cnpj in ({cnpj})""")
-        rows = cursor.fetchall()
-        print_log(f"Consultou remoto cnpj's {cnpj}" , nome_servico)
+        # cursor.execute(
+        #     f"""SELECT nome, cnpj, cidade, uf, ativo, sistema_ativo, sistema_em_uso_id, pasta_compartilhada_backup, 
+        #             caminho_base_dados_maxsuport, caminho_gbak_firebird_maxsuport, porta_firebird_maxsuport, 
+        #             caminho_base_dados_gfil,caminho_gbak_firebird_gfil,alerta_bloqueio,timer_minutos_backup, porta_firebird_gfil, 
+        #             ip
+        #     FROM cliente_cliente where cnpj in ({cnpj})""")
+        # rows = cursor.fetchall()
 
-        datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-4)))
-        # cursor = conn.cursor()
-        # cursor.execute(f"UPDATE cliente_cliente set ultima_conexao_windows_service = '{datahoraagora}' where cnpj in ({cnpj})")
-        # print_log(f"Executou update remoto" , nome_servico)
-        # conn.commit()
+        sql_select = f"""SELECT
+                        P.RAZAO,
+                        P.CNPJ,
+                        P.MUNICIPIO,
+                        P.UF,
+                        P.ATIVO,
+                        P.SISTEMA_EM_USO,
+                        P.PASTA_COMPARTILHADA_BACKUP,
+                        P.CAMINHO_BASE_DADOS,
+                        P.CAMINHO_GBAK_FIREBIRD,
+                        P.PORTA_FIREBIRD,
+                        P.VALIDADE_SISTEMA
+                    FROM
+                        PESSOA P
+                    WHERE
+                        P.CNPJ_EMPRESA = '19775656000104'
+                        AND
+                        P.CNPJ in ({cnpj})"""
+        
+        cursor.execute(sql_select)
+        rows = cursor.fetchall()
+
+        print_log(f"Consultou remoto cnpj's {cnpj}" , nome_servico)
         conn.close()
 
         config = {}
         config['sistema'] = {}
         for row in rows:
-            config['sistema'][row['cnpj']] = {"sistema_ativo": str(row['sistema_ativo']),
-                                            "alerta_bloqueio": str(row['alerta_bloqueio']),
-                                            "sistema_em_uso_id": str(row['sistema_em_uso_id']),
-                                            "pasta_compartilhada_backup": str(row['pasta_compartilhada_backup']),
-                                            "caminho_base_dados_maxsuport": str(row['caminho_base_dados_maxsuport']),
-                                            "caminho_gbak_firebird_maxsuport": str(row['caminho_gbak_firebird_maxsuport']),
-                                            "porta_firebird_maxsuport": str(row['porta_firebird_maxsuport']),
-                                            "caminho_base_dados_gfil": str(row['caminho_base_dados_gfil']),
-                                            "caminho_gbak_firebird_gfil": str(row['caminho_gbak_firebird_gfil']),
-                                            "porta_firebird_gfil": str(row['porta_firebird_gfil']),
-                                            "timer_minutos_backup": str(row['timer_minutos_backup']),
-                                            "ip": str(row['ip'])
-                                            }
+            # config['sistema'][row['cnpj']] = {"sistema_ativo": str(row['sistema_ativo']),
+            #                                 "alerta_bloqueio": str(row['alerta_bloqueio']),
+            #                                 "sistema_em_uso_id": str(row['sistema_em_uso_id']),
+            #                                 "pasta_compartilhada_backup": str(row['pasta_compartilhada_backup']),
+            #                                 "caminho_base_dados_maxsuport": str(row['caminho_base_dados_maxsuport']),
+            #                                 "caminho_gbak_firebird_maxsuport": str(row['caminho_gbak_firebird_maxsuport']),
+            #                                 "porta_firebird_maxsuport": str(row['porta_firebird_maxsuport']),
+            #                                 "caminho_base_dados_gfil": str(row['caminho_base_dados_gfil']),
+            #                                 "caminho_gbak_firebird_gfil": str(row['caminho_gbak_firebird_gfil']),
+            #                                 "porta_firebird_gfil": str(row['porta_firebird_gfil']),
+            #                                 "timer_minutos_backup": str(row['timer_minutos_backup']),
+            #                                 "ip": str(row['ip'])
+            #                                 }
+            config['sistema'][remover_caracteres(row['CNPJ'])] = {
+                "nome": row.get('RAZAO', ''),
+                "municipio": row.get('MUNICIPIO', ''),
+                "uf": row.get('UF', ''),
+                "sistema_ativo": '1'if row['ATIVO'] == 'S' else '0',
+                "sistema_em_uso": str(row.get('SISTEMA_EM_USO', '1')),
+                "pasta_compartilhada_backup": row.get('PASTA_COMPARTILHADA_BACKUP', 'C:\\BackupMaxSuport'),
+                "caminho_base_dados": row.get('CAMINHO_BASE_DADOS'),
+                "caminho_gbak_firebird": row.get('CAMINHO_GBAK_FIREBIRD', ''),
+                "porta_firebird": str(row.get('PORTA_FIREBIRD', '3050')),
+                "validade_sistema": str(row.get('VALIDADE_SISTEMA', ''))
+            }
         if not os.path.exists(os.path.join(parametros.SCRIPT_PATH, 'data')):
             os.makedirs(os.path.join(parametros.SCRIPT_PATH, 'data'))
             
         with open(os.path.join(parametros.SCRIPT_PATH, 'data', 'config.json'), 'w') as configfile:            
             json.dump(config, configfile, indent=2)
+        
+        print_log("Arquivo config salvo com sucesso!", nome_script)
 
     except Exception as a:
         print_log(a, nome_servico)
+
+def formata_cpf(cpf: str):
+    return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
+
+def formata_cnpj(cnpj: str):
+    return f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
+
+def remover_caracteres(texto: str):
+    return texto.replace('.', '').replace('-', '').replace('/','')
 
 if __name__ == '__main__':
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')

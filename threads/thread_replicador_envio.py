@@ -24,11 +24,14 @@ def iniciar_replicacao():
     bancos_ja_replicados = []
 
     for cnpj, dados in params.CNPJ_CONFIG['sistema'].items():
-        caminho_base_dados = dados['caminho_base_dados_maxsuport']
+        caminho_base_dados = dados['caminho_base_dados']
         print_log(f"Banco de dados: {caminho_base_dados}.", nome_servico)
 
         if caminho_base_dados in bancos_ja_replicados:
             print_log('Banco de dados ja replicado. Pulando...\n', nome_servico)
+            continue
+
+        if not caminho_base_dados or caminho_base_dados.lower() == 'none':
             continue
 
         if not os.path.exists(caminho_base_dados):
