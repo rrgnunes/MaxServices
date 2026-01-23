@@ -12,9 +12,9 @@ def realizar_consulta_api():
 
     print_log(f"Realizando consulta na API...", nome_script)
     url = "https://cff.svrs.rs.gov.br/api/v1/consultas/classTrib"
-    arquivo_certificado = "C:\\Main\\Certificados\\MaxSuport.pfx"
+    # arquivo_certificado = "C:\\Main\\Certificados\\MaxSuport.pfx"
+    arquivo_certificado = os.path.join('/', 'home', 'certificado', 'MaxSuport.pfx')
     senha_certificado = "12345678"
-
     classificacao_tributaria = []
     classificacao_tributaria_detalhe = []
     try:
@@ -81,20 +81,10 @@ def atualizar_classificacao_tributaria():
         print_log(f"Nenhum resultado encontrado na consulta...", nome_script)
         return
     
-    caminho_sistema = params.SCRIPT_PATH.replace('SERVER', '')
-    caminho_banco_ini = os.path.join(caminho_sistema, 'banco.ini')
-
-    banco_ini = obter_dados_ini(caminho_banco_ini)
-
-    if banco_ini['homologacao']:
-        params.BASEMYSQL = 'DADOSHM'
-        
-    inicializa_conexao_mysql()
-
     csts_banco = realizar_consulta_banco()
 
-    # scripts = comparar_tributacoes(csts_api[0], csts_banco[0])
-    scripts = comparar_tributacoes_detalhe(csts_api[1], csts_banco[1])
+    scripts = comparar_tributacoes(csts_api[0], csts_banco[0])
+    scripts += comparar_tributacoes_detalhe(csts_api[1], csts_banco[1])
 
     executar_scripts(scripts)
 
@@ -403,7 +393,7 @@ if __name__ == '__main__':
             
             if (len(sys.argv) > 2) and ('-re' == sys.argv[1]):
 
-                if '-all' in sys.argv:                    
+                if '-all' in sys.argv:
                     replicar_para_todos_cnpjs()
 
                 elif str.isdigit(sys.argv[2]):
