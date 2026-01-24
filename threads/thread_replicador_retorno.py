@@ -13,8 +13,10 @@ from funcoes.funcoes import (
     remover_bloqueio,
     verifica_dll_firebird,
     carrega_arquivo_config,
+    fechar_conexao_mysql,
+    fechar_conexao_firebird,
     inicializa_conexao_firebird,
-    inicializa_conexao_mysql_replicador,
+    inicializa_conexao_mysql_replicador
     )
 
 def iniciar_replicacao():
@@ -70,17 +72,8 @@ def iniciar_replicacao():
             print_log(f'Não foi possível realizar replicação do banco -> motivo: {e}', nome_servico)
 
         finally:
-
-            if params.FIREBIRD_CONNECTION:
-                if not params.FIREBIRD_CONNECTION.closed:
-                    params.FIREBIRD_CONNECTION.close()
-            
-            if params.MYSQL_CONNECTION_REPLICADOR:
-                if params.MYSQL_CONNECTION_REPLICADOR.is_connected():
-                    params.MYSQL_CONNECTION_REPLICADOR.close()
-
-            params.FIREBIRD_CONNECTION = None
-            params.MYSQL_CONNECTION_REPLICADOR = None    
+            fechar_conexao_firebird()
+            fechar_conexao_mysql()  
 
 
 if __name__ == '__main__':

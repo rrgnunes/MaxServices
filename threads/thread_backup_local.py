@@ -175,7 +175,7 @@ def backup():
                 datahoraagora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3)))
                 cursor = conn.cursor()
                 # cursor.execute(f"UPDATE cliente_cliente set data_hora_ultimo_backup = '{datahoraagora}' where cnpj = '{cnpj}'")
-                cursor.execute(f"UPDATE PESSOA SET ULTIMO_BACKUP = '{datahoraagora}' WHERE CNPJ = '{cnpj}' AND CNPJ_EMPRESA = '19775656000104'")
+                cursor.execute(f"UPDATE PESSOA SET ULTIMO_BACKUP = '{datahoraagora}' WHERE CNPJ = '{formata_cnpj(cnpj)}' AND CNPJ_EMPRESA = '19775656000104'")
                 print_log("Executou update remoto", nome_script)
                 conn.commit()
                 conn.close()

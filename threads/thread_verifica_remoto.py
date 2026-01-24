@@ -5,7 +5,20 @@ import fdb
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from credenciais import parametros
-from funcoes.funcoes import print_log, os,json, datetime, inicializa_conexao_mysql, pode_executar, criar_bloqueio, remover_bloqueio, verifica_dll_firebird
+from funcoes.funcoes import (
+    os,
+    json,
+    datetime,
+    print_log,
+    formata_cpf,
+    formata_cnpj,
+    pode_executar,
+    criar_bloqueio,
+    remover_bloqueio,
+    remover_caracteres,
+    verifica_dll_firebird,
+    inicializa_conexao_mysql,
+)
 
 def gerar_conexao(servidor='localhost', porta='3050', usuario='maxsuport', senha='oC8qUsDp', pasta_banco=''):
     con = fdb.connect(host=f'{servidor}/{porta}', user=usuario, password=senha, database=pasta_banco)
@@ -190,14 +203,6 @@ def salva_json():
     except Exception as a:
         print_log(a, nome_servico)
 
-def formata_cpf(cpf: str):
-    return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
-
-def formata_cnpj(cnpj: str):
-    return f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
-
-def remover_caracteres(texto: str):
-    return texto.replace('.', '').replace('-', '').replace('/','')
 
 if __name__ == '__main__':
     nome_script = os.path.basename(sys.argv[0]).replace('.py', '')

@@ -2430,6 +2430,13 @@ def fechar_conexao_mysql():
                 parametros.MYSQL_CONNECTION.close()
             
             parametros.MYSQL_CONNECTION = None
+
+        if parametros.MYSQL_CONNECTION_REPLICADOR:
+
+            if parametros.MYSQL_CONNECTION_REPLICADOR.is_connected():
+                parametros.MYSQL_CONNECTION_REPLICADOR.close()
+
+            parametros.MYSQL_CONNECTION_REPLICADOR = None
     except Exception as e:
         print_log(f"Erro ao fechar conexão mysql - motivo: {e}")
 
@@ -2446,3 +2453,12 @@ def fechar_conexao_firebird():
             parametros.FIREBIRD_CONNECTION = None
     except Exception as e:
         print_log(f"Erro ao fechar conexão firebird -> motivo: {e}")
+
+def formata_cpf(cpf: str):
+    return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
+
+def formata_cnpj(cnpj: str):
+    return f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
+
+def remover_caracteres(texto: str):
+    return texto.replace('.', '').replace('-', '').replace('/','')
